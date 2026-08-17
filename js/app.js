@@ -29,10 +29,11 @@ export function showChrome(user) {
   document.getElementById("mobile-nav").hidden = false;
   document.getElementById("user-chip-name").textContent = user.nombre;
 
-  // El tab de Administración solo se muestra al usuario maestro (rol "admin").
-  document.querySelectorAll(".admin-only").forEach((node) => {
-    node.hidden = user.rol !== "admin";
-  });
+  // TEMPORAL: mientras Jesús agrega el rol "admin" real, usamos "gerente"
+// para poder revisar el diseño con un usuario que ya existe en el backend.
+document.querySelectorAll(".admin-only").forEach((node) => {
+  node.hidden = user.rol !== "gerente";
+});
 }
 
 function wireNav() {
