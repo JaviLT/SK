@@ -24,6 +24,7 @@ const routes = {
   detalle: () => import("./views/detalle.js"),
   dashboard: () => import("./views/dashboard.js"),
   aprobacion: () => import("./views/aprobacion.js"),
+  admin: () => import("./views/admin.js"),
 };
 
 let currentModule = null;

@@ -2,6 +2,7 @@ import { el, toast } from "../utils.js";
 import { api } from "../api.js";
 import { setState } from "../state.js";
 import { CONFIG } from "../config.js";
+import { showChrome } from "../app.js";
 
 export async function render(container) {
   const errorBox = el("div", { class: "login-error", id: "login-error" });
@@ -38,9 +39,7 @@ export async function render(container) {
           setState({ user });
           toast(`Bienvenido, ${user.nombre.split(" ")[0]}`, "tg");
           const { goTo } = await import("../router.js");
-          document.getElementById("topbar").hidden = false;
-          document.getElementById("mobile-nav").hidden = false;
-          document.getElementById("user-chip-name").textContent = user.nombre;
+          showChrome(user);
           goTo("historial");
         } catch (err) {
           errorBox.textContent = err.message || "No se pudo iniciar sesión.";

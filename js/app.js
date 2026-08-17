@@ -24,10 +24,15 @@ async function boot() {
   }
 }
 
-function showChrome(user) {
+export function showChrome(user) {
   document.getElementById("topbar").hidden = false;
   document.getElementById("mobile-nav").hidden = false;
   document.getElementById("user-chip-name").textContent = user.nombre;
+
+  // El tab de Administración solo se muestra al usuario maestro (rol "admin").
+  document.querySelectorAll(".admin-only").forEach((node) => {
+    node.hidden = user.rol !== "admin";
+  });
 }
 
 function wireNav() {

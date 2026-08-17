@@ -131,6 +131,39 @@
 .detail-photos img{ border-radius: var(--radius-sm); width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--gray-100); }
 .detail-photos figcaption{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: var(--sp-1); text-align: center; }
 
+/* ============ Administración (equipos / líderes / gerentes / empleados) ============ */
+.admin-grid{
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--sp-5);
+}
+.admin-team-card .card-header h3{ color: var(--zx-blue); }
+.admin-roles-row{
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4);
+  margin-bottom: var(--sp-5); padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--gray-200);
+}
+.admin-role-block{
+  background: var(--gray-50); border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+  min-width: 0; overflow-wrap: anywhere;
+}
+.admin-role-label{
+  font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--gray-500); margin-bottom: var(--sp-1);
+}
+.admin-role-name{ font-size: var(--fs-sm); font-weight: 600; color: var(--gray-800); }
+.admin-members-header{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-3); gap: var(--sp-3);
+}
+.admin-members-header h4{ font-size: var(--fs-sm); color: var(--gray-700); }
+.admin-member-list{ display: flex; flex-direction: column; gap: var(--sp-2); }
+.admin-member-row{
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-3); padding: var(--sp-3); border-radius: var(--radius-sm);
+  background: var(--gray-50);
+}
+
 /* ============ Dashboard ============ */
 .dash-grid{ display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-5); margin-top: var(--sp-5); }
 .chart-wrap{ position: relative; height: 260px; }

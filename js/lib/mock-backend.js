@@ -63,6 +63,7 @@ const USUARIOS_DEMO = [
   { nomina: "0001", password: "demo123", nombre: "Colaborador Demo Uno", rol: "solicitante", equipo: "Equipo Demo — Línea A" },
   { nomina: "lider1", password: "demo123", nombre: "Líder de Ejemplo", rol: "lider", equipo: "Equipo Demo — Línea A" },
   { nomina: "gerente1", password: "demo123", nombre: "Gerente de Ejemplo", rol: "gerente", equipo: "Equipo Demo — Línea A" },
+  { nomina: "admin1", password: "demo123", nombre: "Usuario Maestro (Demo)", rol: "admin", equipo: null },
 ];
 
 function seedKaizens() {
@@ -202,6 +203,75 @@ export const mockBackend = {
     // eslint-disable-next-line no-console
     console.info("[MOCK] Se habría enviado correo al líder con link:", `?token=${token}`);
     return delay(structuredClone(nuevo));
+  },
+
+  // ==========================================================================
+  // Administración de equipos/empleados — SOLO PARA MAQUETAR LA PANTALLA
+  // ==========================================================================
+  // Estas funciones existen únicamente para poder diseñar y probar
+  // visualmente la pantalla de Administrador (js/views/admin.js) mientras
+  // Jesús (TI) no ha construido las rutas reales para esto en el backend.
+  // Todo lo que hacen es mutar el arreglo EQUIPOS_DEMO en memoria — se
+  // pierde al recargar la página, y nunca toca el backend real.
+  //
+  // Cuando Jesús defina el contrato de API para administración (por ej.
+  // POST /equipos, PUT /equipos/:id, POST /equipos/:id/empleados, etc.),
+  // estas llamadas deben moverse a api.js igual que el resto de la app, y
+  // este bloque puede eliminarse.
+  // ==========================================================================
+
+  async crearEquipo({ nombre, liderNombre, liderEmail, gerenteNombre, gerenteEmail }) {
+    if (EQUIPOS_DEMO.some((e) => e.nombre === nombre)) {
+      await delay();
+      throw new Error("Ya existe un equipo con ese nombre.");
+    }
+    const nuevo = { nombre, liderNombre, liderEmail, gerenteNombre, gerenteEmail, miembros: [] };
+    EQUIPOS_DEMO.push(nuevo);
+    return delay(structuredClone(nuevo));
+  },
+
+  async actualizarEquipo(nombreOriginal, { nombre, liderNombre, liderEmail, gerenteNombre, gerenteEmail }) {
+    const equipo = EQUIPOS_DEMO.find((e) => e.nombre === nombreOriginal);
+    if (!equipo) {
+      await delay();
+      throw new Error("Equipo no encontrado.");
+    }
+    Object.assign(equipo, { nombre, liderNombre, liderEmail, gerenteNombre, gerenteEmail });
+    return delay(structuredClone(equipo));
+  },
+
+  async eliminarEquipo(nombre) {
+    const idx = EQUIPOS_DEMO.findIndex((e) => e.nombre === nombre);
+    if (idx === -1) {
+      await delay();
+      throw new Error("Equipo no encontrado.");
+    }
+    EQUIPOS_DEMO.splice(idx, 1);
+    return delay(true);
+  },
+
+  async agregarEmpleado(equipoNombre, { nomina, nombre }) {
+    const equipo = EQUIPOS_DEMO.find((e) => e.nombre === equipoNombre);
+    if (!equipo) {
+      await delay();
+      throw new Error("Equipo no encontrado.");
+    }
+    if (equipo.miembros.some((m) => m.nomina === nomina)) {
+      await delay();
+      throw new Error("Ya existe un empleado con esa nómina en este equipo.");
+    }
+    equipo.miembros.push({ nomina, nombre });
+    return delay(structuredClone(equipo));
+  },
+
+  async eliminarEmpleado(equipoNombre, nomina) {
+    const equipo = EQUIPOS_DEMO.find((e) => e.nombre === equipoNombre);
+    if (!equipo) {
+      await delay();
+      throw new Error("Equipo no encontrado.");
+    }
+    equipo.miembros = equipo.miembros.filter((m) => m.nomina !== nomina);
+    return delay(structuredClone(equipo));
   },
 
   async obtenerDatosAprobacion(token) {
