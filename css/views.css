@@ -1,0 +1,140 @@
+.view{
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-5) calc(var(--sp-12) + env(safe-area-inset-bottom,0px));
+}
+
+/* ============ Login ============ */
+.login-screen{
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, var(--zx-blue) 0%, #0a1280 100%);
+  padding: var(--sp-5);
+}
+.login-card{
+  background: var(--zx-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-8) var(--sp-6);
+  max-width: 380px; width: 100%;
+}
+.login-mark{
+  width: 52px; height: 52px; border-radius: var(--radius-md);
+  background: var(--zx-blue); color: var(--zx-white);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; margin: 0 auto var(--sp-4);
+}
+.login-card h1{ text-align: center; font-size: var(--fs-lg); }
+.login-card .sub{ text-align: center; font-size: var(--fs-sm); color: var(--gray-500); margin-bottom: var(--sp-6); }
+.login-error{
+  background: var(--zx-negative-bg); color: var(--zx-negative);
+  font-size: var(--fs-sm); padding: var(--sp-3); border-radius: var(--radius-sm);
+  margin-bottom: var(--sp-4); display: none;
+}
+.login-error.show{ display: block; }
+
+/* ============ Historial / mosaico de equipos ============ */
+.view-header{
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: var(--sp-6); flex-wrap: wrap; gap: var(--sp-3);
+}
+.stats-row{
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-3); margin-bottom: var(--sp-6);
+}
+.stats-row-4{ grid-template-columns: repeat(4, 1fr); }
+.mosaico{
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sp-3); margin-bottom: var(--sp-8);
+}
+.equipo-card{
+  background: var(--zx-white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: var(--sp-4);
+  cursor: pointer; transition: box-shadow .15s var(--ease), border-color .15s var(--ease);
+}
+.equipo-card:hover{ box-shadow: var(--shadow-md); border-color: var(--zx-blue-accent); }
+.equipo-card.active{ border-color: var(--zx-blue); background: var(--zx-highlight); }
+.equipo-card .eq-name{ font-weight: 700; font-size: var(--fs-sm); color: var(--zx-blue); margin-bottom: var(--sp-2); }
+.equipo-card .eq-count{ font-size: var(--fs-xl); font-weight: 700; color: var(--gray-800); }
+.equipo-card .eq-sub{ font-size: var(--fs-xs); color: var(--gray-500); }
+
+.kaizen-list{ display: flex; flex-direction: column; gap: var(--sp-3); }
+.kaizen-row{
+  background: var(--zx-white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-4);
+  cursor: pointer; transition: box-shadow .15s var(--ease);
+}
+.kaizen-row:hover{ box-shadow: var(--shadow-md); }
+.kaizen-row .kr-main{ flex: 1; min-width: 0; }
+.kaizen-row .kr-title{ font-weight: 600; font-size: var(--fs-base); color: var(--gray-800); }
+.kaizen-row .kr-sub{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: 2px; }
+
+.empty-state{
+  text-align: center; padding: var(--sp-12) var(--sp-5);
+  color: var(--gray-500);
+}
+.empty-state .icon{ font-size: 2rem; margin-bottom: var(--sp-3); }
+
+/* ============ Formulario / captura ============ */
+.stepper{
+  display: flex; gap: var(--sp-2); margin-bottom: var(--sp-6);
+  overflow-x: auto; padding-bottom: 2px;
+}
+.step-pill{
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px; background: var(--gray-100);
+  font-size: var(--fs-xs); font-weight: 600; color: var(--gray-500);
+}
+.step-pill .num{
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--gray-300); color: var(--zx-white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+.step-pill.active{ background: var(--zx-highlight); color: var(--zx-blue); }
+.step-pill.active .num{ background: var(--zx-blue); }
+.step-pill.done .num{ background: var(--zx-positive); }
+
+.form-grid{ display: grid; gap: var(--sp-5); }
+.form-actions{
+  display: flex; justify-content: flex-end; gap: var(--sp-3);
+  margin-top: var(--sp-6); padding-top: var(--sp-5);
+  border-top: 1px solid var(--gray-200);
+}
+
+/* ============ Detalle ============ */
+.detail-header{
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: var(--sp-6); gap: var(--sp-4); flex-wrap: wrap;
+}
+.timeline{ display: flex; flex-direction: column; gap: 0; }
+.timeline-step{ display: flex; gap: var(--sp-4); padding-bottom: var(--sp-6); position: relative; }
+.timeline-step:not(:last-child)::before{
+  content:''; position: absolute; left: 11px; top: 26px; bottom: 0;
+  width: 2px; background: var(--gray-200);
+}
+.timeline-dot{
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--gray-200); color: var(--zx-white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--fs-xs); flex-shrink: 0; z-index: 1;
+}
+.timeline-dot.done{ background: var(--zx-positive); }
+.timeline-dot.rej{ background: var(--zx-negative); }
+.timeline-dot.pending{ background: var(--zx-blue-accent); }
+.detail-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
+.detail-photos{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.detail-photos figure{ margin: 0; }
+.detail-photos img{ border-radius: var(--radius-sm); width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--gray-100); }
+.detail-photos figcaption{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: var(--sp-1); text-align: center; }
+
+/* ============ Dashboard ============ */
+.dash-grid{ display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-5); margin-top: var(--sp-5); }
+.chart-wrap{ position: relative; height: 260px; }
+.methodology-note{
+  font-size: var(--fs-xs); color: var(--gray-500); font-weight: 300;
+  border-top: 1px solid var(--gray-200); padding-top: var(--sp-3); margin-top: var(--sp-6);
+}

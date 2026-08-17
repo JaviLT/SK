@@ -1,0 +1,60 @@
+/*
+  Enfoque: mobile-first en comportamiento, breakpoints en tablet/desktop.
+  Todo el layout usa unidades relativas y grids fluidos — estos breakpoints
+  ajustan la DENSIDAD de columnas, no reescriben el diseño desde cero.
+*/
+
+/* ---- Tablet y menor (≤ 1024px) ---- */
+@media (max-width: 1024px){
+  .stats-row{ grid-template-columns: repeat(3, 1fr); }
+  .dash-grid{ grid-template-columns: 1fr; }
+  .detail-grid{ grid-template-columns: 1fr; }
+}
+
+/* ---- Móvil (≤ 720px) ---- */
+@media (max-width: 720px){
+  .topbar{ display: none; } /* se sustituye por mobile-nav inferior */
+
+  main#app-root{ padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px)); }
+
+  .mobile-nav{
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: var(--mobile-nav-h);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--zx-white);
+    border-top: 1px solid var(--gray-200);
+    box-shadow: 0 -4px 16px rgba(15,23,42,.06);
+    z-index: 40;
+  }
+
+  .view{ padding: var(--sp-4) var(--sp-4) var(--sp-10); }
+
+  .stats-row{ grid-template-columns: repeat(2, 1fr); }
+  .mosaico{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .field-row{ grid-template-columns: 1fr; }
+  .detail-photos{ grid-template-columns: 1fr; }
+
+  .view-header{ flex-direction: column; align-items: stretch; }
+  .view-header .btn{ width: 100%; }
+
+  .kaizen-row{ flex-wrap: wrap; }
+
+  .toast-container{ left: var(--sp-3); right: var(--sp-3); bottom: calc(var(--mobile-nav-h) + var(--sp-3) + env(safe-area-inset-bottom,0px)); }
+}
+
+/* ---- Móvil pequeño (≤ 400px) ---- */
+@media (max-width: 400px){
+  .stats-row{ grid-template-columns: repeat(2, 1fr); }
+  .login-card{ padding: var(--sp-6) var(--sp-4); }
+}
+
+/* ---- Mostrar mobile-nav solo cuando aplica (por defecto oculto vía [hidden] en HTML) ---- */
+.mobile-nav{ display: none; align-items: stretch; justify-content: space-around; }
+.mobile-nav-btn{
+  flex: 1; background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; color: var(--gray-500); font-size: 11px; font-weight: 600;
+}
+.mobile-nav-btn.active{ color: var(--zx-blue); }
+#mobile-nuevo{ color: var(--zx-blue-accent); }

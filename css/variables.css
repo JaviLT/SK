@@ -1,0 +1,77 @@
+/*
+  Tokens de marca — Manual de Estandarización de Reportes IA (Zubex Industrial)
+  No modificar estos valores sin actualizar también el manual de referencia.
+*/
+:root{
+  /* Paleta primaria de marca */
+  --zx-blue:        #0D18A8;   /* Azul Zubex — dominante */
+  --zx-blue-accent: #227EF6;   /* Azul Zubex Brillante — interactivo/acento */
+  --zx-white:       #FFFFFF;
+  --zx-black:       #000000;
+
+  /* Paleta semántica */
+  --zx-positive:    #166534;
+  --zx-positive-bg: #dcfce7;
+  --zx-negative:    #991b1b;
+  --zx-negative-bg: #fee2e2;
+  --zx-neutral:     #0D18A8;
+  --zx-page-bg:     #f8fafc;
+  --zx-highlight:   #dbeafe;
+
+  /* Escala de grises funcional (no es paleta de marca, es utilitaria) */
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Tipografía — fallback aprobado para HTML: Poppins → Segoe UI → sans-serif */
+  --font-base: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Escala tipográfica (jerarquía título/cuerpo ≈ 2.2:1, adaptada a UI de app) */
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md:   1.0625rem;
+  --fs-lg:   1.25rem;
+  --fs-xl:   1.625rem;
+  --fs-2xl:  2rem;
+
+  /* Espaciado — escala de 4px */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Radios y sombras */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px rgba(13, 24, 168, 0.08);
+  --shadow-lg: 0 12px 32px rgba(13, 24, 168, 0.14);
+
+  /* Layout */
+  --topbar-h: 64px;
+  --mobile-nav-h: 64px;
+  --content-max: 1180px;
+
+  /* Transiciones */
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+
+@media (prefers-color-scheme: dark){
+  /* La app usa siempre tema claro institucional — no se define modo oscuro
+     porque el manual de marca no lo contempla. Se deja el bloque explícito
+     para que quede claro que fue una decisión, no un olvido. */
+}
