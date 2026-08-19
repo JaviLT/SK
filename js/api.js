@@ -5,16 +5,28 @@
 // datos de negocio. Todo pasa por aquí, para que el día que el backend de
 // Jesús esté listo, el cambio sea: apagar MOCK_MODE en config.js. Nada más.
 //
-// Contrato esperado del backend real (documentado también en README.md):
+// Contrato esperado del backend real (documentado también en README.md y en
+// el documento de traspaso para Jesús — flujo de 3 pasos: Mejora Continua →
+// Líder → Gerente):
 //
 //   POST   /auth/login              { nomina, password }        -> { token, user }
+//                                    user.requiereCambioPassword indica si
+//                                    hay que forzar el cambio de contraseña
+//                                    antes de dejar entrar a la app.
+//   POST   /auth/cambiar-password   { passwordActual,
+//                                      passwordNueva }           -> { ok: true }
+//   GET    /departamentos                                        -> string[]
 //   GET    /equipos                                              -> Equipo[]
 //   GET    /kaizens                                              -> Kaizen[]
 //   GET    /kaizens/:id                                          -> Kaizen
 //   POST   /kaizens                 { ...datosDelFormulario }    -> Kaizen
 //   GET    /approvals/:token                                     -> { kaizen, step }
-//   POST   /approvals/:token        { decision, nombre, firma,
-//                                      razonRechazo, password }  -> Kaizen
+//                                    step ∈ "mc" | "lider" | "gerente"
+//   POST   /approvals/:token        { decision, password }       -> Kaizen
+//                                    decision ∈ "aprobar" | "rechazar" — ya
+//                                    NO se manda nombre/firma/razón: el
+//                                    backend identifica a quien aprueba por
+//                                    el token + su contraseña.
 //
 // Todas las respuestas de error deben usar código HTTP != 2xx y un body
 // { error: "mensaje legible" } — este módulo ya sabe leer ese formato.
@@ -31,6 +43,8 @@ const SESSION_KEY = "sk_session_token"; // solo el token de sesión, nunca una c
 const FUNCTION_MAP = [
   { method: "POST", pattern: /^\/auth\/login$/, fn: "auth-login" },
   { method: "GET", pattern: /^\/auth\/session$/, fn: "auth-session" },
+  { method: "POST", pattern: /^\/auth\/cambiar-password$/, fn: "auth-cambiar-password" }, // pendiente en el backend, ver doc para Jesús
+  { method: "GET", pattern: /^\/departamentos$/, fn: "departamentos-list" }, // pendiente en el backend, ver doc para Jesús
   { method: "GET", pattern: /^\/equipos$/, fn: "equipos-list" },
   { method: "GET", pattern: /^\/kaizens$/, fn: "kaizens-list" },
   { method: "GET", pattern: /^\/kaizens\/(.+)$/, fn: "kaizens-detail" },
@@ -111,6 +125,17 @@ export const api = {
       setSessionToken(null);
       return null;
     }
+  },
+
+  /** Cambio de contraseña obligatorio en el primer login (ver ¿Qué falta del backend? en el doc para Jesús) */
+  async cambiarPassword(passwordActual, passwordNueva) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.cambiarPassword(passwordActual, passwordNueva)
+      : request("/auth/cambiar-password", { method: "POST", body: { passwordActual, passwordNueva } });
+  },
+
+  async getDepartamentos() {
+    return CONFIG.MOCK_MODE ? mockBackend.getDepartamentos() : request("/departamentos");
   },
 
   async getEquipos() {

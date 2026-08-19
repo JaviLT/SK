@@ -7,8 +7,10 @@
 /* ---- Tablet y menor (≤ 1024px) ---- */
 @media (max-width: 1024px){
   .stats-row{ grid-template-columns: repeat(3, 1fr); }
+  .stats-row-6{ grid-template-columns: repeat(3, 1fr); }
   .dash-grid{ grid-template-columns: 1fr; }
   .detail-grid{ grid-template-columns: 1fr; }
+  .enfoque-grid{ grid-template-columns: 1fr; }
 }
 
 /* ---- Móvil (≤ 720px) ---- */
@@ -31,9 +33,12 @@
   .view{ padding: var(--sp-4) var(--sp-4) var(--sp-10); }
 
   .stats-row{ grid-template-columns: repeat(2, 1fr); }
+  .stats-row-6{ grid-template-columns: repeat(2, 1fr); }
   .mosaico{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .field-row{ grid-template-columns: 1fr; }
   .detail-photos{ grid-template-columns: 1fr; }
+  .equipo-progreso-row{ grid-template-columns: 1fr; gap: var(--sp-1); }
+  .ep-pct{ text-align: left; }
 
   .view-header{ flex-direction: column; align-items: stretch; }
   .view-header .btn{ width: 100%; }

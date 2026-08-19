@@ -25,6 +25,7 @@ const routes = {
   dashboard: () => import("./views/dashboard.js"),
   aprobacion: () => import("./views/aprobacion.js"),
   admin: () => import("./views/admin.js"),
+  "cambiar-password": () => import("./views/cambiar-password.js"),
 };
 
 let currentModule = null;

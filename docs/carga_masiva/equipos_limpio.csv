@@ -1,0 +1,59 @@
+nombre,departamento,lider_nombre,lider_email,gerente_nombre,gerente_email,n_integrantes
+5QF,CALIDAD,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx,5
+Administrador general,CALIDAD,Giana Tavera,g.tavera@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx,1
+Admon,ADMÓN.,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx,13
+Analista,CONVERSIÓN,Victor López,v.lopez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,1
+Analista Batch,IMPRESIÓN,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,1
+Audi,INGENIERÍA,Juan Calos,jc.sanmiguel@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,4
+BM,ADMINISTRACIÓN PRODUCTIVA,Gamaliel Martinez,g.martinez@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx,3
+Batch Master,EXTRUSIÓN,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,1
+C4,ADMINISTRACIÓN PRODUCTIVA,Filiberto Garza,auxcedis@zubex.com.mx,Filiberto Garza,auxcedis@zubex.com.mx,4
+Capturista,EXTRUSIÓN,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,1
+Cel Cap,REC. HUM.,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx,3
+Color Flex,PRE PRENSA,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx,6
+Comercial,COMERCIAL,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx,13
+Director,PROGRAMACIÓN,Luis López,l.lopez@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx,4
+Equipo de 10,EXTRUSIÓN,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,10
+Especialista en tintas,IMPRESIÓN,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,1
+Expo,EXPORTACIONES,Alberto Zuñiga,a.zuniga@zubex.com.mx,Alberto Zuñiga,a.zuniga@zubex.com.mx,4
+Flexo Master,IMPRESIÓN,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,16
+Generico,EXTRUSIÓN,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,3
+Gerente,CONVERSIÓN,Victor López,v.lopez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,1
+Gerente Mtto,INGENIERÍA,Ricardo Torres,r.torres@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,1
+Gerente de Proyectos,INGENIERÍA,Gilberto Davila,g.davila@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx,1
+Gerente del área,EXTRUSIÓN,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,1
+HOME,ADMINISTRACIÓN PRODUCTIVA,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx,5
+Iluminateam,INGENIERÍA,Gilberto Davila,g.davila@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx,2
+Innovación,INNOVACION,Jose Juan Valadez,juan.valadez@zubex.com.mx,Jose Juan Valadez,juan.valadez@zubex.com.mx,2
+Inspectores,CALIDAD,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx,15
+Jefe área,IMPRESIÓN,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,1
+La Familia APP,ADMINISTRACIÓN PRODUCTIVA,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx,9
+La Pandilla,EXTRUSIÓN,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,10
+Las Papas,IMPRESIÓN,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,2
+Las papas,IMPRESIÓN,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,12
+Lean Pieza,INGENIERÍA,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx,5
+Linces,ADMINISTRACIÓN PRODUCTIVA,Jesus Almanza,j.almanza@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx,4
+Logistica,ADMINISTRACIÓN PRODUCTIVA,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx,11
+Los Electros,INGENIERÍA,Fernando Castillo,f.castillo@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,4
+Los Incalcanzables,CONVERSIÓN,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,11
+Los Jefes,CONVERSIÓN,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,10
+Los Osos,EXTRUSIÓN,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,10
+Los Tercos,EXTRUSIÓN,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx,11
+Los cuartos al bat,IMPRESIÓN,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx,13
+MC,MEJORA CONTINUA,Elizabeth Calderon,e.calderon@zubex.com.mx,Elizabeth Calderon,e.calderon@zubex.com.mx,3
+Motal Kompras,COMPRAS,Blanca Hdz,b.hernandez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx,7
+Programación,PROGRAMACIÓN,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx,4
+RH,REC. HUM.,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx,1
+Servi Lean,INGENIERÍA,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,6
+Smart Team 4.0,INGENIERÍA,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx,7
+Solution Team,INGENIERÍA,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,5
+Subdirectora,ADMINISTRACIÓN PRODUCTIVA,Karina Melchor,k.melchor@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx,1
+Sustentabilidad,SOSTENIBILIDAD,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx,2
+Team Work,INGENIERÍA,Gonzalo Muñoz,g.munoz@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,4
+Team Zubiox,CORRUGADO,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,26
+Tec Lean,INGENIERÍA,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx,3
+The Watch men,VIGILANCIA,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx,8
+coordinador,ADMINISTRACIÓN PRODUCTIVA,Sergio España,s.españa@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx,1
+los jefes,CONVERSIÓN,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,2
+los pibes,CONVERSIÓN,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx,10
+oficina,REC. HUM.,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx,2

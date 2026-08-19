@@ -61,10 +61,12 @@
   --shadow-md: 0 4px 16px rgba(13, 24, 168, 0.08);
   --shadow-lg: 0 12px 32px rgba(13, 24, 168, 0.14);
 
-  /* Layout */
+  /* Layout — fluido: crece con la ventana hasta un tope amplio, para que no
+     queden franjas vacías a los costados en monitores grandes (antes era un
+     valor fijo de 1180px, muy angosto en pantallas de 1440p/1920p+). */
   --topbar-h: 64px;
   --mobile-nav-h: 64px;
-  --content-max: 1180px;
+  --content-max: min(1680px, 96vw);
 
   /* Transiciones */
   --ease: cubic-bezier(.4,0,.2,1);

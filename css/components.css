@@ -62,6 +62,8 @@
 .btn-danger:hover{ background: #fecaca; }
 .btn-success{ background: var(--zx-positive-bg); color: var(--zx-positive); }
 .btn-success:hover{ background: #bbf7d0; }
+.btn-success.is-selected{ background: var(--zx-positive); color: var(--zx-white); box-shadow: var(--shadow-md); }
+.btn-danger.is-selected{ background: var(--zx-negative); color: var(--zx-white); box-shadow: var(--shadow-md); }
 .btn-full{ width: 100%; }
 .btn-sm{ padding: var(--sp-2) var(--sp-4); min-height: 34px; font-size: var(--fs-xs); }
 .btn:disabled{ opacity: .5; cursor: not-allowed; }
@@ -115,6 +117,33 @@
   outline: none;
 }
 .field-row{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+
+/* Valor de solo lectura (datos que llegan de la sesión, no editables) */
+.readonly-field{
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-700);
+  font-weight: 600;
+  min-height: 44px;
+  display: flex; align-items: center;
+}
+
+/* Selección de enfoque de la mejora — 4 opciones fijas */
+.enfoque-grid{
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-3);
+}
+.enfoque-option{
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  font-size: var(--fs-sm); font-weight: 600; color: var(--gray-700);
+  cursor: pointer; transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.enfoque-option:has(input:checked){
+  border-color: var(--zx-blue-accent); background: var(--zx-highlight); color: var(--zx-blue);
+}
 
 .upload-box{
   border: 1.5px dashed var(--gray-300);

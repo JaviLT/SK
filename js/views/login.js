@@ -37,8 +37,14 @@ export async function render(container) {
         try {
           const user = await api.login(nomina, password);
           setState({ user });
-          toast(`Bienvenido, ${user.nombre.split(" ")[0]}`, "tg");
           const { goTo } = await import("../router.js");
+          if (user.requiereCambioPassword) {
+            // Primer login: no se muestra la barra de navegación todavía —
+            // primero hay que definir una contraseña propia.
+            goTo("cambiar-password");
+            return;
+          }
+          toast(`Bienvenido, ${user.nombre.split(" ")[0]}`, "tg");
           showChrome(user);
           goTo("historial");
         } catch (err) {

@@ -1,6 +1,5 @@
 import { el, toast, formatDate, shortId, getQueryParam } from "../utils.js";
 import { api } from "../api.js";
-import { createSignaturePad } from "../lib/signature-pad.js";
 
 // Nota de seguridad — léase antes de modificar este archivo:
 // Este archivo NUNCA debe leer datos del kaizen directamente de la URL
@@ -9,10 +8,13 @@ import { createSignaturePad } from "../lib/signature-pad.js";
 // contenido (datos del kaizen, validez, si ya fue usado) se obtiene del
 // backend a través de api.obtenerDatosAprobacion(token). El backend es el
 // único que decide si el token es válido — el cliente nunca lo asume.
+//
+// Ya no se pide firma digital ni nombre/comentarios al aprobar o rechazar:
+// el token ya identifica a la persona exacta que debe decidir, y el backend
+// valida su identidad con la contraseña. Solo hace falta contraseña +
+// decisión (aprobar/rechazar) + confirmar.
 
-let pad = null;
-
-const STEP_LABEL = { lider: "Líder", gerente: "Gerente" };
+const STEP_LABEL = { mc: "Mejora Continua", lider: "Líder", gerente: "Gerente" };
 
 export async function render(container, params, isStale) {
   const token = getQueryParam("token");
@@ -45,7 +47,24 @@ function paintError(view, message) {
       el("h3", {}, ["No se puede continuar"]),
       el("p", {}, [message]),
       el("p", { class: "hint" }, ["Si crees que esto es un error, solicita que te reenvíen el correo de aprobación."]),
+      botonVolver(),
     ])
+  );
+}
+
+function botonVolver() {
+  return el(
+    "button",
+    {
+      class: "btn btn-outline",
+      style: "margin-top:16px",
+      onclick: () => {
+        // El link de aprobación no requiere sesión iniciada — "volver" manda
+        // a la pantalla principal, que a su vez decide si pide login o no.
+        window.location.href = window.location.pathname;
+      },
+    },
+    ["← Volver a la aplicación"]
   );
 }
 
@@ -55,34 +74,21 @@ function paintForm(view, kaizen, step, token) {
   const summary = el("div", { class: "card", style: "margin-bottom:20px" }, [
     el("div", { class: "card-header" }, [el("h2", {}, [`SK-${shortId(kaizen.id)}`]), el("span", { class: "badge badge-pend" }, [`Esperando ${rol}`])]),
     kv("Equipo", kaizen.equipo),
+    kv("Departamento", kaizen.departamento),
     kv("Solicitante", `${kaizen.nombre} (${kaizen.nomina})`),
-    kv("Área", kaizen.donde),
+    kv("Área / Línea / Máquina", kaizen.areaLinea),
     kv("Fecha de identificación", formatDate(kaizen.fechaId)),
     el("hr", { style: "border:none;border-top:1px solid var(--gray-200);margin:14px 0" }),
     kv("Antes", kaizen.descAntes),
-    kv("Después", kaizen.descDespues),
+    kv("Después y beneficios", kaizen.descDespues),
     kaizen.estandarizacion ? kv("Estandarización", kaizen.estandarizacion) : null,
+    step === "lider" ? kv("Aprobado por Mejora Continua", `${kaizen.firmaMCNombre || "—"} · ${formatDate(kaizen.firmaMCFecha)}`) : null,
     step === "gerente"
       ? kv("Aprobado por Líder", `${kaizen.firmaLiderNombre || "—"} · ${formatDate(kaizen.firmaLiderFecha)}`)
       : null,
   ]);
 
   const passInput = el("input", { class: "input", type: "password", id: "ap-pass", placeholder: "Contraseña de autorización", required: true });
-  const nombreInput = el("input", { class: "input", id: "ap-nombre", placeholder: "Tu nombre completo", required: true });
-
-  const canvas = el("canvas", { height: "140" });
-  const sigWrap = el("div", { class: "sig-pad-wrap" }, [
-    canvas,
-    el("div", { class: "sig-toolbar" }, [
-      el("span", { class: "hint" }, ["Firma dentro del recuadro"]),
-      el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: () => pad && pad.clear() }, ["Limpiar"]),
-    ]),
-  ]);
-
-  const razonBox = el("div", { class: "field", id: "ap-razon-box", style: "display:none" }, [
-    el("label", {}, ["Motivo del rechazo *"]),
-    el("textarea", { class: "textarea", id: "ap-razon", placeholder: "Explica por qué se rechaza" }),
-  ]);
 
   let decision = null;
   const approveBtn = el("button", { class: "btn btn-success", type: "button" }, ["✓ Aprobar"]);
@@ -91,42 +97,33 @@ function paintForm(view, kaizen, step, token) {
 
   approveBtn.addEventListener("click", () => {
     decision = "aprobar";
-    approveBtn.classList.add("btn-success");
-    razonBox.style.display = "none";
+    approveBtn.classList.add("is-selected");
+    rejectBtn.classList.remove("is-selected");
     confirmBtn.disabled = false;
     confirmBtn.textContent = "Confirmar aprobación";
   });
   rejectBtn.addEventListener("click", () => {
     decision = "rechazar";
-    razonBox.style.display = "block";
+    rejectBtn.classList.add("is-selected");
+    approveBtn.classList.remove("is-selected");
     confirmBtn.disabled = false;
     confirmBtn.textContent = "Confirmar rechazo";
   });
 
   confirmBtn.addEventListener("click", async () => {
     if (!passInput.value) return toast("Ingresa la contraseña de autorización.", "tr");
-    if (!nombreInput.value.trim()) return toast("Ingresa tu nombre completo.", "tr");
-    if (decision === "aprobar" && (!pad || pad.isEmpty())) return toast("Falta la firma digital.", "tr");
-    if (decision === "rechazar" && !document.getElementById("ap-razon").value.trim()) {
-      return toast("Escribe el motivo del rechazo.", "tr");
-    }
 
     confirmBtn.disabled = true;
     confirmBtn.textContent = "Enviando…";
     try {
-      await api.procesarAprobacion(token, {
-        decision,
-        nombre: nombreInput.value.trim(),
-        firma: pad ? pad.toDataURL() : null,
-        razonRechazo: decision === "rechazar" ? document.getElementById("ap-razon").value.trim() : "",
-        password: passInput.value,
-      });
+      await api.procesarAprobacion(token, { decision, password: passInput.value });
       view.innerHTML = "";
       view.appendChild(
         el("div", { class: "empty-state" }, [
           el("div", { class: "icon" }, [decision === "aprobar" ? "✅" : "❌"]),
           el("h3", {}, [decision === "aprobar" ? "Aprobación registrada" : "Rechazo registrado"]),
-          el("p", {}, ["Puedes cerrar esta ventana."]),
+          el("p", {}, ["Ya puedes volver a la aplicación o cerrar esta ventana."]),
+          botonVolver(),
         ])
       );
     } catch (err) {
@@ -141,15 +138,11 @@ function paintForm(view, kaizen, step, token) {
     el("div", { class: "card" }, [
       el("h3", {}, [`Autorización — ${rol}`]),
       el("div", { class: "field" }, [el("label", {}, ["Contraseña de autorización *"]), passInput]),
-      el("div", { class: "field" }, [el("label", {}, ["Nombre completo *"]), nombreInput]),
-      el("div", { class: "field" }, [el("label", {}, ["Firma digital *"]), sigWrap]),
-      razonBox,
       el("div", { style: "display:flex;gap:12px;margin-top:8px" }, [approveBtn, rejectBtn]),
       confirmBtn,
+      botonVolver(),
     ])
   );
-
-  pad = createSignaturePad(canvas);
 }
 
 function kv(label, value) {
@@ -157,9 +150,4 @@ function kv(label, value) {
   return el("p", { style: "margin-bottom:8px" }, [el("strong", { style: "color:var(--gray-700)" }, [`${label}: `]), String(value)]);
 }
 
-export function unmount() {
-  if (pad) {
-    pad.destroy();
-    pad = null;
-  }
-}
+export function unmount() {}

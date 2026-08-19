@@ -43,6 +43,7 @@
   gap: var(--sp-3); margin-bottom: var(--sp-6);
 }
 .stats-row-4{ grid-template-columns: repeat(4, 1fr); }
+.stats-row-6{ grid-template-columns: repeat(6, 1fr); }
 .mosaico{
   display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--sp-3); margin-bottom: var(--sp-8);
@@ -165,7 +166,18 @@
 }
 
 /* ============ Dashboard ============ */
-.dash-grid{ display: grid; grid-template-columns: 2fr 1fr; gap: var(--sp-5); margin-top: var(--sp-5); }
+.equipo-progreso-list{ display: flex; flex-direction: column; gap: var(--sp-3); }
+.equipo-progreso-row{
+  display: grid; grid-template-columns: 1.4fr 2fr auto auto;
+  align-items: center; gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+}
+.ep-bar{ height: 8px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.ep-bar-fill{ height: 100%; background: var(--zx-blue-accent); border-radius: 999px; }
+.ep-valor{ font-size: var(--fs-sm); color: var(--gray-600); white-space: nowrap; }
+.ep-pct{ font-size: var(--fs-sm); font-weight: 700; color: var(--zx-blue); min-width: 44px; text-align: right; }
+.ep-pct.up{ color: var(--zx-positive); }
+.dash-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); margin-top: var(--sp-5); }
 .chart-wrap{ position: relative; height: 260px; }
 .methodology-note{
   font-size: var(--fs-xs); color: var(--gray-500); font-weight: 300;

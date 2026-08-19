@@ -11,10 +11,11 @@
 const listeners = new Set();
 
 export const state = {
-  user: null, // { nomina, nombre, rol, equipo }
+  user: null, // { nomina, nombre, rol, equipo, requiereCambioPassword }
   equipos: [],
   kaizens: [],
-  equipoActivo: null, // filtro de mosaico en la vista Historial
+  departamentos: [],
+  equipoActivo: null, // filtro de mosaico en la vista Historial / Administración
 };
 
 export function setState(patch) {

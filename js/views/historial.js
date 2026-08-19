@@ -1,15 +1,30 @@
+// ============================================================================
+// historial.js — Pantalla principal ("Solicitudes").
+//
+// Lo que ve cada persona depende de su rol (filtrado también del lado del
+// backend real, no solo aquí — ver doc para Jesús):
+//   - solicitante: solo sus propios Short Kaizen enviados.
+//   - lider:       los Short Kaizen de su propio equipo.
+//   - gerente:     primero el mosaico de los equipos que le reportan a él/
+//                   ella, y al abrir uno ve los Short Kaizen de ese equipo.
+//   - admin (u otro rol no reconocido): todo, sin restricción — igual que
+//                   el comportamiento original de esta pantalla.
+// ============================================================================
+
 import { el, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
 
 const STATUS_META = {
-  nuevo: { label: "Nuevo", badge: "badge-nuevo" },
-  pend_l: { label: "Esperando Líder", badge: "badge-pend" },
-  pend_g: { label: "Esperando Gerente", badge: "badge-pend" },
-  done: { label: "Cerrado", badge: "badge-done" },
+  pend_mc: { label: "Pend. Mejora Continua", badge: "badge-pend" },
+  pend_l: { label: "Pend. Líder", badge: "badge-pend" },
+  pend_g: { label: "Pend. Gerente", badge: "badge-pend" },
+  done: { label: "Aceptado", badge: "badge-done" },
+  rej_mc: { label: "Rechazado (Mejora Continua)", badge: "badge-rej" },
   rej_l: { label: "Rechazado (Líder)", badge: "badge-rej" },
   rej_g: { label: "Rechazado (Gerente)", badge: "badge-rej" },
 };
+const RECHAZADOS = ["rej_mc", "rej_l", "rej_g"];
 
 export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
@@ -42,19 +57,71 @@ function paintError(container, err) {
   );
 }
 
+/** Calcula, según el rol de la sesión, qué equipos y qué kaizens le corresponde ver. */
+function alcanceParaUsuario() {
+  const user = state.user || {};
+  const rol = user.rol;
+
+  if (rol === "solicitante") {
+    return {
+      mostrarMosaico: false,
+      equiposVisibles: [],
+      kaizensVisibles: state.kaizens.filter((k) => k.nomina === user.nomina),
+      titulo: "Mis solicitudes",
+      subtitulo: "Short Kaizen que has enviado",
+    };
+  }
+
+  if (rol === "lider") {
+    const equiposVisibles = state.equipos.filter((eq) => eq.nombre === user.equipo);
+    return {
+      mostrarMosaico: false,
+      equiposVisibles,
+      kaizensVisibles: state.kaizens.filter((k) => k.equipo === user.equipo),
+      titulo: `Solicitudes — ${user.equipo || "tu equipo"}`,
+      subtitulo: "Short Kaizen de tu equipo",
+    };
+  }
+
+  if (rol === "gerente") {
+    const equiposVisibles = state.equipos.filter((eq) => eq.gerenteNombre === user.nombre);
+    const nombresEquipos = new Set(equiposVisibles.map((eq) => eq.nombre));
+    return {
+      mostrarMosaico: true,
+      equiposVisibles,
+      kaizensVisibles: state.kaizens.filter((k) => nombresEquipos.has(k.equipo)),
+      titulo: "Solicitudes de mis equipos",
+      subtitulo: "Selecciona un equipo para ver sus Short Kaizen",
+    };
+  }
+
+  // admin u otro rol no contemplado: sin restricción (comportamiento original)
+  return {
+    mostrarMosaico: true,
+    equiposVisibles: state.equipos,
+    kaizensVisibles: state.kaizens,
+    titulo: "Solicitudes",
+    subtitulo: "Registro y seguimiento de Short Kaizen",
+  };
+}
+
 function paint(container) {
   const view = container.querySelector("#historial-view");
   view.innerHTML = "";
 
+  const alcance = alcanceParaUsuario();
+
   view.appendChild(
-    el("div", { class: "view-header" }, [
-      el("div", {}, [el("h1", {}, ["Solicitudes"]), el("p", {}, ["Registro y seguimiento de Short Kaizen"])]),
-    ])
+    el("div", { class: "view-header" }, [el("div", {}, [el("h1", {}, [alcance.titulo]), el("p", {}, [alcance.subtitulo])])])
   );
 
-  view.appendChild(buildStatsRow(state.kaizens));
-  view.appendChild(el("h3", {}, ["Equipos"]));
-  view.appendChild(buildMosaico(state.equipos, state.kaizens));
+  view.appendChild(buildStatsRow(alcance.kaizensVisibles));
+
+  if (alcance.mostrarMosaico) {
+    view.appendChild(el("h3", {}, ["Equipos"]));
+    view.appendChild(buildMosaico(alcance.equiposVisibles, alcance.kaizensVisibles, container));
+  }
+
   view.appendChild(
     el("div", { class: "view-header", style: "margin-top:8px" }, [
       el("h3", {}, [state.equipoActivo ? `Solicitudes — ${state.equipoActivo}` : "Todas las solicitudes"]),
@@ -63,27 +130,29 @@ function paint(container) {
         : null,
     ])
   );
-  view.appendChild(buildList(state.kaizens, state.equipoActivo, container));
+  view.appendChild(buildList(alcance.kaizensVisibles, state.equipoActivo, container));
 }
 
 function buildStatsRow(kaizens) {
   const counts = {
     total: kaizens.length,
-    nuevo: kaizens.filter((k) => k.status === "nuevo").length,
+    pend_mc: kaizens.filter((k) => k.status === "pend_mc").length,
     pend_l: kaizens.filter((k) => k.status === "pend_l").length,
     pend_g: kaizens.filter((k) => k.status === "pend_g").length,
     done: kaizens.filter((k) => k.status === "done").length,
+    rechazados: kaizens.filter((k) => RECHAZADOS.includes(k.status)).length,
   };
   const items = [
     ["Total", counts.total],
-    ["Nuevos", counts.nuevo],
+    ["Pend. Mejora Continua", counts.pend_mc],
     ["Pend. Líder", counts.pend_l],
     ["Pend. Gerente", counts.pend_g],
-    ["Cerrados", counts.done],
+    ["Aceptados", counts.done],
+    ["Rechazados", counts.rechazados],
   ];
   return el(
     "div",
-    { class: "stats-row" },
+    { class: "stats-row stats-row-6" },
     items.map(([label, value]) =>
       el("div", { class: "kpi-card" }, [
         el("div", { class: "kpi-label" }, [label]),
@@ -93,11 +162,11 @@ function buildStatsRow(kaizens) {
   );
 }
 
-function buildMosaico(equipos, kaizens) {
+function buildMosaico(equipos, kaizens, container) {
   if (!equipos.length) {
     return el("div", { class: "empty-state" }, [
       el("div", { class: "icon" }, ["🏷️"]),
-      el("p", {}, ["Todavía no hay equipos configurados en el backend."]),
+      el("p", {}, ["No hay equipos asignados a tu cuenta todavía."]),
     ]);
   }
   return el(
@@ -112,8 +181,7 @@ function buildMosaico(equipos, kaizens) {
           class: `equipo-card${isActive ? " active" : ""}`,
           onclick: () => {
             setState({ equipoActivo: isActive ? null : eq.nombre });
-            const root = document.getElementById("app-root");
-            paint(root);
+            paint(container);
           },
         },
         [
@@ -151,7 +219,7 @@ function buildList(kaizens, equipoActivo, container) {
         },
         [
           el("div", { class: "kr-main" }, [
-            el("div", { class: "kr-title" }, [`SK-${shortId(k.id)} · ${k.donde || "—"}`]),
+            el("div", { class: "kr-title" }, [`SK-${shortId(k.id)} · ${k.areaLinea || k.donde || "—"}`]),
             el("div", { class: "kr-sub" }, [`${k.equipo} · ${k.nombre} · ${formatDate(k.fechaId)}`]),
           ]),
           el("span", { class: `badge ${meta.badge}` }, [meta.label]),

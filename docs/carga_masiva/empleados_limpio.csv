@@ -1,0 +1,328 @@
+nomina,nombre,tipo,departamento,equipo,posicion,posicion_original,lider_nombre,lider_email,gerente_nombre,gerente_email
+101,ZUBIRIA ORTIZ MIGUEL ROGELIO,ADMINISTRATIVO,PROGRAMACIÓN,Director,integrante,Integrante,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx
+103,SIFUENTES DECIGA SANDRA MIROSLAVA,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+108,RODRIGUEZ SIFUENTES JULIETA,ADMINISTRATIVO,ADMÓN.,Director,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+126,MELCHOR GUERRERO KARINA DANIELA,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Subdirectora,integrante,Integrante,Karina Melchor,k.melchor@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx
+141,NAJAR LEAL ALFREDO,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+149,DELGADO PEDRAZA WILBERT OZIEL,ADMINISTRATIVO,COMERCIAL,Comercial,lider,Líder,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+170,ORTA JIMENEZ JUAN MANUEL,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Logistica,lider,Líder,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+175,PATIÑO GONZALEZ ALMA WALKIRIA,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+257,RODRIGUEZ CALVA FARIVA MARGARITA,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+260,TAVERA SANCHEZ GIANA AIDE,ADMINISTRATIVO,CALIDAD,Administrador general,integrante,Integrante,Giana Tavera,g.tavera@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+262,LOPEZ MENDOZA CINTHYA SELENE,ADMINISTRATIVO,PRE PRENSA,Color Flex,lider,Líder,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+268,ROBLES LOPEZ ADRIANA MAIHUALIDA,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+271,RUIZ GUERRA JESUS ANTONIO,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+274,RODRIGUEZ MALDONADO LUIS DANIEL,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+279,LOPEZ CASTILLO LUIS GUADALUPE,ADMINISTRATIVO,INGENIERÍA,Director,lider,Líder,Luis López,l.lopez@zubex.com.mx,Luis López,l.lopez@zubex.com.mx
+2009,QUIROZ SEGOVIA JUAN,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2011,PEREZ VAZQUEZ FERNANDO,ADMINISTRATIVO,CONVERSIÓN,Analista,integrante,Integrante,Victor López,v.lopez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2015,FLORES SANCHEZ HUMARO MANUEL,ADMINISTRATIVO,EXTRUSIÓN,Los Osos,lider,Líder,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2027,CRUZ SANMIGUEL JUAN CARLOS,ADMINISTRATIVO,INGENIERÍA,Audi,integrante,Integrante,Juan Calos,jc.sanmiguel@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2033,RUIZ RODRIGUEZ JOSE ALEJANDRO,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,lider,Líder,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2060,MARTINEZ PEREZ LUIS ANGEL,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2087,MEJIA SOTO PABLO EVERARDO,SINDICALIZADO,INGENIERÍA,Audi,lider,Líder,Juan Calos,jc.sanmiguel@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2233,ANTUNA RODRIGUEZ JOSE ANTONIO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2237,CASTILLO RODRIGUEZ FERNANDO JESUS,ADMINISTRATIVO,INGENIERÍA,Los Electros,integrante,Integrante,Fernando Castillo,f.castillo@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2255,VALADEZ LOPEZ JOSE JUAN,ADMINISTRATIVO,INNOVACION,Innovación,lider,Líder,Jose Juan Valadez,juan.valadez@zubex.com.mx,Jose Juan Valadez,juan.valadez@zubex.com.mx
+2270,ZUÑIGA ROQUE PEDRO LUIS,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2280,HERNANDEZ CASANGO HEBER,ADMINISTRATIVO,CONVERSIÓN,Los Jefes,lider,Líder,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2281,GONZALEZ GONZALEZ EDUARDO,ADMINISTRATIVO,IMPRESIÓN,Las papas,lider,Líder,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2303,SANCHEZ CORONADO ROBERTO ALEJANDRO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2311,RODRIGUEZ MARTINEZ JOSE LUIS,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2316,CRUZ HERNANDEZ JUAN ANGEL,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2338,SAUCEDO GAYTAN NESTOR IVAN,ADMINISTRATIVO,EXTRUSIÓN,Gerente del área,gerente,Gerente del área,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2344,SAUCEDA ROBLEDO ERIK JOEL,SINDICALIZADO,PRE PRENSA,Color Flex,integrante,Integrante,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+2352,NUÑEZ PACHECO JOSE EFRAIN,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2357,GONZALEZ CASTRO EDGAR ALEJANDRO,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2367,RODRIGUEZ GOVEA J CARLOS,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2371,ESTRADA ZAPATA JOSE VALENTIN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,C4,integrante,Integrante,Josue Estrada,almacencedis@zubex.com.mx,Filiberto Garza,auxcedis@zubex.com.mx
+2372,FUANTOS TENIENTE OSCAR NARCISO,SINDICALIZADO,INGENIERÍA,Team Work,lider,Líder,Gonzalo Muñoz,g.munoz@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2381,TORRES CABRERA GUSTAVO DANIEL,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+2386,GONZALEZ RAMIREZ LUIS ANTONIO,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2394,CASTAÑEDA PEREZ JUAN CARLOS,SINDICALIZADO,INGENIERÍA,Tec Lean,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2398,RODRIGUEZ MEDINA JOSE MARCOS,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2401,OCHOA LEIJA JOSE ALFONSO,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2406,CRUZ RIVERA VIRGINIA,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2411,DE SANTIAGO JARA MANUEL,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2413,VEGA BERNAL JOSE ALEJANDRO,ADMINISTRATIVO,REC. HUM.,Cel Cap,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+2419,GONZALEZ GURROLA JOSE JOAQUIN,ADMINISTRATIVO,EXTRUSIÓN,Los Tercos,lider,Líder,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2442,ESPAÑA PEREZ SERGIO DENIS,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,coordinador,aprobador,aprobador,Sergio España,s.españa@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx
+2459,RODRIGUEZ ZAVALA JOSE ANTONIO,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2487,IRACHETA FLORES ALEJANDRO GUADALUPE,ADMINISTRATIVO,EXTRUSIÓN,Batch Master,integrante,Analista Batch,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2492,RODRIGUEZ PEREZ JAIR ALEJANDRO,ADMINISTRATIVO,IMPRESIÓN,Jefe área,lider,Líder,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2507,HERNANDEZ CASANGO LORENA,ADMINISTRATIVO,SOSTENIBILIDAD,Sustentabilidad,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+2517,ALMANZA SANCHEZ JESUS CARLOS,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Linces,lider,Líder,Jesus Almanza,j.almanza@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2523,PEREZ VALLADARES EDWING ARGENIZ,ADMINISTRATIVO,REC. HUM.,Cel Cap,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+2526,SOLIS MARTINEZ LISBETH ADAIDE,ADMINISTRATIVO,CALIDAD,5QF,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2527,MORENO GONZALEZ LINO FRANCISCO,SINDICALIZADO,INGENIERÍA,Los Electros,lider,Líder,Fernando Castillo,f.castillo@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2530,GAMEZ GARCIA ABDON,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2539,DE LEON ZAMARRON PEDRO ANTONIO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2547,PRESAS JASSO JUAN REYNALDO,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2552,PRESAS JASSO ERICK RODRIGO,ADMINISTRATIVO,EXTRUSIÓN,La Pandilla,lider,Líder,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2553,CASTILLO MENDEZ HERIBERTO,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2554,GARCIA DE LA CRUZ ILIANA CELESTE,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,BM,integrante,Integrante,Gamaliel Martinez,g.martinez@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx
+2559,RODRIGUEZ HERRERA ISRAEL,ADMINISTRATIVO,EXTRUSIÓN,Equipo de 10,lider,Líder,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2560,MARTINEZ GAMEZ LUIS ANGEL,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2564,AGUILAR MARTINEZ PERLA ESMERALDA,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2580,BOCANEGRA MONCADA JOEL,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2586,SANCHEZ MARQUEZ GUADALUPE,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2595,AGUILAR MARTINEZ GERARDO,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2596,SALINAS RAMIREZ MARIO HUMBERTO,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2606,TORRES RODRIGUEZ RICARDO,ADMINISTRATIVO,INGENIERÍA,Gerente Mtto,integrante,Integrante,Ricardo Torres,r.torres@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2616,CARDENAS NAVARRO CLAUDIA,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2626,ESQUIVEL SALAS MANUEL ALEJANDRO,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2641,ZAMORA DELGADO ALDO,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2643,RODRIGUEZ MORALES ROBERTO RENE,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2654,TREVIÑO CUELLAR ERIK ALBERTO,SINDICALIZADO,INGENIERÍA,Los Electros,integrante,Integrante,Fernando Castillo,f.castillo@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2657,TORRES GONZALEZ ABRAHAM,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2658,HERNANDEZ MARTINEZ JOSUE EDUARDO,ADMINISTRATIVO,REC. HUM.,Cel Cap,lider,Líder,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+2660,MARTINEZ PEREZ DAVID ANTONIO,SINDICALIZADO,INGENIERÍA,Lean Pieza,lider,Líder,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2670,GARZA HERNANDEZ FRANCISCO ABELARDO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2676,RODRIGUEZ GUZMAN JESUS,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2677,RODRIGUEZ GUZMAN DAVID,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2684,GUEVARA ALVARADO RAUL,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2693,RAMIREZ TORRES NELSON HUMBERTO,ADMINISTRATIVO,REC. HUM.,RH,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+2695,ROJAS JARAMILLO IGNACIO RAMON,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2699,DE LEON MEJIA FABIAN,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2705,BALDERAS NIÑO JOSE FRANCISCO,ADMINISTRATIVO,INNOVACION,Innovación,integrante,Integrante,Jose Juan Valadez,juan.valadez@zubex.com.mx,Jose Juan Valadez,juan.valadez@zubex.com.mx
+2715,DE LEON GARCIA VICTOR MANUEL,ADMINISTRATIVO,PROGRAMACIÓN,Programación,lider,Líder,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx
+2717,CRUZ RODRIGUEZ LUIS JAVIER,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2722,DIAZ POSADA SERGIO ANTONIO,SINDICALIZADO,INGENIERÍA,Los Electros,integrante,Integrante,Fernando Castillo,f.castillo@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2725,MARTINEZ ARANDA NORMA GUADALUPE,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2737,LOPEZ GARCIA VICTOR MANUEL,ADMINISTRATIVO,CONVERSIÓN,Gerente,integrante,integrante,Victor López,v.lopez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2745,BETANCOURT CERDA JOSE JUAN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Linces,integrante,Integrante,Jesus Almanza,j.almanza@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2764,ANDRADE ARIAS JESUS ALEJANDRO,ADMINISTRATIVO,IMPRESIÓN,Los cuartos al bat,lider,Líder,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2766,SOLANO CASTRO JOSE GERARDO,SINDICALIZADO,INGENIERÍA,Solution Team,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2771,RAMIREZ LOPEZ ANTONIO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2773,FUENTES MARTINEZ BRAYAN ARMANDO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2774,ROMERO DIAZ FRANCISCO JAVIER,ADMINISTRATIVO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2776,ORTEGA SAUCEDO JOSE FELICIANO,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,lider,Líder,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2783,RAMOS RODRIGUEZ SERVANDO JAVIER,SINDICALIZADO,CORRUGADO,Team Zubiox,lider,Líder,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2795,MUÑOZ HERNANDEZ JOSE GONZALO,ADMINISTRATIVO,INGENIERÍA,Team Work,integrante,integrante,Gonzalo Muñoz,g.munoz@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2803,MEDINA BARBOZA SERGIO,SINDICALIZADO,INGENIERÍA,Tec Lean,lider,Líder,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2809,TREVIÑO TORRES JUAN FRANCISCO,ADMINISTRATIVO,INGENIERÍA,Servi Lean,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+2821,DAVILA MONTEMAYOR GILBERTO,ADMINISTRATIVO,INGENIERÍA,Gerente de Proyectos,integrante,Integrante,Gilberto Davila,g.davila@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2822,CASTAÑEDA ARZOLA JESUS ALBERTO,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2828,CALDERON PALACIOS ELIZABETH,ADMINISTRATIVO,MEJORA CONTINUA,MC,lider,Líder,Elizabeth Calderon,e.calderon@zubex.com.mx,Elizabeth Calderon,e.calderon@zubex.com.mx
+2831,GONZALEZ PALOMO ERIK,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2835,FLORES TORRES ARTEMIO FRANCISCO,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2836,GARZA GONZALEZ FILIBERTO EDUARDO,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,C4,lider,Líder,Filiberto Garza,auxcedis@zubex.com.mx,Filiberto Garza,auxcedis@zubex.com.mx
+2837,RODRIGUEZ POSADA OLGA LIDIA,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+2838,MARTINEZ ALVARADO GERARDO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2844,LOZANO FUENTES LUIS LAURO,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2845,SANMIGUEL MARTINEZ JOSE LEOPOLDO,ADMINISTRATIVO,INGENIERÍA,Iluminateam,lider,Líder,Gilberto Davila,g.davila@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+2848,RODRIGUEZ MARTINEZ PABLO JESUS,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Blanca Hdz,b.hernandez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+2850,SANCHEZ SEPULVEDA FELIX ALEJANDRO,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,HOME,lider,Líder,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2852,RIOS GUERRERO TANYA,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+2854,ZUÑIGA ROQUE JOSE EDUARDO,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2856,SILGUERO ROCHA JOSE ANGEL,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2859,LEIVA TREVIÑO FELIX JAVIER,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+2865,GAYTAN RODRIGUEZ JOSUE RODOLFO,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2866,ARMIJO SAAVEDRA SAMUEL,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2877,ESPINOSA LAM JUAN CARLOS,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+2879,MALDONADO DURAN OZIEL EMMANUEL,SINDICALIZADO,EXTRUSIÓN,Generico,integrante,Integrante,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2883,MORALES CAMPOS DAVID,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+2886,HERRERA VALERO JOSE JOAQUIN,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2901,ESTRADA RIVERA JOSUE VALENTIN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,C4,integrante,Integrante,Josue Estrada,almacencedis@zubex.com.mx,Filiberto Garza,auxcedis@zubex.com.mx
+2903,HINOJOSA CASTILLO KARINA,ADMINISTRATIVO,PRE PRENSA,Color Flex,integrante,Integrante,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+2904,VALADEZ SALDAÑA JUAN AXZEL,ADMINISTRATIVO,CALIDAD,5QF,lider,Líder,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+2911,DEL ANGEL PACHECO ROLANDO,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2912,RENTERIA GRACIA JAIME GERARDO,ADMINISTRATIVO,PROGRAMACIÓN,Programación,integrante,Integrante,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx
+2927,BALDERAS CARRILLO RIBALDO ALDAIR,ADMINISTRATIVO,CONVERSIÓN,los pibes,lider,Líder,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2930,MARROQUIN SANCHEZ PEDRO ALFONSO,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2950,JIMENEZ RIVERA JUAN ANTONIO,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2951,GARCIA FERNANDEZ MARCO ANTONIO,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+2956,GRIMALDO GASPAR LUIS,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+2958,GARCIA OCHOA JUAN FRANCISCO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2959,HERNANDEZ CEDILLO BRAYAN ISAIAS ALEJANDRO,SINDICALIZADO,PRE PRENSA,Color Flex,integrante,Integrante,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+2964,MORENO BADILLO JUAN HUMBERTO,ADMINISTRATIVO,IMPRESIÓN,Flexo Master,lider,Líder,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2965,DE LEON ZAMARRON CARLOS ALBERTO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+2966,MARQUEZ SERRANO GIOVANNA DEYANIRA,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,BM,integrante,Integrante,Gamaliel Martinez,g.martinez@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx
+2976,LOPEZ SOTO KAREN ESTEFANIA,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Blanca Hdz,b.hernandez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+2978,MARTINEZ RUIZ JOSUE GAMALIEL,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,BM,integrante,Integrante,Gamaliel Martinez,g.martinez@zubex.com.mx,Karina Melchor,k.melchor@zubex.com.mx
+2979,OCHOA SOLIS RAYMUNDO,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2980,MARTINEZ OCHOA BRANDON GILBERTO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2981,DOMINGUEZ ULLOA MARTIN JOVANI,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2983,OCHOA MARTINEZ MIGUEL ANGEL,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+2985,MENDEZ MARTINEZ LUIS ANTONIO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3007,AUSTRIA VICENTE FLORENCIO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3012,HERNANDEZ MARTINEZ ARMANDO,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3015,GARCIA MALDONADO RAFAEL DE JESUS,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3020,HERNANDEZ REYNA BLANCA EDITH,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Blanca Hdz,b.hernandez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+3038,PRESAS JASSO FELIPE CONCEPCION,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3039,REYES DE LA CRUZ YAZMIN,ADMINISTRATIVO,CALIDAD,5QF,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3051,IBARRA HERRERA VICTOR JAVIER,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3052,LOPEZ MARTINEZ FABIAN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,HOME,integrante,Integrante,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3065,SANCHEZ GONZALEZ BRANDON IMANOL,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3072,CASTILLO HERRERA JOEL PABLO,SINDICALIZADO,INGENIERÍA,Tec Lean,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3073,RUBIO QUIROZ LUIS FELIPE,SINDICALIZADO,INGENIERÍA,Team Work,integrante,integrante,Gonzalo Muñoz,g.munoz@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3074,ROBLEDO SAUCEDO TADEO ALEJANDRO,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Elena Rdz,e.rodriguez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+3075,ROMERO MORENO ALAN JAHIR,ADMINISTRATIVO,INGENIERÍA,Solution Team,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3079,BOCANEGRA LEIJA MICHELLE ALDAIR,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3083,SALAS ROSALES RICARDO GABRIEL,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3084,PEREZ MEDINA EULALIO,SINDICALIZADO,INGENIERÍA,Servi Lean,lider,Líder,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3087,LIMON OBREGON AURORA BELEN,SINDICALIZADO,INGENIERÍA,Lean Pieza,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3092,MONCADA RODRIGUEZ ERICK ADRIAN,ADMINISTRATIVO,PRE PRENSA,Color Flex,integrante,Integrante,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+3093,BORDA SANTIAGO SAMANTHA VIANEY,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Elena Rdz,e.rodriguez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+3097,SALAS SOTO CARLOS ALBERTO,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3103,GUZMAN RODRIGUEZ MIGUEL NICOLAS,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3111,RIOS MARTINEZ SAMUEL,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3114,MONTAÑEZ PEREZ EDUARDO,SINDICALIZADO,EXTRUSIÓN,Capturista,capturista,Capturista,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3116,LOPEZ DE ANGEL RICARDO ISMAEL,ADMINISTRATIVO,VIGILANCIA,The Watch men,lider,Líder,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3128,MARTINEZ SALAZAR JORGE LUIS,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3130,ZUÑIGA LEIJA BRANDON JOSUE,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3144,SANTILLAN ROMERO ARMANDO,ADMINISTRATIVO,REC. HUM.,Director,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+3156,MARTINEZ DELGADO IVAN,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3157,SALAS SAUCEDO ADRIAN DANIEL,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3160,VELEZ PONCE CESAR ALEJANDRO,ADMINISTRATIVO,REC. HUM.,oficina,integrante,Integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+3177,PASCUAL REYES DOMINGO,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3180,SILVA AGUIRRE VANESA YAZMIN,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3189,CANDIA LEAL NAYELY ABIGAIL,ADMINISTRATIVO,MEJORA CONTINUA,MC,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Elizabeth Calderon,e.calderon@zubex.com.mx
+3211,VALERIANO BUENO DAVID,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3214,SANTOS MORALES CRUZ ANTONIO,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3218,GAMEZ GUEL JOSE LUIS,ADMINISTRATIVO,CONVERSIÓN,Los Incalcanzables,lider,Líder,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3237,TORRES RODRIGUEZ REYNA ISABEL,SINDICALIZADO,INGENIERÍA,Lean Pieza,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3238,CORONADO MARTINEZ ROSA,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3240,HERNANDEZ HERNANDEZ JESUS,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3248,MORENO CORONADO ALAN MISAEL,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3252,PALOMO NOROÑA JAVIER,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3255,RODRIGUEZ SIFUENTES PATRICIA,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3257,HERNANDEZ GARCIA MARIA DEL ROSARIO,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3274,MERCADO MARTINEZ ANTONIO,SINDICALIZADO,INGENIERÍA,Servi Lean,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3275,MARTINEZ BALDERAS GEOVANI JEOSIMAR,ADMINISTRATIVO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3285,CUELLAR SANTOS ALEJANDRO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3290,GAMEZ ESCOBEDO JOSE LUIS,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3291,CASTAÑEDA ARZOLA GERARDO,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3292,GARCIA GALVAN VICTOR,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3296,GOMEZ HERRERA JOSE ORLANDO,SINDICALIZADO,IMPRESIÓN,Especialista en tintas,integrante,Integrante,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3299,IBARRA ALMENDARIZ ARIEL TADEO,ADMINISTRATIVO,PROGRAMACIÓN,Programación,integrante,Integrante,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx
+3305,MIRELES SALAZAR BERENICE,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3307,LOPEZ PEREZ BERSAIN,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3309,PINEDA RODRIGUEZ MARVIN ANTONIO,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3317,ORNELAS SALDIVAR MARCOS ADRIAN,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3321,PEREZ RESENDIZ ANTONIO,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3322,ALVAREZ HERNANDEZ ANIBAL,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,C4,integrante,Integrante,Josue Estrada,almacencedis@zubex.com.mx,Filiberto Garza,auxcedis@zubex.com.mx
+3326,HERNANDEZ MENDOZA BEATRIZ LIZETH,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3328,PEREZ JIMENEZ ROSEY DE JESUS,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3341,TISCAREÑO LOPEZ JOSE,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,HOME,integrante,Integrante,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3350,VAZQUEZ RAMIREZ MARIA FERNANDA,ADMINISTRATIVO,CALIDAD,5QF,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3352,GALICIA CARDENAS RUBEN,SINDICALIZADO,INGENIERÍA,Audi,integrante,Integrante,Juan Calos,jc.sanmiguel@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3359,GUTIERREZ AGUILAR MAYRA IVON,ADMINISTRATIVO,SOSTENIBILIDAD,Sustentabilidad,integrante,integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+3364,GONZALEZ LUZ JUAN CARLOS,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3376,GARCIA CARREON FRANCISCO JAVIER,SINDICALIZADO,IMPRESIÓN,Las papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3387,VILLARREAL HERRERA RAYMUNDO BALTAZAR,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3388,CRUZ RAMIREZ ROBERTO CARLOS,ADMINISTRATIVO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3392,MANCILLAS PARGAS LUIS ROBERTO,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3393,FELIX HERNANDEZ DANIEL,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3402,NOGUEDA CHAVARRIA CARLOS ALBERTO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3404,RODRIGUEZ ARRONA BERTHA ALICIA,SINDICALIZADO,PRE PRENSA,Color Flex,integrante,Integrante,Selene López,s.lopez@zubex.com.mx,Selene López,s.lopez@zubex.com.mx
+3406,ALAMILLO DE LA CRUZ JOSE ADRIAN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Linces,integrante,Integrante,Jesus Almanza,j.almanza@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3423,CHAVARRIA TAPIA CARLOS,ADMINISTRATIVO,INGENIERÍA,Solution Team,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3429,BALLADARES DE LOS SANTOS YESWIN,ADMINISTRATIVO,CALIDAD,5QF,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3434,RUIZ TORRES AARON EMMANUEL,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3443,CASIANO MARTINEZ DAMIAN,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3448,SALAZAR BERNAL ALEJANDRO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3452,GALVAN LEIJA JOSE ARMANDO,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3459,DEL ANGEL PACHECO EDGAR URIEL,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3461,RODRIGUEZ DANIEL LUIS MANUEL,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3466,BAUTISTA DIEGO SILVERIO,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3470,NAFARRATE GOMEZ JOSE FRANCISCO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3472,GOMEZ CARDONA JOSE DOMINGO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3477,VILLEGAS MARTINEZ LUIS ALBERTO,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3480,RODRIGUEZ ORTEGA ELENA AIMEE,ADMINISTRATIVO,COMPRAS,Motal Kompras,lider,Líder,Blanca Hdz,b.hernandez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+3481,JOSE PEREZ CELIA,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3483,ZUÑIGA RAMIREZ LUIS ELOY,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3485,GUERRERO AMADOR ANA LUISA,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3486,PEREZ BARBOZA ISIDRO,SINDICALIZADO,INGENIERÍA,Audi,integrante,Integrante,Juan Calos,jc.sanmiguel@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3488,PEREZ MELCHOR JULISA FERNANDA,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3495,MARTINEZ FLORES ARLETH,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3500,VAZQUEZ CORONADO DANIELA MAYTE,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3505,HUANTE ALEJANDRE NATALY,ADMINISTRATIVO,EXPORTACIONES,Expo,integrante,Integrante,Alberto Zuñiga,a.zuniga@zubex.com.mx,Alberto Zuñiga,a.zuniga@zubex.com.mx
+3508,RODRIGUEZ ARRONA MARIA CRISTINA,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3512,REYES RAMIREZ ORLANDO DANIEL,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3513,MARTINEZ VALDEZ ANA LAURA,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3515,SILVA TOVAR NORMA GUADALUPE,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3517,HERNANDEZ HUERTA REGULO,SINDICALIZADO,CONVERSIÓN,los jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3519,CEDILLO ALMANZA MOISES ISRAEL,SINDICALIZADO,INGENIERÍA,Solution Team,lider,Líder,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3524,MACIAS SERRATO PEDRO FRANCISCO,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3525,FLORES TORRES DANIEL ALEJANDRO,SINDICALIZADO,INGENIERÍA,Solution Team,integrante,integrante,Carlos Chavarria,c.chavarria@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3527,GOMEZ LOPEZ JACOBINO,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3530,BUSTOS RAMIREZ DIEGO CRISTOBAL,ADMINISTRATIVO,COMPRAS,Motal Kompras,integrante,Integrante,Elena Rdz,e.rodriguez@zubex.com.mx,Elena Rdz,e.rodriguez@zubex.com.mx
+3534,JUAREZ QUEVEDO JOSE LUIS,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3536,BAUTISTA ROCHA YARELI,ADMINISTRATIVO,PROGRAMACIÓN,Programación,integrante,Integrante,Victor de Leon,v.deleon@zubex.com.mx,Victor de Leon,v.deleon@zubex.com.mx
+3540,SANTILLAN RIVERA MAURICIO ARMANDO,ADMINISTRATIVO,INGENIERÍA,Iluminateam,integrante,Integrante,Gilberto Davila,g.davila@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3542,GOMEZ TAPIA EDWIN ORLANDO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3543,NAVARRO MORENO MIRIAM ZORAYDA,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3545,ELIZONDO BENITO SERGIO,SINDICALIZADO,INGENIERÍA,Servi Lean,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3553,GONZALEZ LOPEZ CESAR HUMBERTO,SINDICALIZADO,IMPRESIÓN,Analista Batch,integrante,Analista Batch,Jair Rdz,j.perez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3555,RUBIO RUBIO MARTINA,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3568,RODRIGUEZ VARGAS ERICK,ADMINISTRATIVO,EXPORTACIONES,Expo,integrante,Integrante,Alberto Zuñiga,a.zuniga@zubex.com.mx,Alberto Zuñiga,a.zuniga@zubex.com.mx
+3570,RIOS MUÑOZ VIRGINIA,SINDICALIZADO,CONVERSIÓN,Los Jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3577,SALAZAR AGUIRRE EVER ESAU,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3578,PEREZ MENDOZA JOSE ISABEL,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3579,GONZALEZ RAMIREZ RUBEN EDUARDO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3590,VILLASANA FLORES JAIR ALEJANDRO,SINDICALIZADO,INGENIERÍA,Servi Lean,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3593,ENRIQUEZ MARTINEZ EVA,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3606,HERNANDEZ DELGADO MARIA DE LOS ANGELES,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3608,ROCHA MARTINEZ ALEJANDRO ASAEL,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3614,SANCHEZ LOZANO SINDY JANETTE,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3618,GARCIA GUTIERREZ ROSARIO CAROLINA,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3619,PACHICANO REYNOSA MARIA CONCEPCION,SINDICALIZADO,INGENIERÍA,Lean Pieza,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3620,AGUILA DIAZ JONATHAN ULISES,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3622,SEPULVEDA FRAGA MARCOS NATANAEL,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3626,BERMEA LOPEZ EDUARDO,SINDICALIZADO,IMPRESIÓN,Flexo Master,integrante,Integrante,Humberto Moreno,j.moreno@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3631,CARREON LARA ANGEL EDUARDO,SINDICALIZADO,IMPRESIÓN,Las Papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3633,MARTINEZ CORDERO OMAR DAMIAN,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3634,MAYA PIÑA MARCO ANTONIO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3635,MARTINEZ RANGEL JOSUE DIEGO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3639,MORALES ALBA LUZ MARIA,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3642,RAMIREZ MUÑIZ GERARDO ALBERTO,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3644,ZAMARRON GARCIA CESAR CANAAN,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3646,HERNANDEZ NAVA JESUS ISAI,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3648,MONTEMAYOR VAZQUEZ JORGE EMMANUEL,SINDICALIZADO,INGENIERÍA,Smart Team 4.0,integrante,integrante,Francisco Romero,proyectos@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3655,GONZALEZ ALVAREZ JUAN PABLO,SINDICALIZADO,IMPRESIÓN,Las Papas,integrante,Integrante,Eduardo Gonzalez,e.gonzalez@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3657,PEREZ RUBIO ALEXIS GAEL,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3659,ESTRADA CHACON JULIO DANIEL,SINDICALIZADO,IMPRESIÓN,Los cuartos al bat,integrante,integrante,Alejandro Andrade,j.andrade@zubex.com.mx,Jair Rdz,j.perez@zubex.com.mx
+3660,MIJANGOS PEREZ RAFAEL,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3661,LOPEZ RIOS JORDAN RENE,SINDICALIZADO,CONVERSIÓN,los jefes,integrante,Integrante,Heber Hernandez,h.hernandez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3662,MENDOZA PESINA MARTIN GUADALUPE,SINDICALIZADO,INGENIERÍA,Lean Pieza,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Gilberto Davila,g.davila@zubex.com.mx
+3664,CALDERON PUEBLA EMILIANO JOEL,ADMINISTRATIVO,MEJORA CONTINUA,MC,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Elizabeth Calderon,e.calderon@zubex.com.mx
+3667,GASPAR ANTONIO KARLA LIZETH,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3668,CORTEZ FLORES PAOLO ROBERTO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,HOME,integrante,Integrante,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3672,RAMIREZ TETELPA ANGEL ANTONIO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3674,QUEVEDO JUAN MANUEL,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,HOME,integrante,Integrante,Felix Sanchez,f.sanchez@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3680,ZUÑIGA GARZA ALBERTO ALEJANDRO,ADMINISTRATIVO,EXPORTACIONES,Expo,lider,Líder,Alberto Zuñiga,a.zuniga@zubex.com.mx,Alberto Zuñiga,a.zuniga@zubex.com.mx
+3682,SALAS CAMARILLO GUILLERMO,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3685,VALDEZ MOLINA EDGAR EDUARDO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Linces,integrante,Integrante,Jesus Almanza,j.almanza@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3686,SILGUERO VILLEGAS MILTON MISAEL,SINDICALIZADO,EXTRUSIÓN,Generico,integrante,Integrante,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3687,CAÑEDO RAMIREZ ANGEL EDUARDO,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3692,TOVAR GARAY JOSE ALONSO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3696,MARES HUERTA HUGO ALFONSO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3367,RUIZ GARZA ELIZABETH DEL CARMEN,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3699,GUZMAN SILVA LEONARDO GABRIEL,ADMINISTRATIVO,EXPORTACIONES,Expo,integrante,Integrante,Alberto Zuñiga,a.zuniga@zubex.com.mx,Alberto Zuñiga,a.zuniga@zubex.com.mx
+3702,RODRIGUEZ TORRES LAURA IDALIA,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3704,ESCOBAR GONZALEZ KEVIN JOHAN,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3706,FLORES DIAZ JUAN,SINDICALIZADO,INGENIERÍA,Team Work,integrante,integrante,Gonzalo Muñoz,g.munoz@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3707,GALVAN SILVA CHRISTOPHER ARMANDO,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3710,FLORES BALLEZA ANGEL EDUARDO,SINDICALIZADO,EXTRUSIÓN,Los Osos,integrante,Integrante,Humaro Flores,h.flores@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3709,RODRIGUEZ ROSALES DIEGO ALFONSO,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+204,RODRIGUEZ RODRIGUEZ ANA LUISA,ADMINISTRATIVO,REC. HUM.,oficina,integrante,integrante,Armando Santillan,a.santillan@zubex.com.mx,Armando Santillan,a.santillan@zubex.com.mx
+3208,BALDERAS NIÑO PEDRO,SINDICALIZADO,CONVERSIÓN,Los Incalcanzables,integrante,Integrante,Luis Gamez,l.gamez@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3712,RAMIREZ HERNANDEZ GERMAN ANDRES,SINDICALIZADO,INGENIERÍA,Servi Lean,integrante,Integrante,Francisco Treviño,f.trevino@zubex.com.mx,Ricardo Torres,r.torres@zubex.com.mx
+3391,THOMAS CRUZ LUIS MARIO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3714,CABALLERO REYNA EDUARDO ADRIAN,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,La Familia APP,integrante,Integrante,Alejandro Ruiz,a.ruiz@zubex.com.mx,Sergio España,sd.espana@zubex.com.mx
+3715,GARCIA VAZQUEZ JOSE JAVIER,ADMINISTRATIVO,COMERCIAL,Comercial,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Wilbert Delgado,w.delgado@zubex.com.mx
+3717,MORALES ZARAGOZA PRISCILA ABIGAIL,ADMINISTRATIVO,ADMÓN.,Admon,integrante,Integrante,Elizabeth Calderon,e.calderon@zubex.com.mx,Julieta Rdz,j.rodriguez@zubex.com.mx
+3718,GOMEZ DEGOLLADO JUAN DANIEL,SINDICALIZADO,EXTRUSIÓN,Los Tercos,integrante,Integrante,Joaquin Gonzalez,j.gonzalez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3719,GARCIA TORRES FABIOLA,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3720,LUIS GREGORIO MUÑIZ SANTOS,SINDICALIZADO,EXTRUSIÓN,La Pandilla,integrante,Integrante,Erick Presas,e.presas@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3721,LUIS ANTONIO ZUÑIGA ROQUE,SINDICALIZADO,EXTRUSIÓN,Equipo de 10,integrante,Integrante,Israel Rdz,i.rodriguez@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3300,HERRERA FLORES FABIOLA ANAHI,SINDICALIZADO,CONVERSIÓN,los pibes,integrante,Integrante,Ribaldo Balderas,r.balderas@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3722,MORENO LOZA JUAN CARLOS,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3725,LUGO FRANCO CHRISTIAN ALEJANDRO,SINDICALIZADO,CORRUGADO,Team Zubiox,integrante,Integrante,Servando Ramos,s.ramos@zubex.com.mx,Victor López,v.lopez@zubex.com.mx
+3490,MORENO REVILLA CARLOS ALBERTO,SINDICALIZADO,EXTRUSIÓN,Generico,integrante,Integrante,Nestor Saucedo,n.sauceda@zubex.com.mx,Nestor Saucedo,n.sauceda@zubex.com.mx
+3726,OYERVIDEZ GONALEZ ARNOLDO,SINDICALIZADO,CALIDAD,Inspectores,integrante,integrante,Lisbeth Solis,l.solis@zubex.com.mx,Giana Tavera,g.tavera@zubex.com.mx
+3728,AGUILAR LOPEZ ABEL,SINDICALIZADO,VIGILANCIA,The Watch men,integrante,Integrante,Ricardo López,r.lopez@zubex.com.mx,Nelson Ramirez,n.ramirez@zubex.com.mx
+3729,OLVERA GUERRERO ADRIAN EDUARDO,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3730,RODRIGUEZ NUÑEZ JESUS DAVID,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
+3388,CRUZ RAMIREZ ROBERTO CARLOS,SINDICALIZADO,ADMINISTRACIÓN PRODUCTIVA,Logistica,integrante,integrante,Juan Orta,j.orta@zubex.com.mx,Juan Orta,j.orta@zubex.com.mx
