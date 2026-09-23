@@ -43,7 +43,16 @@ export async function render(container, params, isStale) {
     { class: "select", id: "f-departamento", required: true },
     [
       el("option", { value: "" }, ["Selecciona un departamento…"]),
-      ...(state.departamentos || []).map((d) => el("option", { value: d }, [d])),
+      // GET /departamentos ahora regresa { id, nombre }[] en el backend real
+      // (antes era string[] en el mock) — se admite cualquiera de las 2
+      // formas para no romper el modo mock. El value que se manda en
+      // POST /kaizens sigue siendo el NOMBRE (kaizens-create espera
+      // `departamento` como texto, no un id — a diferencia de
+      // POST /equipos, que sí pide `departamentoId`).
+      ...(state.departamentos || []).map((d) => {
+        const nombre = typeof d === "string" ? d : d.nombre;
+        return el("option", { value: nombre }, [nombre]);
+      }),
     ]
   );
   const areaInput = el("input", { class: "input", id: "f-area", type: "text", required: true, placeholder: "Área / línea / máquina" });

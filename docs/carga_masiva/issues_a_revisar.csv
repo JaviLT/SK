@@ -1,0 +1,55 @@
+fila_excel,nomina,nombre,problemas
+3,101,ZUBIRIA ORTIZ MIGUEL ROGELIO,sin equipo lean
+4,103,SIFUENTES DECIGA SANDRA MIROSLAVA,sin equipo lean
+5,108,RODRIGUEZ SIFUENTES JULIETA,sin equipo lean
+6,126,MELCHOR GUERRERO KARINA DANIELA,sin equipo lean
+7,141,NAJAR LEAL ALFREDO,sin equipo lean
+8,149,DELGADO PEDRAZA WILBERT OZIEL,sin equipo lean
+10,175,PATIÑO GONZALEZ ALMA WALKIRIA,sin equipo lean
+11,204,RODRIGUEZ RODRIGUEZ ANA LUISA,sin equipo lean
+12,257,RODRIGUEZ CALVA FARIVA MARGARITA,sin equipo lean
+13,260,TAVERA SANCHEZ GIANA AIDE,sin equipo lean
+15,268,ROBLES LOPEZ ADRIANA MAIHUALIDA,sin equipo lean
+16,271,RUIZ GUERRA JESUS ANTONIO,sin equipo lean
+17,274,RODRIGUEZ MALDONADO LUIS DANIEL,sin equipo lean
+18,279,LOPEZ CASTILLO LUIS GUADALUPE,sin equipo lean
+35,2338,SAUCEDO GAYTAN NESTOR IVAN,sin equipo lean
+51,2442,ESPAÑA PEREZ SERGIO DENIS,sin equipo lean
+53,2487,IRACHETA FLORES ALEJANDRO GUADALUPE,sin equipo lean
+54,2492,RODRIGUEZ PEREZ JAIR ALEJANDRO,sin equipo lean
+55,2507,HERNANDEZ CASANGO LORENA,sin equipo lean
+65,2554,GARCIA DE LA CRUZ ILIANA CELESTE,sin equipo lean
+73,2606,TORRES RODRIGUEZ RICARDO,sin equipo lean
+86,2693,RAMIREZ TORRES NELSON HUMBERTO,sin equipo lean
+94,2737,LOPEZ GARCIA VICTOR MANUEL,sin equipo lean
+106,2821,DAVILA MONTEMAYOR GILBERTO,sin equipo lean
+112,2837,RODRIGUEZ POSADA OLGA LIDIA,sin equipo lean
+118,2852,RIOS GUERRERO TANYA,sin equipo lean
+121,2859,LEIVA TREVIÑO FELIX JAVIER,sin equipo lean
+124,2877,ESPINOSA LAM JUAN CARLOS,sin equipo lean
+132,2912,RENTERIA GRACIA JAIME GERARDO,sin equipo lean
+142,2966,MARQUEZ SERRANO GIOVANNA DEYANIRA,sin equipo lean
+144,2978,MARTINEZ RUIZ JOSUE GAMALIEL,sin equipo lean
+152,3015,GARCIA MALDONADO RAFAEL DE JESUS,sin equipo lean
+172,3114,MONTAÑEZ PEREZ EDUARDO,sin equipo lean
+176,3144,SANTILLAN ROMERO ARMANDO,sin equipo lean
+179,3160,VELEZ PONCE CESAR ALEJANDRO,sin equipo lean
+181,3180,SILVA AGUIRRE VANESA YAZMIN,sin equipo lean
+192,3255,RODRIGUEZ SIFUENTES PATRICIA,sin equipo lean
+193,3257,HERNANDEZ GARCIA MARIA DEL ROSARIO,sin equipo lean
+209,3326,HERNANDEZ MENDOZA BEATRIZ LIZETH,sin equipo lean
+244,3490,MORENO REVILLA CARLOS ALBERTO,sin equipo lean
+273,3606,HERNANDEZ DELGADO MARIA DE LOS ANGELES,sin equipo lean
+282,3633,MARTINEZ CORDERO OMAR DAMIAN,sin equipo lean
+293,3660,MIJANGOS PEREZ RAFAEL,sin equipo lean
+302,3682,SALAS CAMARILLO GUILLERMO,sin equipo lean
+304,3686,SILGUERO VILLEGAS MILTON MISAEL,sin equipo lean
+309,3702,RODRIGUEZ TORRES LAURA IDALIA,sin equipo lean
+317,3715,GARCIA VAZQUEZ JOSE JAVIER,sin equipo lean
+318,3717,MORALES ZARAGOZA PRISCILA ABIGAIL,sin equipo lean
+,,[EQUIPO] Los Jefes / los jefes,"el mismo equipo está capturado con distinta mayúscula/minúscula ('Los Jefes', 'los jefes') — revisar si es el mismo equipo duplicado por error de captura"
+,,[EQUIPO] Las Papas,"más de un candidato a líder por voto de mayoría: [(('Eduardo Gonzalez', 'e.gonzalez@zubex.com.mx'), 13), (('Jair Rdz', 'j.perez@zubex.com.mx'), 2)]"
+,,[EQUIPO] Los Incalcanzables,"más de un candidato a líder por voto de mayoría: [(('Luis Gamez', 'l.gamez@zubex.com.mx'), 10), (('Victor López', 'v.lopez@zubex.com.mx'), 1)]"
+,,[EQUIPO] Motal Kompras,"más de un candidato a líder por voto de mayoría: [(('Elena Rdz', 'e.rodriguez@zubex.com.mx'), 4), (('Blanca Hdz', 'b.hernandez@zubex.com.mx'), 2)]"
+,,[DEPARTAMENTO] ADMINISTRACIÓN PRODUCTIVA,"más de un candidato a gerente por voto de mayoría: [(('Sergio España', 'sd.espana@zubex.com.mx'), 18), (('Juan Orta', 'j.orta@zubex.com.mx'), 10), (('Karina Melchor', 'k.melchor@zubex.com.mx'), 4), (('Filiberto Garza', 'auxcedis@zubex.com.mx'), 3)] — confirmar con RH/Jesús cuál es el vigente"
+,,[DEPARTAMENTO] INGENIERÍA,"más de un candidato a gerente por voto de mayoría: [(('Ricardo Torres', 'r.torres@zubex.com.mx'), 20), (('Gilberto Davila', 'g.davila@zubex.com.mx'), 20), (('Luis López', 'l.lopez@zubex.com.mx'), 1)] — confirmar con RH/Jesús cuál es el vigente"

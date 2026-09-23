@@ -17,17 +17,21 @@ import { el, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
 
-const STATUS_META = {
-  pend_mc: { label: "Pend. Mejora Continua", badge: "badge-pend" },
-  pend_l: { label: "Pend. Líder", badge: "badge-pend" },
-  pend_g: { label: "Pend. Gerente", badge: "badge-pend" },
-  done: { label: "Aceptado", badge: "badge-done" },
-  rej_mc: { label: "Rechazado (Mejora Continua)", badge: "badge-rej" },
-  rej_l: { label: "Rechazado (Líder)", badge: "badge-rej" },
-  rej_g: { label: "Rechazado (Gerente)", badge: "badge-rej" },
-};
-const PENDIENTES = ["pend_mc", "pend_l", "pend_g"];
-const RECHAZADOS = ["rej_mc", "rej_l", "rej_g"];
+// Modelo de 2-o-3 pasos (KaizenZX_Flujo_Definitivo_Aprobacion.md): `status`
+// es la fuente de verdad confirmada por Jesús (nunca derivar del estado de
+// las firmas — sería lógica duplicada y podría desincronizarse de lo que el
+// backend considera el estado real). Valores exactos: pend_aprobacion1,
+// pend_aprobacion2, pend_aprobacion3, done, rej_aprobacion1, rej_aprobacion2,
+// rej_aprobacion3.
+function estadoKaizen(k) {
+  const NOMBRES_PASO = { aprobacion1: "Mejora Continua", aprobacion2: k.nombreAprobacion2 || "Aprobación 2", aprobacion3: k.nombreAprobacion3 || "Aprobación 3" };
+  if (k.status === "done") return { label: "Aceptado", badge: "badge-done", grupo: "aceptado" };
+  const m = /^(pend|rej)_(aprobacion[123])$/.exec(k.status || "");
+  if (!m) return { label: k.status || "—", badge: "badge-nuevo", grupo: "pendiente" };
+  const [, tipo, paso] = m;
+  if (tipo === "rej") return { label: `Rechazado (${NOMBRES_PASO[paso]})`, badge: "badge-rej", grupo: "rechazado" };
+  return { label: `Pend. ${NOMBRES_PASO[paso]}`, badge: "badge-pend", grupo: "pendiente" };
+}
 
 export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
@@ -135,11 +139,12 @@ function paint(container) {
 }
 
 function buildStatsRow(kaizens) {
+  const grupos = kaizens.map((k) => estadoKaizen(k).grupo);
   const counts = {
     total: kaizens.length,
-    pendientes: kaizens.filter((k) => PENDIENTES.includes(k.status)).length,
-    aceptados: kaizens.filter((k) => k.status === "done").length,
-    rechazados: kaizens.filter((k) => RECHAZADOS.includes(k.status)).length,
+    pendientes: grupos.filter((g) => g === "pendiente").length,
+    aceptados: grupos.filter((g) => g === "aceptado").length,
+    rechazados: grupos.filter((g) => g === "rechazado").length,
   };
   const items = [
     ["Total SK creados", counts.total],
@@ -204,7 +209,7 @@ function buildList(kaizens, equipoActivo) {
     "div",
     { class: "kaizen-list" },
     filtered.map((k) => {
-      const meta = STATUS_META[k.status] || { label: k.status, badge: "badge-nuevo" };
+      const meta = estadoKaizen(k);
       return el(
         "div",
         {

@@ -14,7 +14,10 @@ import { api } from "../api.js";
 // valida su identidad con la contraseña. Solo hace falta contraseña +
 // decisión (aprobar/rechazar) + confirmar.
 
-const STEP_LABEL = { mc: "Mejora Continua", lider: "Líder", gerente: "Gerente" };
+// Modelo de 2-o-3 pasos (KaizenZX_Flujo_Definitivo_Aprobacion.md) — el step
+// que manda el backend ya no es "mc"/"lider"/"gerente", es
+// "aprobacion1"/"aprobacion2"/"aprobacion3".
+const STEP_LABEL = { aprobacion1: "Mejora Continua", aprobacion2: "Aprobación 2", aprobacion3: "Aprobación 3" };
 
 export async function render(container, params, isStale) {
   const token = getQueryParam("token");
@@ -69,7 +72,11 @@ function botonVolver() {
 }
 
 function paintForm(view, kaizen, step, token) {
-  const rol = STEP_LABEL[step] || step;
+  const rol =
+    (step === "aprobacion2" && kaizen.nombreAprobacion2) ||
+    (step === "aprobacion3" && kaizen.nombreAprobacion3) ||
+    STEP_LABEL[step] ||
+    step;
 
   const summary = el("div", { class: "card", style: "margin-bottom:20px" }, [
     el("div", { class: "card-header" }, [el("h2", {}, [`SK-${shortId(kaizen.id)}`]), el("span", { class: "badge badge-pend" }, [`Esperando ${rol}`])]),
@@ -82,9 +89,11 @@ function paintForm(view, kaizen, step, token) {
     kv("Antes", kaizen.descAntes),
     kv("Después y beneficios", kaizen.descDespues),
     kaizen.estandarizacion ? kv("Estandarización", kaizen.estandarizacion) : null,
-    step === "lider" ? kv("Aprobado por Mejora Continua", `${kaizen.firmaMCNombre || "—"} · ${formatDate(kaizen.firmaMCFecha)}`) : null,
-    step === "gerente"
-      ? kv("Aprobado por Líder", `${kaizen.firmaLiderNombre || "—"} · ${formatDate(kaizen.firmaLiderFecha)}`)
+    step === "aprobacion2"
+      ? kv("Aprobado por Mejora Continua", `${kaizen.firmaAprobacion1Nombre || "—"} · ${formatDate(kaizen.firmaAprobacion1Fecha)}`)
+      : null,
+    step === "aprobacion3"
+      ? kv(`Aprobado por ${kaizen.nombreAprobacion2 || "Aprobación 2"}`, `${kaizen.firmaAprobacion2Nombre || "—"} · ${formatDate(kaizen.firmaAprobacion2Fecha)}`)
       : null,
   ]);
 

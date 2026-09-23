@@ -2,31 +2,29 @@
 // admin.js — Pantalla de administración: equipos, líderes, gerentes y
 // empleados, filtro por departamento y exportación a Excel.
 //
-// NOTA IMPORTANTE (léase antes de tocar este archivo):
-// La parte de equipos/empleados (crear, editar, eliminar) todavía trabaja
-// 100% contra js/lib/mock-backend.js, sin pasar por api.js, a propósito —
-// es una MAQUETA visual mientras Jesús (TI) no ha construido las rutas
-// reales de administración en el backend (el contrato de API actual solo
-// contempla GET /equipos, de solo lectura). En cuanto esas rutas existan:
-//   1. Agregarlas al contrato de api.js (crearEquipo, actualizarEquipo,
-//      eliminarEquipo, agregarEmpleado, eliminarEmpleado, buscarEmpleadoPorNomina),
-//      respetando el mismo patrón MOCK_MODE que ya usa el resto de la app.
-//   2. Cambiar los imports de este archivo de "../lib/mock-backend.js" a
-//      "../api.js" y listo — el resto de la pantalla no debería cambiar.
+// Conectado al contrato real de Fase 5 (KaizenZX_Handoff_Fase5_Final.md +
+// KaizenZX_Respuestas_3_Preguntas_Tecnicas.md): equipos-create/update/delete,
+// equipos-empleados-add/remove, empleados-get — todo vía js/api.js, con
+// fallback a mock-backend.js cuando CONFIG.MOCK_MODE está activo, igual que
+// el resto de la app.
 //
-// La exportación a Excel y el listado de Short Kaizen SÍ usan api.js (datos
-// reales), porque GET /kaizens ya existe en el contrato actual.
+// Modelo de gerente: YA NO se administra por departamento — cada equipo
+// trae su propio gerente ya resuelto por el backend (`gerenteNombre`/
+// `gerenteEmail` en la respuesta de GET /equipos, vía equipos_gerentes o
+// departamentos_gerentes según el caso — transparente para el frontend).
+// Aquí solo se MUESTRA, no se edita todavía — no hay endpoint documentado
+// para reasignar gerente directamente; si el negocio lo necesita, es un
+// pendiente a levantar con Jesús.
 //
 // Acceso: visible para usuarios con rol "admin" o "mc" (ver js/shell.js).
 // ============================================================================
 
 import { el, toast, isValidEmail, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
-import { mockBackend, DEPARTAMENTOS } from "../lib/mock-backend.js";
 import { state } from "../state.js";
 
 let equiposCache = [];
-let gerentesCache = {}; // departamento -> {nombre, email} — el gerente ahora es por departamento, no por equipo
+let departamentosCache = []; // [{id, nombre}] — GET /departamentos (antes string[] en el mock)
 let departamentoFiltro = "";
 
 export async function render(container, params, isStale) {
@@ -48,10 +46,11 @@ export async function render(container, params, isStale) {
   view.appendChild(el("div", { class: "skeleton", style: "height:220px" }));
 
   try {
-    const [equipos, gerentes] = await Promise.all([mockBackend.getEquipos(), mockBackend.getGerentesPorDepartamento()]);
+    const [equipos, departamentos] = await Promise.all([api.getEquipos(), api.getDepartamentos()]);
     if (isStale && isStale()) return; // el usuario ya navegó a otra vista — no tocar el DOM
     equiposCache = equipos;
-    gerentesCache = gerentes;
+    // Normaliza: el mock regresa string[], el backend real { id, nombre }[].
+    departamentosCache = departamentos.map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
     paint(view);
   } catch (err) {
     if (isStale && isStale()) return;
@@ -64,6 +63,10 @@ export async function render(container, params, isStale) {
       ])
     );
   }
+}
+
+function nombreDepartamento(id) {
+  return departamentosCache.find((d) => d.id === id)?.nombre || id;
 }
 
 function paint(view) {
@@ -84,11 +87,14 @@ function paint(view) {
 
   view.appendChild(buildFiltroDepartamento(view));
 
-  if (departamentoFiltro) {
-    view.appendChild(buildGerenteDepartamentoCard(view, departamentoFiltro));
-  }
-
-  const equiposFiltrados = departamentoFiltro ? equiposCache.filter((eq) => eq.departamento === departamentoFiltro) : equiposCache;
+  const equiposFiltrados = departamentoFiltro
+    ? equiposCache.filter(
+        (eq) =>
+          eq.departamentoId === departamentoFiltro ||
+          eq.departamento === departamentoFiltro ||
+          eq.departamento === nombreDepartamento(departamentoFiltro)
+      )
+    : equiposCache;
 
   if (!equiposCache.length) {
     view.appendChild(
@@ -128,82 +134,19 @@ function buildFiltroDepartamento(view) {
     },
     [
       el("option", { value: "" }, ["Todos los departamentos"]),
-      ...DEPARTAMENTOS.map((d) => el("option", { value: d, selected: d === departamentoFiltro || undefined }, [d])),
+      ...departamentosCache.map((d) => el("option", { value: d.id, selected: d.id === departamentoFiltro || undefined }, [d.nombre])),
     ]
   );
   return el("div", { class: "field", style: "max-width:320px;margin-bottom:20px" }, [el("label", {}, ["Filtrar por departamento"]), select]);
 }
 
-// El gerente ya no se asigna por equipo — aprueba y ve TODO el departamento,
-// así que se administra una sola vez por departamento, no por cada equipo.
-function buildGerenteDepartamentoCard(view, departamento) {
-  const gerente = gerentesCache[departamento] || { nombre: "", email: "" };
-  return el("div", { class: "card", style: "margin-bottom:20px" }, [
-    el("div", { class: "card-header" }, [
-      el("div", {}, [
-        el("h3", {}, [`Gerente de ${departamento}`]),
-        el("div", { class: "hint" }, ["Ve y aprueba todos los Short Kaizen de este departamento, sin importar el equipo Lean"]),
-      ]),
-      el("button", { class: "btn btn-outline btn-sm", onclick: () => openGerenteModal(view, departamento) }, [gerente.nombre ? "Editar" : "Asignar"]),
-    ]),
-    el("div", { class: "admin-role-block" }, [
-      el("div", { class: "admin-role-name" }, [gerente.nombre || "— sin asignar —"]),
-      gerente.email ? el("div", { class: "hint" }, [gerente.email]) : null,
-    ]),
-  ]);
-}
-
-function openGerenteModal(view, departamento) {
-  let overlayRef;
-  const gerente = gerentesCache[departamento] || { nombre: "", email: "" };
-  const nombreInput = el("input", { class: "input", type: "text", value: gerente.nombre || "", placeholder: "Nombre del gerente" });
-  const emailInput = el("input", { class: "input", type: "email", value: gerente.email || "", placeholder: "correo@zubex.com.mx" });
-
-  const body = el("div", {}, [
-    el("p", { class: "hint", style: "margin-bottom:16px" }, [`Departamento: ${departamento}`]),
-    field("Nombre *", nombreInput),
-    field("Correo *", emailInput),
-  ]);
-
-  overlayRef = openModal(`Gerente de ${departamento}`, body, [
-    el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]),
-    el(
-      "button",
-      {
-        class: "btn btn-accent",
-        onclick: async () => {
-          const nombre = nombreInput.value.trim();
-          const email = emailInput.value.trim();
-          if (!nombre || !email) {
-            toast("Completa el nombre y el correo del gerente.", "tr");
-            return;
-          }
-          if (!isValidEmail(email)) {
-            toast("Revisa que el correo sea válido.", "tr");
-            return;
-          }
-          try {
-            await mockBackend.actualizarGerenteDepartamento(departamento, { nombre, email });
-            gerentesCache = await mockBackend.getGerentesPorDepartamento();
-            toast("Gerente actualizado.", "tg");
-            closeModal(overlayRef);
-            paint(view);
-          } catch (err) {
-            toast(err.message || "No se pudo guardar el gerente.", "tr");
-          }
-        },
-      },
-      ["Guardar"]
-    ),
-  ]);
-}
-
 function buildEquipoCard(view, eq) {
+  const nombreDepto = eq.departamento || nombreDepartamento(eq.departamentoId);
   return el("div", { class: "card admin-team-card" }, [
     el("div", { class: "card-header" }, [
       el("div", {}, [
         el("h3", {}, [eq.nombre]),
-        eq.departamento ? el("div", { class: "hint" }, [eq.departamento]) : null,
+        nombreDepto ? el("div", { class: "hint" }, [nombreDepto]) : null,
       ]),
       el("div", { style: "display:flex;gap:8px" }, [
         el("button", { class: "btn btn-outline btn-sm", onclick: () => openEquipoModal(view, eq) }, ["Editar"]),
@@ -213,6 +156,11 @@ function buildEquipoCard(view, eq) {
 
     el("div", { class: "admin-roles-row" }, [
       roleBlock("Líder", eq.liderNombre, eq.liderEmail),
+      // El gerente ya se resuelve por equipo del lado del backend (vía el
+      // equipo específico o el gerente único del departamento, según el
+      // caso) — aquí solo se muestra, no se edita: no hay endpoint
+      // documentado todavía para reasignar gerente directamente.
+      roleBlock("Gerente", eq.gerenteNombre, eq.gerenteEmail),
     ]),
 
     el("div", { class: "admin-members-header" }, [
@@ -265,23 +213,27 @@ function openEquipoModal(view, equipoExistente) {
   let overlayRef; // se asigna abajo, antes de que el usuario pueda hacer clic en nada
 
   const nombreInput = el("input", { class: "input", type: "text", value: equipoExistente?.nombre || "", placeholder: "Ej. Equipo Línea A" });
+  const departamentoActualId = equipoExistente?.departamentoId
+    || departamentosCache.find((d) => d.nombre === equipoExistente?.departamento)?.id
+    || "";
   const departamentoSelect = el(
     "select",
     { class: "select" },
     [
       el("option", { value: "" }, ["Selecciona un departamento…"]),
-      ...DEPARTAMENTOS.map((d) => el("option", { value: d, selected: d === equipoExistente?.departamento || undefined }, [d])),
+      ...departamentosCache.map((d) => el("option", { value: d.id, selected: d.id === departamentoActualId || undefined }, [d.nombre])),
     ]
   );
-  const liderNombreInput = el("input", { class: "input", type: "text", value: equipoExistente?.liderNombre || "", placeholder: "Nombre del líder" });
-  const liderEmailInput = el("input", { class: "input", type: "email", value: equipoExistente?.liderEmail || "", placeholder: "correo@zubex.com.mx" });
+  // POST /equipos solo acepta { nombre, departamentoId, liderEmail? } — no
+  // existe `liderNombre` en el contrato real (se resuelve del lado del
+  // backend a partir del correo, si aplica). Ver KaizenZX_Handoff_Fase5_Final.md.
+  const liderEmailInput = el("input", { class: "input", type: "email", value: equipoExistente?.liderEmail || "", placeholder: "correo@zubex.com.mx (opcional)" });
 
   const body = el("div", {}, [
     field("Nombre del equipo *", nombreInput),
     field("Departamento *", departamentoSelect),
-    field("Líder — nombre *", liderNombreInput),
-    field("Líder — correo *", liderEmailInput),
-    el("p", { class: "hint" }, ["El gerente ya no se asigna por equipo — se administra una sola vez por departamento, desde el filtro de arriba."]),
+    field("Líder — correo", liderEmailInput),
+    el("p", { class: "hint" }, ["El gerente ya no se asigna aquí — se resuelve automáticamente por equipo del lado del backend."]),
   ]);
 
   overlayRef = openModal(esEdicion ? "Editar equipo" : "Nuevo equipo", body, [
@@ -291,29 +243,30 @@ function openEquipoModal(view, equipoExistente) {
       {
         class: "btn btn-accent",
         onclick: async () => {
+          const liderEmail = liderEmailInput.value.trim();
           const payload = {
             nombre: nombreInput.value.trim(),
-            departamento: departamentoSelect.value,
-            liderNombre: liderNombreInput.value.trim(),
-            liderEmail: liderEmailInput.value.trim(),
+            departamentoId: departamentoSelect.value,
           };
-          if (!payload.nombre || !payload.departamento || !payload.liderNombre || !payload.liderEmail) {
+          if (liderEmail) payload.liderEmail = liderEmail;
+
+          if (!payload.nombre || !payload.departamentoId) {
             toast("Completa todos los campos obligatorios (*).", "tr");
             return;
           }
-          if (!isValidEmail(payload.liderEmail)) {
+          if (liderEmail && !isValidEmail(liderEmail)) {
             toast("Revisa que el correo del líder sea válido.", "tr");
             return;
           }
           try {
             if (esEdicion) {
-              await mockBackend.actualizarEquipo(equipoExistente.nombre, payload);
+              await api.actualizarEquipo(equipoExistente.id, payload);
               toast("Equipo actualizado.", "tg");
             } else {
-              await mockBackend.crearEquipo(payload);
+              await api.crearEquipo(payload);
               toast("Equipo creado.", "tg");
             }
-            equiposCache = await mockBackend.getEquipos();
+            equiposCache = await api.getEquipos();
             closeModal(overlayRef);
             paint(view);
           } catch (err) {
@@ -328,11 +281,11 @@ function openEquipoModal(view, equipoExistente) {
 
 function confirmEliminarEquipo(view, eq) {
   if (!confirm(`¿Eliminar el equipo "${eq.nombre}" y sus ${eq.miembros.length} empleado(s)? Esta acción no se puede deshacer.`)) return;
-  mockBackend
-    .eliminarEquipo(eq.nombre)
+  api
+    .eliminarEquipo(eq.id)
     .then(async () => {
       toast("Equipo eliminado.", "tg");
-      equiposCache = await mockBackend.getEquipos();
+      equiposCache = await api.getEquipos();
       paint(view);
     })
     .catch((err) => toast(err.message || "No se pudo eliminar el equipo.", "tr"));
@@ -364,10 +317,10 @@ function openEmpleadoModal(view, eq) {
             return;
           }
           try {
-            const equipoActualizado = await mockBackend.agregarEmpleado(eq.nombre, { nomina });
-            const agregado = equipoActualizado.miembros.find((m) => m.nomina === nomina);
+            const equipoActualizado = await api.agregarEmpleado(eq.id, nomina);
+            const agregado = equipoActualizado?.miembros?.find((m) => m.nomina === nomina);
             toast(`Empleado agregado: ${agregado?.nombre || nomina}.`, "tg");
-            equiposCache = await mockBackend.getEquipos();
+            equiposCache = await api.getEquipos();
             closeModal(overlayRef);
             paint(view);
           } catch (err) {
@@ -382,11 +335,13 @@ function openEmpleadoModal(view, eq) {
 
 function confirmEliminarEmpleado(view, eq, miembro) {
   if (!confirm(`¿Quitar a ${miembro.nombre} (nómina ${miembro.nomina}) del equipo "${eq.nombre}"?`)) return;
-  mockBackend
-    .eliminarEmpleado(eq.nombre, miembro.nomina)
+  // DELETE /equipos/empleados solo necesita la nómina — el backend resuelve
+  // el equipo (confirmado por Jesús), no hace falta pasar el id del equipo.
+  api
+    .eliminarEmpleado(miembro.nomina)
     .then(async () => {
       toast("Empleado eliminado del equipo.", "tg");
-      equiposCache = await mockBackend.getEquipos();
+      equiposCache = await api.getEquipos();
       paint(view);
     })
     .catch((err) => toast(err.message || "No se pudo quitar al empleado.", "tr"));
@@ -426,9 +381,9 @@ async function exportarExcel() {
       { header: "Fecha identificación", key: "fechaId", width: 16 },
       { header: "Fecha implementación", key: "fechaImpl", width: 16 },
       { header: "Tiempo implementación", key: "tiempoImpl", width: 16 },
-      { header: "Mejora Continua", key: "aprMC", width: 22 },
-      { header: "Líder", key: "aprLider", width: 22 },
-      { header: "Gerente", key: "aprGerente", width: 22 },
+      { header: "Aprobación 1 (Mejora Continua)", key: "apr1", width: 22 },
+      { header: "Aprobación 2", key: "apr2", width: 22 },
+      { header: "Aprobación 3", key: "apr3", width: 22 },
       { header: "Foto antes", key: "fotoAntes", width: 18 },
       { header: "Foto después", key: "fotoDespues", width: 18 },
     ];
@@ -442,8 +397,13 @@ async function exportarExcel() {
     });
     ws.getRow(1).height = 20;
 
+    // Estatus final confirmado (KaizenZX_Respuestas_3_Preguntas_Tecnicas.md):
+    // done, rej_aprobacion1, rej_aprobacion2, rej_aprobacion3.
     const ESTATUS_LABEL = {
-      done: "Aceptado", rej_mc: "Rechazado (Mejora Continua)", rej_l: "Rechazado (Líder)", rej_g: "Rechazado (Gerente)",
+      done: "Aceptado",
+      rej_aprobacion1: "Rechazado (Mejora Continua)",
+      rej_aprobacion2: "Rechazado (Aprobación 2)",
+      rej_aprobacion3: "Rechazado (Aprobación 3)",
     };
 
     relevantes.forEach((k, idx) => {
@@ -463,9 +423,9 @@ async function exportarExcel() {
         fechaId: formatDate(k.fechaId),
         fechaImpl: formatDate(k.fechaImpl),
         tiempoImpl: k.tiempoImpl ? `${k.tiempoImpl} ${k.unidadTiempo || ""}` : "",
-        aprMC: k.firmaMCNombre || "",
-        aprLider: k.firmaLiderNombre || "",
-        aprGerente: k.firmaGerenteNombre || "",
+        apr1: k.firmaAprobacion1Nombre || "",
+        apr2: k.firmaAprobacion2Nombre || "",
+        apr3: k.firmaAprobacion3Nombre || "",
       });
       row.height = 70;
       if (idx % 2 === 1) {

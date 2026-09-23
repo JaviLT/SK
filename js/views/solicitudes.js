@@ -7,10 +7,15 @@
 // del flujo por link de correo (js/views/aprobacion.js), que no se toca.
 //
 // Alcance por rol:
-//   - lider:   Short Kaizen de SU equipo, pendientes de su firma (pend_l).
-//   - gerente: Short Kaizen de SU departamento, pendientes de su firma (pend_g).
-//   - mc:      TODOS los Short Kaizen de TODA la empresa pendientes del paso
-//              de Mejora Continua (pend_mc) — sin importar equipo/departamento.
+//   - lider/gerente: Short Kaizen donde SU nómina coincide exactamente con
+//                    nominaAprobacion2/nominaAprobacion3 del kaizen (paso
+//                    actual según `status`) — la autorización real es por
+//                    nómina exacta, nunca por rol/equipo/departamento (ver
+//                    KaizenZX_Flujo_Definitivo_Aprobacion.md y confirmación
+//                    de Jesús en KaizenZX_Respuestas_3_Preguntas_Tecnicas.md:
+//                    `email` no sirve porque solo está poblado para los 47
+//                    aprobadores del catálogo, no para las 326 personas).
+//   - mc:      TODOS los Short Kaizen con status === "pend_aprobacion1".
 //   - admin:   todos los pendientes, de cualquier paso (vista de respaldo).
 // ============================================================================
 
@@ -18,7 +23,19 @@ import { el, formatDate, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
 
-const STEP_LABEL = { pend_mc: "Mejora Continua", pend_l: "Líder", pend_g: "Gerente" };
+// `status` es la fuente de verdad (confirmado por Jesús, no derivar de las
+// firmas). Valores: pend_aprobacion1/2/3, done, rej_aprobacion1/2/3.
+function estadoActual(k) {
+  const m = /^pend_(aprobacion[123])$/.exec(k.status || "");
+  if (!m) return null; // ya cerrado (done o rechazado)
+  const paso = m[1];
+  const info = {
+    aprobacion1: { paso: 1, label: "Mejora Continua", nomina: null },
+    aprobacion2: { paso: 2, label: k.nombreAprobacion2 || "Aprobación 2", nomina: k.nominaAprobacion2 },
+    aprobacion3: { paso: 3, label: k.nombreAprobacion3 || "Aprobación 3", nomina: k.nominaAprobacion3 },
+  };
+  return info[paso];
+}
 
 export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "solicitudes-view" }, [el("div", { class: "skeleton", style: "height:200px" })]));
@@ -67,11 +84,19 @@ function paintError(container, err) {
 function pendientesParaUsuario() {
   const user = state.user || {};
   const kaizens = state.kaizens || [];
-  if (user.rol === "lider") return kaizens.filter((k) => k.status === "pend_l" && k.equipo === user.equipo);
-  if (user.rol === "gerente") return kaizens.filter((k) => k.status === "pend_g" && k.departamento === user.departamento);
-  if (user.rol === "mc") return kaizens.filter((k) => k.status === "pend_mc");
-  if (user.rol === "admin") return kaizens.filter((k) => ["pend_mc", "pend_l", "pend_g"].includes(k.status));
-  return [];
+  const pendientes = kaizens
+    .map((k) => ({ k, actual: estadoActual(k) }))
+    .filter(({ actual }) => actual);
+
+  if (user.rol === "mc") return pendientes.filter(({ actual }) => actual.paso === 1).map(({ k }) => k);
+  if (user.rol === "admin") return pendientes.map(({ k }) => k);
+
+  // lider/gerente: coincidencia exacta de nómina contra el paso actual —
+  // nunca por rol/equipo/departamento (confirmado por Jesús: `email` no es
+  // confiable, solo está poblado para los 47 aprobadores del catálogo).
+  return pendientes
+    .filter(({ actual }) => (actual.paso === 2 || actual.paso === 3) && actual.nomina === user.nomina)
+    .map(({ k }) => k);
 }
 
 function paint(container) {
@@ -147,7 +172,7 @@ function buildCard(k, container) {
           el("div", { class: "hint" }, [`${k.equipo} · ${k.nombre} (${k.nomina}) · ${formatDate(k.fechaId)}`]),
         ]
       ),
-      el("span", { class: "badge badge-pend" }, [`Esperando ${STEP_LABEL[k.status] || k.status}`]),
+      el("span", { class: "badge badge-pend" }, [`Esperando ${estadoActual(k)?.label || "aprobación"}`]),
     ]),
     el("p", { style: "margin:10px 0" }, [k.breveDescripcion || ""]),
     el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [aprobarBtn, rechazarBtn]),

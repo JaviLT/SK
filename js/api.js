@@ -31,12 +31,28 @@
 //   GET    /kaizens/:id                                          -> Kaizen
 //   POST   /kaizens                 { ...datosDelFormulario }    -> Kaizen
 //   GET    /approvals/:token                                     -> { kaizen, step }
-//                                    step ∈ "mc" | "lider" | "gerente"
+//                                    step ∈ "aprobacion1" | "aprobacion2" |
+//                                    "aprobacion3" (modelo de 2-o-3 pasos,
+//                                    ver KaizenZX_Flujo_Definitivo_Aprobacion.md)
 //   POST   /approvals/:token        { decision, password }       -> Kaizen
 //                                    decision ∈ "aprobar" | "rechazar" — ya
 //                                    NO se manda nombre/firma/razón: el
 //                                    backend identifica a quien aprueba por
 //                                    el token + su contraseña.
+//   POST   /kaizens/:id/decision    { decision }                 -> Kaizen
+//                                    Aprobación de un clic desde la pestaña
+//                                    "Solicitudes" (con sesión). Autoriza por
+//                                    nómina exacta congelada en el kaizen,
+//                                    nunca por rol.
+//   POST   /equipos                 { nombre, departamentoId, liderEmail? } -> Equipo
+//   PUT    /equipos/:id             { ...campos a actualizar }   -> Equipo
+//   DELETE /equipos/:id                                          -> { ok: true }
+//                                    Bloquea si el equipo tiene empleados o
+//                                    kaizens históricos asociados.
+//   POST   /equipos/:id/empleados   { nomina }                   -> Equipo
+//   DELETE /equipos/empleados       { nomina }                   -> { ok: true }
+//   GET    /empleados/:nomina                                    -> Empleado
+//                                    Restringido a admin/mc.
 //
 // Todas las respuestas de error deben usar código HTTP != 2xx y un body
 // { error: "mensaje legible" } — este módulo ya sabe leer ese formato.
@@ -64,6 +80,13 @@ const FUNCTION_MAP = [
   // Aprobación de un clic desde la pestaña "Solicitudes" (ya con sesión
   // iniciada) — pendiente en el backend real, ver docs/PARA_JESUS.md.
   { method: "POST", pattern: /^\/kaizens\/(.+)\/decision$/, fn: "kaizens-decision" },
+  // Administración de equipos/empleados — Fase 5, ya construidas por Jesús.
+  { method: "POST", pattern: /^\/equipos$/, fn: "equipos-create" },
+  { method: "PUT", pattern: /^\/equipos\/(.+)$/, fn: "equipos-update" },
+  { method: "DELETE", pattern: /^\/equipos\/(.+)$/, fn: "equipos-delete" },
+  { method: "POST", pattern: /^\/equipos\/(.+)\/empleados$/, fn: "equipos-empleados-add" },
+  { method: "DELETE", pattern: /^\/equipos\/empleados$/, fn: "equipos-empleados-remove" },
+  { method: "GET", pattern: /^\/empleados\/(.+)$/, fn: "empleados-get" },
 ];
 
 function resolveUrl(path, method) {
@@ -192,5 +215,41 @@ export const api = {
     return CONFIG.MOCK_MODE
       ? mockBackend.aprobarEnApp(kaizenId, decision, state.user)
       : request(`/kaizens/${encodeURIComponent(kaizenId)}/decision`, { method: "POST", body: { decision } });
+  },
+
+  // ---- Administración de equipos/empleados (Fase 5) ----
+
+  async crearEquipo(payload) {
+    return CONFIG.MOCK_MODE ? mockBackend.crearEquipo(payload) : request("/equipos", { method: "POST", body: payload });
+  },
+
+  async actualizarEquipo(equipoId, payload) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.actualizarEquipo(equipoId, payload)
+      : request(`/equipos/${encodeURIComponent(equipoId)}`, { method: "PUT", body: payload });
+  },
+
+  async eliminarEquipo(equipoId) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.eliminarEquipo(equipoId)
+      : request(`/equipos/${encodeURIComponent(equipoId)}`, { method: "DELETE" });
+  },
+
+  async agregarEmpleado(equipoId, nomina) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.agregarEmpleado(equipoId, { nomina })
+      : request(`/equipos/${encodeURIComponent(equipoId)}/empleados`, { method: "POST", body: { nomina } });
+  },
+
+  async eliminarEmpleado(nomina) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.eliminarEmpleado(nomina)
+      : request("/equipos/empleados", { method: "DELETE", body: { nomina } });
+  },
+
+  async buscarEmpleadoPorNomina(nomina) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.buscarEmpleadoPorNomina(nomina)
+      : request(`/empleados/${encodeURIComponent(nomina)}`);
   },
 };

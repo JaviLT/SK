@@ -86,12 +86,22 @@ function paint(view, k) {
   );
 }
 
+// El kaizen puede cerrar en 2 o 3 pasos según la fila del creador (ver
+// KaizenZX_Flujo_Definitivo_Aprobacion.md) — el paso 3 solo se muestra si el
+// backend mandó datos de aprobador para ese paso (nombreAprobacion3/
+// emailAprobacion3), sin asumir un número fijo de pasos.
 function buildAutorizaciones(k) {
   const items = [
-    ["Mejora Continua", k.firmaMCNombre, k.firmaMCFecha],
-    ["Líder / Coordinador", k.firmaLiderNombre, k.firmaLiderFecha],
-    ["Gerente de Área", k.firmaGerenteNombre, k.firmaGerenteDate],
+    ["Mejora Continua", k.firmaAprobacion1Nombre, k.firmaAprobacion1Fecha],
+    ["Aprobación 2" + (k.nombreAprobacion2 ? ` (${k.nombreAprobacion2})` : ""), k.firmaAprobacion2Nombre, k.firmaAprobacion2Fecha],
   ];
+  if (k.nombreAprobacion3 || k.emailAprobacion3 || k.firmaAprobacion3Nombre) {
+    items.push([
+      "Aprobación 3" + (k.nombreAprobacion3 ? ` (${k.nombreAprobacion3})` : ""),
+      k.firmaAprobacion3Nombre,
+      k.firmaAprobacion3Fecha,
+    ]);
+  }
   return el(
     "div",
     { class: "sk-autorizaciones" },
@@ -117,28 +127,53 @@ function kv(label, value) {
   return el("p", { style: "margin-bottom:8px" }, [el("strong", { style: "color:var(--gray-700)" }, [`${label}: `]), String(value)]);
 }
 
+// `status` es la fuente de verdad del paso en el que va el kaizen
+// (confirmado por Jesús — nunca derivar el estado de las firmas, sería
+// lógica duplicada). Valores: pend_aprobacion1/2/3, done, rej_aprobacion1/2/3.
+// Los campos de firma solo se usan para MOSTRAR quién/cuándo firmó, no para
+// decidir el estado de cada paso.
 function buildTimeline(k) {
+  const pendMatch = /^pend_(aprobacion([123]))$/.exec(k.status || "");
+  const rejMatch = /^rej_(aprobacion([123]))$/.exec(k.status || "");
+  const pasoPendiente = pendMatch ? Number(pendMatch[2]) : null;
+  const pasoRechazado = rejMatch ? Number(rejMatch[2]) : null;
+  const tienePaso3 = Boolean(k.nombreAprobacion3 || k.emailAprobacion3 || k.firmaAprobacion3Nombre);
+
+  function estadoPaso(n) {
+    if (pasoRechazado === n) return "rej";
+    if (k.status === "done") return "done";
+    if (pasoRechazado !== null && n < pasoRechazado) return "done";
+    if (pasoPendiente !== null) {
+      if (n < pasoPendiente) return "done";
+      if (n === pasoPendiente) return "pending";
+      return "todo";
+    }
+    return "todo";
+  }
+
   const steps = [
     { label: "Solicitud creada", date: k.creadoEn, state: "done" },
     {
       label: "Revisión de Mejora Continua",
-      date: k.firmaMCFecha,
-      state: k.status === "rej_mc" ? "rej" : k.firmaMCNombre ? "done" : k.status === "pend_mc" ? "pending" : "todo",
-      extra: k.firmaMCNombre,
+      date: k.firmaAprobacion1Fecha,
+      state: estadoPaso(1),
+      extra: k.firmaAprobacion1Nombre || (pasoRechazado === 1 ? k.rechazoAprobacion1Razon : null),
     },
     {
-      label: "Aprobación del Líder",
-      date: k.firmaLiderFecha,
-      state: k.status === "rej_l" ? "rej" : k.firmaLiderNombre ? "done" : k.status === "pend_l" ? "pending" : "todo",
-      extra: k.firmaLiderNombre,
-    },
-    {
-      label: "Autorización del Gerente",
-      date: k.firmaGerenteDate,
-      state: k.status === "rej_g" ? "rej" : k.firmaGerenteNombre ? "done" : k.status === "pend_g" ? "pending" : "todo",
-      extra: k.firmaGerenteNombre,
+      label: k.nombreAprobacion2 ? `Aprobación de ${k.nombreAprobacion2}` : "Aprobación 2",
+      date: k.firmaAprobacion2Fecha,
+      state: estadoPaso(2),
+      extra: k.firmaAprobacion2Nombre || (pasoRechazado === 2 ? k.rechazoAprobacion2Razon : null),
     },
   ];
+  if (tienePaso3) {
+    steps.push({
+      label: k.nombreAprobacion3 ? `Aprobación de ${k.nombreAprobacion3}` : "Aprobación 3",
+      date: k.firmaAprobacion3Fecha,
+      state: estadoPaso(3),
+      extra: k.firmaAprobacion3Nombre || (pasoRechazado === 3 ? k.rechazoAprobacion3Razon : null),
+    });
+  }
 
   return el(
     "div",
@@ -254,10 +289,14 @@ async function exportPDF(k) {
     // ---- Autorizaciones ----
     y += 2;
     y = seccionTitulo(doc, "Autorizaciones", margin, y, contentW);
-    const autCols = contentW / 3;
-    autorizacion(doc, "Mejora Continua", k.firmaMCNombre, k.firmaMCFecha, margin, y, autCols - 3);
-    autorizacion(doc, "Líder / Coordinador", k.firmaLiderNombre, k.firmaLiderFecha, margin + autCols, y, autCols - 3);
-    autorizacion(doc, "Gerente de Área", k.firmaGerenteNombre, k.firmaGerenteDate, margin + autCols * 2, y, autCols - 3);
+    const tienePaso3 = Boolean(k.nombreAprobacion3 || k.emailAprobacion3 || k.firmaAprobacion3Nombre);
+    const autItems = [
+      ["Mejora Continua", k.firmaAprobacion1Nombre, k.firmaAprobacion1Fecha],
+      [k.nombreAprobacion2 || "Aprobación 2", k.firmaAprobacion2Nombre, k.firmaAprobacion2Fecha],
+    ];
+    if (tienePaso3) autItems.push([k.nombreAprobacion3 || "Aprobación 3", k.firmaAprobacion3Nombre, k.firmaAprobacion3Fecha]);
+    const autCols = contentW / autItems.length;
+    autItems.forEach(([rol, nombre, fecha], i) => autorizacion(doc, rol, nombre, fecha, margin + autCols * i, y, autCols - 3));
 
     y += 16 + 8;
     doc.setFontSize(7);
