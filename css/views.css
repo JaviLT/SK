@@ -198,6 +198,12 @@
   gap: var(--sp-3); padding: var(--sp-3); border-radius: var(--radius-sm);
   background: var(--gray-50);
 }
+/* Cuando un equipo tiene más de 5 integrantes: se ven los primeros ~5 y el
+   resto queda accesible con scroll interno, para que la tarjeta no crezca
+   sin límite. */
+.admin-member-list-scroll{
+  max-height: 320px; overflow-y: auto; padding-right: var(--sp-2);
+}
 
 /* ============ Dashboard ============ */
 .equipo-progreso-list{ display: flex; flex-direction: column; gap: var(--sp-3); }

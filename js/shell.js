@@ -17,6 +17,7 @@
 import { api } from "./api.js";
 import { setState } from "./state.js";
 import { toast } from "./utils.js";
+import { CONFIG } from "./config.js";
 
 // Cada tab: a qué página apunta y qué roles pueden verla. `roles: null` = todos.
 const NAV_ITEMS = [
@@ -66,6 +67,19 @@ function buildChrome(user, page) {
   if (topbar) topbar.hidden = false;
   if (mobileNav) mobileNav.hidden = false;
   if (fab) fab.hidden = false;
+
+  // Versión visible en el topbar de toda la app — para confirmar a simple
+  // vista que el navegador ya trae la última versión y no una copia vieja
+  // en caché (pedido explícito de Javier, sept. 2026).
+  const brandText = document.querySelector(".brand-text");
+  if (brandText && !document.getElementById("app-version-badge")) {
+    const badge = document.createElement("span");
+    badge.id = "app-version-badge";
+    badge.className = "app-version-badge";
+    badge.textContent = `v${CONFIG.APP_VERSION}`;
+    badge.title = "Versión de la aplicación en ejecución";
+    brandText.appendChild(badge);
+  }
 
   const nameEl = document.getElementById("user-chip-name");
   if (nameEl) nameEl.textContent = user.nombre;

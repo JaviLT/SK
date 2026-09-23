@@ -25,6 +25,7 @@
 .brand-text{ display: flex; flex-direction: column; line-height: 1.15; }
 .brand-text strong{ color: var(--zx-white); font-size: var(--fs-base); font-weight: 700; }
 .brand-text span{ color: #c7d5ff; font-size: var(--fs-xs); font-weight: 300; }
+.app-version-badge{ color: #8fa3e0; font-size: 10px; font-weight: 300; letter-spacing: .02em; }
 
 .tabs{ display: flex; gap: var(--sp-1); flex: 1; }
 .tab{

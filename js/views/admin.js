@@ -1,30 +1,40 @@
 // ============================================================================
-// admin.js — Pantalla de administración: equipos, líderes, gerentes y
-// empleados, filtro por departamento y exportación a Excel.
+// admin.js — Pantalla de administración: equipos, aprobadores y empleados,
+// filtro por departamento y exportación a Excel.
 //
 // Conectado al contrato real de Fase 5 (KaizenZX_Handoff_Fase5_Final.md +
-// KaizenZX_Respuestas_3_Preguntas_Tecnicas.md): equipos-create/update/delete,
-// equipos-empleados-add/remove, empleados-get — todo vía js/api.js, con
-// fallback a mock-backend.js cuando CONFIG.MOCK_MODE está activo, igual que
-// el resto de la app.
+// KaizenZX_Respuestas_3_Preguntas_Tecnicas.md + KaizenZX_Respuestas_Admin_
+// Conectado.md): equipos-create/update/delete, equipos-empleados-add/remove,
+// empleados-get — todo vía js/api.js, con fallback a mock-backend.js cuando
+// CONFIG.MOCK_MODE está activo, igual que el resto de la app.
 //
-// Modelo de gerente: YA NO se administra por departamento — cada equipo
-// trae su propio gerente ya resuelto por el backend (`gerenteNombre`/
-// `gerenteEmail` en la respuesta de GET /equipos, vía equipos_gerentes o
-// departamentos_gerentes según el caso — transparente para el frontend).
-// Aquí solo se MUESTRA, no se edita todavía — no hay endpoint documentado
-// para reasignar gerente directamente; si el negocio lo necesita, es un
-// pendiente a levantar con Jesús.
+// Nomenclatura (ajuste de septiembre 2026, pedido directo de Javier): lo que
+// `GET /equipos` regresa como `liderNombre`/`liderEmail` y `gerenteNombre`/
+// `gerenteEmail` es, en los datos reales, quien aprueba el paso 2 y el paso 3
+// del kaizen respectivamente (no necesariamente el mismo rol "Líder"/
+// "Gerente" del organigrama — no todos los líderes son aprobadores). Por eso
+// esta pantalla ya los llama "Aprobador 2" y "Aprobador 3", aunque el campo
+// que viaja al backend se sigue llamando `liderEmail` (el backend no lo ha
+// renombrado). "Aprobador 3" (antes "Gerente") sigue sin poder asignarse
+// desde aquí — no hay endpoint todavía; ver KaizenZX_Filtro_y_Aprobadores_
+// Admin.md, pendiente con Jesús.
+//
+// Filtro por departamento: `GET /equipos` NO trae departamento por equipo
+// (confirmado por Jesús) — mientras se agrega ese campo, se infiere
+// cruzando el historial de Short Kaizen de cada equipo (ver
+// departamentoDeEquipo()). Es una aproximación, marcada como tal en
+// pantalla, y no clasifica equipos sin ningún kaizen creado todavía.
 //
 // Acceso: visible para usuarios con rol "admin" o "mc" (ver js/shell.js).
 // ============================================================================
 
-import { el, toast, isValidEmail, formatDate, shortId } from "../utils.js";
+import { el, toast, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
 import { state } from "../state.js";
 
 let equiposCache = [];
 let departamentosCache = []; // [{id, nombre}] — GET /departamentos (antes string[] en el mock)
+let equipoDepartamentoCache = {}; // { [nombreEquipo]: nombreDepartamento } — inferido de kaizens, ver departamentoDeEquipo()
 let departamentoFiltro = "";
 
 export async function render(container, params, isStale) {
@@ -46,11 +56,17 @@ export async function render(container, params, isStale) {
   view.appendChild(el("div", { class: "skeleton", style: "height:220px" }));
 
   try {
-    const [equipos, departamentos] = await Promise.all([api.getEquipos(), api.getDepartamentos()]);
+    const [equipos, departamentos, kaizens] = await Promise.all([api.getEquipos(), api.getDepartamentos(), api.getKaizens()]);
     if (isStale && isStale()) return; // el usuario ya navegó a otra vista — no tocar el DOM
     equiposCache = equipos;
     // Normaliza: el mock regresa string[], el backend real { id, nombre }[].
     departamentosCache = departamentos.map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
+    // GET /equipos no trae departamento propio — se infiere del historial de
+    // kaizens (sí trae `departamento`) mientras se agrega el campo real.
+    equipoDepartamentoCache = {};
+    (kaizens || []).forEach((k) => {
+      if (k.equipo && k.departamento) equipoDepartamentoCache[k.equipo] = k.departamento;
+    });
     paint(view);
   } catch (err) {
     if (isStale && isStale()) return;
@@ -69,6 +85,27 @@ function nombreDepartamento(id) {
   return departamentosCache.find((d) => d.id === id)?.nombre || id;
 }
 
+// Devuelve { id, nombre, estimado } o null si no se pudo determinar el
+// departamento del equipo. Prioriza un campo directo del equipo (por si
+// Jesús ya agregó departamentoId/departamento a GET /equipos) y solo cae al
+// cruce con el historial de kaizens si no hay nada directo — ver nota en el
+// encabezado del archivo.
+function departamentoDeEquipo(eq) {
+  if (eq.departamentoId) {
+    return { id: eq.departamentoId, nombre: nombreDepartamento(eq.departamentoId), estimado: false };
+  }
+  if (eq.departamento) {
+    const match = departamentosCache.find((d) => d.nombre === eq.departamento);
+    return { id: match?.id || null, nombre: eq.departamento, estimado: false };
+  }
+  const inferido = equipoDepartamentoCache[eq.nombre];
+  if (inferido) {
+    const match = departamentosCache.find((d) => d.nombre === inferido);
+    return { id: match?.id || null, nombre: inferido, estimado: true };
+  }
+  return null;
+}
+
 function paint(view) {
   view.innerHTML = "";
 
@@ -79,7 +116,7 @@ function paint(view) {
     el("div", { class: "view-header" }, [
       el("div", {}, [
         el("h1", {}, ["Administración"]),
-        el("p", {}, ["Equipos, líderes, gerentes y empleados — solo visible para el usuario maestro y Mejora Continua"]),
+        el("p", {}, ["Equipos, aprobadores y empleados — solo visible para el usuario maestro y Mejora Continua"]),
       ]),
       el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [exportBtn, nuevoBtn]),
     ])
@@ -88,12 +125,7 @@ function paint(view) {
   view.appendChild(buildFiltroDepartamento(view));
 
   const equiposFiltrados = departamentoFiltro
-    ? equiposCache.filter(
-        (eq) =>
-          eq.departamentoId === departamentoFiltro ||
-          eq.departamento === departamentoFiltro ||
-          eq.departamento === nombreDepartamento(departamentoFiltro)
-      )
+    ? equiposCache.filter((eq) => departamentoDeEquipo(eq)?.id === departamentoFiltro)
     : equiposCache;
 
   if (!equiposCache.length) {
@@ -141,12 +173,13 @@ function buildFiltroDepartamento(view) {
 }
 
 function buildEquipoCard(view, eq) {
-  const nombreDepto = eq.departamento || nombreDepartamento(eq.departamentoId);
+  const depto = departamentoDeEquipo(eq);
+  const deptoTexto = depto ? (depto.estimado ? `${depto.nombre} (estimado por historial)` : depto.nombre) : "Departamento sin clasificar";
   return el("div", { class: "card admin-team-card" }, [
     el("div", { class: "card-header" }, [
       el("div", {}, [
         el("h3", {}, [eq.nombre]),
-        nombreDepto ? el("div", { class: "hint" }, [nombreDepto]) : null,
+        el("div", { class: "hint" }, [deptoTexto]),
       ]),
       el("div", { style: "display:flex;gap:8px" }, [
         el("button", { class: "btn btn-outline btn-sm", onclick: () => openEquipoModal(view, eq) }, ["Editar"]),
@@ -155,12 +188,13 @@ function buildEquipoCard(view, eq) {
     ]),
 
     el("div", { class: "admin-roles-row" }, [
-      roleBlock("Líder", eq.liderNombre, eq.liderEmail),
-      // El gerente ya se resuelve por equipo del lado del backend (vía el
-      // equipo específico o el gerente único del departamento, según el
-      // caso) — aquí solo se muestra, no se edita: no hay endpoint
-      // documentado todavía para reasignar gerente directamente.
-      roleBlock("Gerente", eq.gerenteNombre, eq.gerenteEmail),
+      // liderNombre/liderEmail = quien aprueba el paso 2 del kaizen para
+      // este equipo (no necesariamente el "líder" del organigrama).
+      roleBlock("Aprobador 2", eq.liderNombre, eq.liderEmail),
+      // gerenteNombre/gerenteEmail = quien aprueba el paso 3 (opcional según
+      // el equipo). Se resuelve por equipo del lado del backend — aquí solo
+      // se muestra, todavía no se edita (sin endpoint, pendiente con Jesús).
+      roleBlock("Aprobador 3", eq.gerenteNombre, eq.gerenteEmail),
     ]),
 
     el("div", { class: "admin-members-header" }, [
@@ -193,9 +227,13 @@ function buildMembersTable(view, eq) {
       el("p", {}, ["Este equipo todavía no tiene empleados registrados."]),
     ]);
   }
+  // Con más de 5 integrantes, la lista se vuelve scrollable en vez de
+  // seguir creciendo la tarjeta — se ven los primeros ~5 y el resto se
+  // alcanza con scroll interno.
+  const listClass = eq.miembros.length > 5 ? "admin-member-list admin-member-list-scroll" : "admin-member-list";
   return el(
     "div",
-    { class: "admin-member-list" },
+    { class: listClass },
     eq.miembros.map((m) =>
       el("div", { class: "admin-member-row" }, [
         el("div", {}, [
@@ -215,14 +253,27 @@ function buildMembersTable(view, eq) {
 // ---------------------------------------------------------------------------
 // Modal: crear / editar equipo
 // ---------------------------------------------------------------------------
+// Resuelve una nómina al nombre/correo del empleado, vía GET /empleados/:nomina
+// (empleados-get). La forma exacta de la respuesta no está 100% confirmada
+// por Jesús todavía, así que se prueban los nombres de campo más probables
+// para el correo antes de rendirse.
+async function resolverEmpleadoPorNomina(nomina) {
+  const empleado = await api.buscarEmpleadoPorNomina(nomina);
+  const correo = empleado?.email || empleado?.correo || empleado?.liderEmail || null;
+  if (!correo) {
+    throw new Error(
+      `${empleado?.nombre || "Ese empleado"} (nómina ${nomina}) no tiene correo institucional cargado en RH — no se puede asignar como aprobador todavía.`
+    );
+  }
+  return { nombre: empleado?.nombre || nomina, email: correo };
+}
+
 function openEquipoModal(view, equipoExistente) {
   const esEdicion = Boolean(equipoExistente);
   let overlayRef; // se asigna abajo, antes de que el usuario pueda hacer clic en nada
 
   const nombreInput = el("input", { class: "input", type: "text", value: equipoExistente?.nombre || "", placeholder: "Ej. Equipo Línea A" });
-  const departamentoActualId = equipoExistente?.departamentoId
-    || departamentosCache.find((d) => d.nombre === equipoExistente?.departamento)?.id
-    || "";
+  const departamentoActualId = departamentoDeEquipo(equipoExistente || {})?.id || "";
   const departamentoSelect = el(
     "select",
     { class: "select" },
@@ -231,17 +282,35 @@ function openEquipoModal(view, equipoExistente) {
       ...departamentosCache.map((d) => el("option", { value: d.id, selected: d.id === departamentoActualId || undefined }, [d.nombre])),
     ]
   );
-  // POST /equipos solo acepta { nombre, departamentoId, liderEmail? } — no
-  // existe `liderNombre` en el contrato real (se resuelve del lado del
-  // backend a partir del correo, si aplica). Ver KaizenZX_Handoff_Fase5_Final.md.
-  const liderEmailInput = el("input", { class: "input", type: "email", value: equipoExistente?.liderEmail || "", placeholder: "correo@zubex.com.mx (opcional)" });
+  // POST/PUT /equipos solo aceptan { nombre, departamentoId, liderEmail? } —
+  // no existe `liderNombre` en el contrato real. Se pide la NÓMINA (no el
+  // correo) y se resuelve a correo aquí mismo antes de mandarlo, vía
+  // GET /empleados/:nomina (empleados-get) — mismo patrón que "Agregar
+  // empleado". El campo se sigue llamando `liderEmail` de cara al backend,
+  // aunque en pantalla ya se muestra como "Aprobador 2".
+  const aprobador2NominaInput = el("input", { class: "input", type: "text", placeholder: "Ej. 0006" });
+  const aprobador2ActualHint = esEdicion
+    ? el("p", { class: "hint" }, [
+        `Aprobador 2 actual: ${equipoExistente.liderNombre || equipoExistente.liderEmail || "— sin asignar —"}. Deja este campo vacío si no quieres cambiarlo.`,
+      ])
+    : null;
 
-  const body = el("div", {}, [
-    field("Nombre del equipo *", nombreInput),
-    field("Departamento *", departamentoSelect),
-    field("Líder — correo", liderEmailInput),
-    el("p", { class: "hint" }, ["El gerente ya no se asigna aquí — se resuelve automáticamente por equipo del lado del backend."]),
-  ]);
+  const body = el(
+    "div",
+    {},
+    [
+      field("Nombre del equipo *", nombreInput),
+      field("Departamento *", departamentoSelect),
+      field("Aprobador 2 — nómina (opcional)", aprobador2NominaInput),
+      aprobador2ActualHint,
+      el("p", { class: "hint" }, [
+        "El nombre y correo del Aprobador 2 se completan automáticamente al validar la nómina contra el catálogo de personal.",
+      ]),
+      el("p", { class: "hint" }, [
+        "Aprobador 3 todavía no se puede asignar desde aquí — el backend no tiene ese endpoint listo (pendiente con TI).",
+      ]),
+    ].filter(Boolean)
+  );
 
   overlayRef = openModal(esEdicion ? "Editar equipo" : "Nuevo equipo", body, [
     el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]),
@@ -250,32 +319,47 @@ function openEquipoModal(view, equipoExistente) {
       {
         class: "btn btn-accent",
         onclick: async () => {
-          const liderEmail = liderEmailInput.value.trim();
-          const payload = {
-            nombre: nombreInput.value.trim(),
-            departamentoId: departamentoSelect.value,
-          };
-          if (liderEmail) payload.liderEmail = liderEmail;
+          const nombre = nombreInput.value.trim();
+          const departamentoId = departamentoSelect.value;
+          const nomina = aprobador2NominaInput.value.trim();
 
-          if (!payload.nombre || !payload.departamentoId) {
+          if (!nombre || !departamentoId) {
             toast("Completa todos los campos obligatorios (*).", "tr");
             return;
           }
-          if (liderEmail && !isValidEmail(liderEmail)) {
-            toast("Revisa que el correo del líder sea válido.", "tr");
-            return;
+
+          const payload = { nombre, departamentoId };
+          if (nomina) {
+            try {
+              const { email } = await resolverEmpleadoPorNomina(nomina);
+              payload.liderEmail = email;
+            } catch (err) {
+              toast(err.message || "No se pudo validar esa nómina.", "tr");
+              return;
+            }
           }
+
           try {
+            let equipoResultado;
             if (esEdicion) {
-              await api.actualizarEquipo(equipoExistente.id, payload);
+              equipoResultado = await api.actualizarEquipo(equipoExistente.id, payload);
               toast("Equipo actualizado.", "tg");
             } else {
-              await api.crearEquipo(payload);
+              equipoResultado = await api.crearEquipo(payload);
               toast("Equipo creado.", "tg");
             }
             equiposCache = await api.getEquipos();
             closeModal(overlayRef);
             paint(view);
+
+            // Al crear (no al editar): se abre de inmediato el popup para
+            // agregar integrantes, tal como pidió Javier.
+            if (!esEdicion) {
+              const equipoNuevo =
+                equiposCache.find((e) => e.id === equipoResultado?.id) || equiposCache.find((e) => e.nombre === nombre);
+              if (equipoNuevo) openEmpleadoModal(view, equipoNuevo);
+              else toast("Equipo creado. Agrega sus integrantes desde la tarjeta del equipo.", "default");
+            }
           } catch (err) {
             toast(err.message || "No se pudo guardar el equipo.", "tr");
           }
