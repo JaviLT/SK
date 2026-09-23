@@ -8,49 +8,50 @@
 // empleados-get — todo vía js/api.js, con fallback a mock-backend.js cuando
 // CONFIG.MOCK_MODE está activo, igual que el resto de la app.
 //
-// Nomenclatura (ajuste de septiembre 2026, pedido directo de Javier): esta
-// pantalla llama "Aprobador 2"/"Aprobador 3" a lo que `GET /equipos` regresa
-// como `liderNombre`/`liderEmail` y `gerenteNombre`/`gerenteEmail` (no
-// necesariamente el mismo rol "Líder"/"Gerente" del organigrama — no todos
-// los líderes son aprobadores). El campo que viaja al backend se sigue
-// llamando `liderEmail` — Jesús pidió explícitamente NO renombrarlo
-// (romper el nombre de un campo en uso es riesgoso sin necesidad real).
+// Modelo de roles (rediseño de septiembre 2026, pedido directo de Javier —
+// "vamos a hacer los cambios bien"): esta pantalla ahora distingue 3 roles
+// separados por equipo, en vez de reusar el campo "líder" como si fuera un
+// aprobador:
+//   - Líder: rol de organigrama, puramente informativo. Viene de
+//     `liderNombre`/`liderEmail` (GET /equipos) y se asigna por NÓMINA
+//     (cualquier empleado de la empresa) — el correo se resuelve solo si
+//     esa persona lo tiene capturado en RH.
+//   - Aprobador 2 / Aprobador 3: quienes de verdad aprueban los pasos 2 y 3
+//     del kaizen. Hoy NO se pueden asignar por equipo desde aquí — ver mapa
+//     de ruteo abajo y la sección "pendiente con TI" en openEquipoModal().
 //
 // IMPORTANTE — mapa confirmado de ruteo vs. visibilidad vs. informativo
-// (KaizenZX_Mapa_Ruteo_Vs_Visibilidad.md, respuesta final de Jesús — ya NO
-// es una sospecha, está confirmado):
+// (KaizenZX_Mapa_Ruteo_Vs_Visibilidad.md, respuesta final de Jesús):
 //
 //   RUTEO real (a quién le llega/quién puede aprobar):
 //     `empleados.aprobador2_nomina` / `aprobador3_nomina` — se congelan en
 //     el kaizen al crearse. Única fuente de verdad. Hoy solo se puede
 //     modificar directo en la base de Jesús, NO desde ningún endpoint de
-//     Admin (para aprobador3 ya viene una cascada, ver abajo; para
-//     aprobador2 no, por los 3 equipos con valores no uniformes).
+//     Admin todavía (cascada de Aprobador 3 prometida, ver
+//     KaizenZX_Cambios_Necesarios_Equipos_v2.md; cascada de Aprobador 2
+//     pedida en esa misma ronda — Javier decidió UNIFICAR también los 3
+//     equipos con valores no uniformes, C4/Las Papas/Motal Kompras).
 //   VISIBILIDAD (qué ve cada quien en listados) — funcional, pero no es ruteo:
 //     `equipos_gerentes`/`departamentos_gerentes` (gerente por equipo/depto
 //     en "Solicitudes"), `empleados.equipo_id` (qué ve un líder).
 //   PURAMENTE INFORMATIVO, sin efecto funcional en nada:
 //     `equipos.lider_email` — el campo `liderEmail` de POST/PUT /equipos.
 //     CONFIRMADO por Jesús: solo alimenta `liderNombre`/`liderEmail` en
-//     GET /equipos, nunca toca `aprobador2_nomina`. La caja "Aprobador 2"
-//     de esta pantalla es, por ahora, SOLO REFERENCIA — cambiarla no
-//     cambia a quién le toca aprobar el paso 2.
-//
-// "Aprobador 3" tampoco se puede editar desde aquí todavía — Jesús va a
-// construir que, al reasignarlo por equipo, se propague a
-// `aprobador3_nomina` de todos los miembros actuales y futuros (seguro:
-// verificado que el aprobador3 es idéntico entre todos los miembros de
-// cada uno de los 38 equipos reales, sin excepciones). Para "Aprobador 2"
-// NO habrá una cascada equivalente por ahora: 3 equipos (C4, Las Papas,
-// Motal Kompras) tienen aprobador2 distinto entre miembros del mismo
-// equipo, así que forzarlo a nivel equipo sobrescribiría datos correctos.
+//     GET /equipos, nunca toca `aprobador2_nomina`. Correcto y esperado
+//     para "Líder" (siempre fue solo informativo); por eso YA NO se
+//     etiqueta como "Aprobador 2" en pantalla.
 //
 // ALERTA — mover gente de equipo NO actualiza su aprobador: agregar/quitar
 // un empleado de un equipo (equipos-empleados-add/remove) NO actualiza su
 // `aprobador2_nomina`/`aprobador3_nomina` — se queda con el aprobador de su
-// equipo anterior hasta que Jesús lo corrija manualmente. Mismo tipo de
-// desconexión que lo anterior: mover a alguien en Admin no cambia quién le
-// aprueba sus kaizens nuevos. Sin corregir todavía del lado del backend.
+// equipo anterior hasta que Jesús lo corrija manualmente. Sin corregir
+// todavía del lado del backend.
+//
+// Aviso de "ya pertenece a otro equipo": al buscar una nómina (líder,
+// aprobador o integrante nuevo), si `GET /empleados/:nomina` regresa un
+// `equipo` distinto al que se está editando, se muestra una advertencia —
+// ver advertenciaEquipoExistente(). No bloquea la acción, solo avisa (así
+// lo pidió Javier).
 //
 // Filtro por departamento: `GET /equipos` NO trae departamento por equipo
 // (confirmado por Jesús) — mientras se agrega ese campo, se infiere
@@ -221,13 +222,14 @@ function buildEquipoCard(view, eq) {
     ]),
 
     el("div", { class: "admin-roles-row" }, [
-      // liderNombre/liderEmail = quien aprueba el paso 2 del kaizen para
-      // este equipo (no necesariamente el "líder" del organigrama).
-      roleBlock("Aprobador 2", eq.liderNombre, eq.liderEmail),
-      // gerenteNombre/gerenteEmail = quien aprueba el paso 3 (opcional según
-      // el equipo). Se resuelve por equipo del lado del backend — aquí solo
-      // se muestra, todavía no se edita (sin endpoint, pendiente con Jesús).
-      roleBlock("Aprobador 3", eq.gerenteNombre, eq.gerenteEmail),
+      // liderNombre/liderEmail = rol de organigrama, puramente informativo
+      // (confirmado por Jesús — no mueve el ruteo de aprobación).
+      roleBlock("Líder", eq.liderNombre, eq.liderEmail),
+      // gerenteNombre/gerenteEmail = capa de VISIBILIDAD (equipos_gerentes),
+      // usada aquí como mejor referencia disponible de Aprobador 3 mientras
+      // no existe la cascada real hacia aprobador3_nomina — pendiente con
+      // Jesús, todavía no editable desde aquí.
+      roleBlock("Aprobador 3 (referencia)", eq.gerenteNombre, eq.gerenteEmail),
     ]),
 
     el("div", { class: "admin-members-header" }, [
@@ -292,15 +294,76 @@ function buildMembersTable(view, eq) {
 // todavía (lo va a agregar). Y aunque lo agregue, solo 47/326 personas
 // tienen correo institucional capturado en RH — para el resto siempre va a
 // venir vacío. Por eso la nómina solo AUTOCOMPLETA el correo cuando existe;
-// si no, se captura manualmente.
+// si no, se captura manualmente. `equipo` sí viene siempre que la persona
+// ya esté en uno — se usa para la advertencia de "ya pertenece a otro
+// equipo" (ver advertenciaEquipoExistente()).
 async function buscarEmpleadoInfo(nomina) {
   const empleado = await api.buscarEmpleadoPorNomina(nomina);
   const correo = empleado?.email || empleado?.correo || null;
-  return { nombre: empleado?.nombre || nomina, correo };
+  return { nombre: empleado?.nombre || nomina, correo, equipo: empleado?.equipo || null };
+}
+
+// Devuelve un mensaje de advertencia si `equipoDeLaPersona` existe y es
+// distinto al equipo que se está editando/creando (`equipoActualId`) —
+// null si no hay conflicto. Pedido explícito de Javier: solo avisa, no
+// bloquea la acción.
+function advertenciaEquipoExistente(equipoDeLaPersona, equipoActualId) {
+  if (!equipoDeLaPersona) return null;
+  if (equipoActualId && String(equipoDeLaPersona.id) === String(equipoActualId)) return null;
+  return `⚠ Ya pertenece al equipo "${equipoDeLaPersona.nombre}". Puedes continuar, pero probablemente haya que quitarla de ese equipo — hoy eso no pasa automático.`;
+}
+
+// Construye un bloque reutilizable "nómina → buscar → nombre/correo
+// autocompletados + advertencia de equipo existente", usado para Líder,
+// Aprobador 2 y Aprobador 3 dentro de openEquipoModal(). `showCorreo`
+// controla si se muestra/autocompleta un campo de correo aparte (Líder y
+// los aprobadores lo usan; el modal de "Agregar empleado" no).
+function nominaBuscarField({ placeholder = "Ej. 0006", correoInicial = "", equipoActualId = null } = {}) {
+  const nominaInput = el("input", { class: "input", type: "text", placeholder });
+  const correoInput = el("input", { class: "input", type: "email", placeholder: "correo@zubex.com.mx", value: correoInicial });
+  const hint = el("p", { class: "hint" }, [
+    "Escribe la nómina y presiona \"Buscar\" para completar el nombre automáticamente. El correo se autocompleta solo si esa persona ya lo tiene capturado en RH (hoy solo aplica a 47 de 326 personas) — si no, escríbelo tú abajo.",
+  ]);
+  const warning = el("p", { class: "hint", style: "color:#991b1b" }, []);
+  let ultimoResultado = null;
+
+  const buscarBtn = el(
+    "button",
+    {
+      class: "btn btn-outline btn-sm",
+      type: "button",
+      onclick: async () => {
+        const nomina = nominaInput.value.trim();
+        if (!nomina) {
+          toast("Escribe primero la nómina.", "tr");
+          return;
+        }
+        try {
+          const info = await buscarEmpleadoInfo(nomina);
+          ultimoResultado = info;
+          if (info.correo) {
+            correoInput.value = info.correo;
+            hint.textContent = `Encontrado: ${info.nombre} — correo cargado automáticamente.`;
+          } else {
+            hint.textContent = `Encontrado: ${info.nombre} — no tiene correo capturado en RH, escríbelo tú abajo.`;
+          }
+          warning.textContent = advertenciaEquipoExistente(info.equipo, equipoActualId) || "";
+        } catch (err) {
+          ultimoResultado = null;
+          warning.textContent = "";
+          hint.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
+        }
+      },
+    },
+    ["Buscar"]
+  );
+
+  return { nominaInput, correoInput, hint, warning, buscarBtn, getResultado: () => ultimoResultado };
 }
 
 function openEquipoModal(view, equipoExistente) {
   const esEdicion = Boolean(equipoExistente);
+  const equipoActualId = equipoExistente?.id || null;
   let overlayRef; // se asigna abajo, antes de que el usuario pueda hacer clic en nada
 
   const nombreInput = el("input", { class: "input", type: "text", value: equipoExistente?.nombre || "", placeholder: "Ej. Equipo Línea A" });
@@ -313,48 +376,24 @@ function openEquipoModal(view, equipoExistente) {
       ...departamentosCache.map((d) => el("option", { value: d.id, selected: d.id === departamentoActualId || undefined }, [d.nombre])),
     ]
   );
-  // POST/PUT /equipos solo aceptan { nombre, departamentoId, liderEmail? } —
-  // no existe `liderNombre` en el contrato real. Se busca por NÓMINA (botón
-  // "Buscar") para autocompletar nombre y correo cuando el catálogo los
-  // tiene; si no hay correo capturado en RH, se escribe manualmente en el
-  // campo de correo. El campo se sigue llamando `liderEmail` de cara al
-  // backend, aunque en pantalla ya se muestra como "Aprobador 2".
-  const aprobador2NominaInput = el("input", { class: "input", type: "text", placeholder: "Ej. 0006" });
-  const aprobador2CorreoInput = el("input", { class: "input", type: "email", placeholder: "correo@zubex.com.mx", value: equipoExistente?.liderEmail || "" });
-  const aprobador2BusquedaHint = el("p", { class: "hint" }, [
-    "Escribe la nómina y presiona \"Buscar\" para completar el nombre automáticamente. El correo se autocompleta solo si esa persona ya lo tiene capturado en RH (hoy solo aplica a 47 de 326 personas) — si no, escríbelo tú abajo.",
-  ]);
-  const aprobador2BuscarBtn = el(
-    "button",
-    {
-      class: "btn btn-outline btn-sm",
-      type: "button",
-      onclick: async () => {
-        const nomina = aprobador2NominaInput.value.trim();
-        if (!nomina) {
-          toast("Escribe primero la nómina.", "tr");
-          return;
-        }
-        try {
-          const { nombre, correo } = await buscarEmpleadoInfo(nomina);
-          if (correo) {
-            aprobador2CorreoInput.value = correo;
-            aprobador2BusquedaHint.textContent = `Encontrado: ${nombre} — correo cargado automáticamente.`;
-          } else {
-            aprobador2BusquedaHint.textContent = `Encontrado: ${nombre} — no tiene correo capturado en RH, escríbelo tú abajo.`;
-          }
-        } catch (err) {
-          aprobador2BusquedaHint.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
-        }
-      },
-    },
-    ["Buscar"]
-  );
-  const aprobador2ActualHint = esEdicion
-    ? el("p", { class: "hint" }, [
-        `Aprobador 2 actual (solo referencia): ${equipoExistente.liderNombre || equipoExistente.liderEmail || "— sin asignar —"}.`,
-      ])
+
+  // Líder — rol informativo de organigrama, cualquier empleado de la
+  // empresa, se busca por NÓMINA. Es el único de los 3 roles que sí se
+  // guarda hoy: viaja como `liderEmail` en POST/PUT /equipos (contrato
+  // real confirmado por Jesús — no existe `liderNombre` como campo de
+  // entrada).
+  const lider = nominaBuscarField({ placeholder: "Nómina del líder", correoInicial: equipoExistente?.liderEmail || "", equipoActualId });
+  const liderActualHint = esEdicion
+    ? el("p", { class: "hint" }, [`Líder actual: ${equipoExistente.liderNombre || equipoExistente.liderEmail || "— sin asignar —"}.`])
     : null;
+
+  // Aprobador 2 / Aprobador 3 — quienes de verdad aprueban los pasos 2 y 3.
+  // Hoy NO existe ningún campo en POST/PUT /equipos para guardarlos (ver
+  // KaizenZX_Cambios_Necesarios_Equipos_v2.md, pedido pendiente a Jesús) —
+  // estos campos son solo vista previa, se dejan preparados para conectarse
+  // en cuanto exista la cascada del lado del backend.
+  const aprobador2 = nominaBuscarField({ placeholder: "Nómina del Aprobador 2", equipoActualId });
+  const aprobador3 = nominaBuscarField({ placeholder: "Nómina del Aprobador 3", equipoActualId });
 
   const body = el(
     "div",
@@ -362,18 +401,36 @@ function openEquipoModal(view, equipoExistente) {
     [
       field("Nombre del equipo *", nombreInput),
       field("Departamento *", departamentoSelect),
+
+      el("p", { class: "hint", style: "font-weight:600;margin-top:8px" }, ["Líder (informativo)"]),
       el("div", { class: "field" }, [
-        el("label", {}, ["Aprobador 2 — nómina (opcional, solo referencia)"]),
-        el("div", { style: "display:flex;gap:8px" }, [aprobador2NominaInput, aprobador2BuscarBtn]),
+        el("label", {}, ["Líder — nómina"]),
+        el("div", { style: "display:flex;gap:8px" }, [lider.nominaInput, lider.buscarBtn]),
       ]),
-      aprobador2BusquedaHint,
-      field("Aprobador 2 — correo (solo referencia)", aprobador2CorreoInput),
-      aprobador2ActualHint,
-      el("p", { class: "hint" }, [
-        "Confirmado con TI: este correo es solo informativo — NO cambia a quién le toca aprobar los Short Kaizen nuevos del equipo (el ruteo real usa un campo distinto, congelado por persona, que hoy no se puede editar desde Admin). Solo se refleja aquí en pantalla.",
+      lider.hint,
+      lider.warning,
+      liderActualHint,
+      field("Líder — correo", lider.correoInput),
+
+      el("p", { class: "hint", style: "font-weight:600;margin-top:16px" }, ["Aprobador 2 y Aprobador 3 (quiénes aprueban de verdad)"]),
+      el("div", { class: "field" }, [
+        el("label", {}, ["Aprobador 2 — nómina"]),
+        el("div", { style: "display:flex;gap:8px" }, [aprobador2.nominaInput, aprobador2.buscarBtn]),
       ]),
+      aprobador2.hint,
+      aprobador2.warning,
+      field("Aprobador 2 — correo", aprobador2.correoInput),
+
+      el("div", { class: "field" }, [
+        el("label", {}, ["Aprobador 3 — nómina"]),
+        el("div", { style: "display:flex;gap:8px" }, [aprobador3.nominaInput, aprobador3.buscarBtn]),
+      ]),
+      aprobador3.hint,
+      aprobador3.warning,
+      field("Aprobador 3 — correo", aprobador3.correoInput),
+
       el("p", { class: "hint" }, [
-        "Aprobador 3 todavía no se puede asignar desde aquí — Jesús está construyendo cómo propagarlo correctamente, pendiente con TI.",
+        "IMPORTANTE: Aprobador 2 y Aprobador 3 todavía NO se guardan al presionar el botón de abajo — falta que Jesús construya la cascada que actualiza a todos los integrantes del equipo (ya se le pidió, incluyendo unificar C4, Las Papas y Motal Kompras). Por ahora estos campos son solo vista previa; al guardar solo se aplican nombre, departamento y líder.",
       ]),
     ].filter(Boolean)
   );
@@ -387,14 +444,14 @@ function openEquipoModal(view, equipoExistente) {
         onclick: async () => {
           const nombre = nombreInput.value.trim();
           const departamentoId = departamentoSelect.value;
-          const correo = aprobador2CorreoInput.value.trim();
+          const correo = lider.correoInput.value.trim();
 
           if (!nombre || !departamentoId) {
             toast("Completa todos los campos obligatorios (*).", "tr");
             return;
           }
           if (correo && !isValidEmail(correo)) {
-            toast("Revisa que el correo del Aprobador 2 sea válido.", "tr");
+            toast("Revisa que el correo del líder sea válido.", "tr");
             return;
           }
 
@@ -471,6 +528,19 @@ function openEmpleadoModal(view, eq) {
           if (!nomina) {
             toast("Escribe la nómina del empleado.", "tr");
             return;
+          }
+          // Aviso (no bloqueo, pedido explícito de Javier): si la nómina ya
+          // pertenece a otro equipo, se confirma antes de agregarlo aquí
+          // también. Si la búsqueda falla, se sigue con el flujo normal —
+          // `agregarEmpleado` igual valida del lado del backend.
+          try {
+            const info = await buscarEmpleadoInfo(nomina);
+            const advertencia = advertenciaEquipoExistente(info.equipo, eq.id);
+            if (advertencia && !confirm(`${advertencia}\n\n¿Agregar de todas formas a "${eq.nombre}"?`)) {
+              return;
+            }
+          } catch {
+            /* no se pudo resolver la nómina de antemano; se intenta agregar igual */
           }
           try {
             const equipoActualizado = await api.agregarEmpleado(eq.id, nomina);

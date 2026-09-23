@@ -81,11 +81,24 @@ const FUNCTION_MAP = [
   // iniciada) — pendiente en el backend real, ver docs/PARA_JESUS.md.
   { method: "POST", pattern: /^\/kaizens\/(.+)\/decision$/, fn: "kaizens-decision" },
   // Administración de equipos/empleados — Fase 5, ya construidas por Jesús.
+  //
+  // BUG CORREGIDO (KaizenZX_Bugs_Frontend_Quitar_Eliminar.md, reportado por
+  // Jesús): `resolveUrl()` usa `FUNCTION_MAP.find(...)`, que se queda con la
+  // PRIMERA regla que haga match — no la más específica. El patrón genérico
+  // `DELETE /equipos/(.+)` (equipos-delete) hacía match también con
+  // "/equipos/empleados" (capturando "empleados" como si fuera un id de
+  // equipo) porque estaba declarado ANTES que el patrón específico de
+  // equipos-empleados-remove. Resultado: `eliminarEmpleado()` nunca llegaba
+  // a `equipos-empleados-remove` — llamaba a `equipos-delete` con un id
+  // inexistente ("empleados"). Fix: el patrón específico va primero, y de
+  // paso se excluye "empleados" del patrón genérico como segunda capa de
+  // seguridad (`(?!empleados$)`), para que este tipo de colisión no pueda
+  // repetirse aunque cambie el orden del arreglo en el futuro.
   { method: "POST", pattern: /^\/equipos$/, fn: "equipos-create" },
   { method: "PUT", pattern: /^\/equipos\/(.+)$/, fn: "equipos-update" },
-  { method: "DELETE", pattern: /^\/equipos\/(.+)$/, fn: "equipos-delete" },
-  { method: "POST", pattern: /^\/equipos\/(.+)\/empleados$/, fn: "equipos-empleados-add" },
   { method: "DELETE", pattern: /^\/equipos\/empleados$/, fn: "equipos-empleados-remove" },
+  { method: "DELETE", pattern: /^\/equipos\/(?!empleados$)(.+)$/, fn: "equipos-delete" },
+  { method: "POST", pattern: /^\/equipos\/(.+)\/empleados$/, fn: "equipos-empleados-add" },
   { method: "GET", pattern: /^\/empleados\/(.+)$/, fn: "empleados-get" },
 ];
 
@@ -111,8 +124,19 @@ async function request(path, { method = "GET", body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
+    // Si el body no es JSON válido (p.ej. el backend regresó texto plano o
+    // el body viene vacío), no perder silenciosamente el mensaje real del
+    // servidor: se incluye un fragmento del texto crudo en el fallback, en
+    // vez de solo "Error de red (status)" sin contexto — así, si vuelve a
+    // pasar algo como el bug reportado por Jesús (mensaje genérico en vez
+    // del error real de `equipos-delete`), el toast da una pista real de
+    // qué llegó del servidor en vez de esconderlo.
+    const rawText = await res.clone().text().catch(() => "");
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `Error de red (${res.status})`);
+    if (!res.ok) {
+      const fallback = rawText ? `Error de red (${res.status}): ${rawText.slice(0, 200)}` : `Error de red (${res.status})`;
+      throw new Error(data.error || fallback);
+    }
     return data;
   } catch (err) {
     if (err.name === "AbortError") throw new Error("El servidor no respondió a tiempo. Intenta de nuevo.");
