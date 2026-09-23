@@ -173,10 +173,17 @@ function buildEquipoCard(view, eq) {
 }
 
 function roleBlock(label, nombre, email) {
+  // Jesús confirmó (KaizenZX_Respuestas_Admin_Conectado.md): `liderNombre`
+  // se resuelve buscando `liderEmail` en el catálogo de personal, pero solo
+  // 47/326 personas tienen correo institucional cargado en RH. Si hay
+  // `email` pero no `nombre`, el líder SÍ está asignado — solo no se pudo
+  // resolver el nombre por ese hueco de datos. No confundir con "sin
+  // asignar" (sin email tampoco).
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
-    el("div", { class: "admin-role-name" }, [nombre || "— sin asignar —"]),
+    el("div", { class: "admin-role-name" }, [nombre || (email ? "(nombre no disponible)" : "— sin asignar —")]),
     email ? el("div", { class: "hint" }, [email]) : null,
+    !nombre && email ? el("div", { class: "hint" }, ["Este correo no está en el catálogo de RH — pídele a Mejora Continua que lo cargue."]) : null,
   ]);
 }
 
