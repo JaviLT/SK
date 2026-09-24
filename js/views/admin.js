@@ -186,7 +186,7 @@ export async function render(container, params, isStale) {
 }
 
 function nombreDepartamento(id) {
-  return departamentosCache.find((d) => d.id === id)?.nombre || id;
+  return departamentosCache.find((d) => String(d.id) === String(id))?.nombre || id;
 }
 
 // Devuelve { id, nombre, estimado } o null si no se pudo determinar el
@@ -230,8 +230,13 @@ function paint(view) {
 
   view.appendChild(buildFiltroDepartamento(view));
 
+  // Comparación por String(): el <select> siempre entrega su value como
+  // string, pero el id de departamento puede venir numérico si ya se
+  // desplegó `departamentoId` real en el backend (antes solo existía el
+  // id-string del mock) — comparar con === sin normalizar dejaba el filtro
+  // siempre vacío (15 !== "15"). Bug reportado por Javier, sep. 2026.
   const equiposFiltrados = departamentoFiltro
-    ? equiposCache.filter((eq) => departamentoDeEquipo(eq)?.id === departamentoFiltro)
+    ? equiposCache.filter((eq) => String(departamentoDeEquipo(eq)?.id ?? "") === String(departamentoFiltro))
     : equiposCache;
 
   if (!equiposCache.length) {
@@ -272,7 +277,7 @@ function buildFiltroDepartamento(view) {
     },
     [
       el("option", { value: "" }, ["Todos los departamentos"]),
-      ...departamentosCache.map((d) => el("option", { value: d.id, selected: d.id === departamentoFiltro || undefined }, [d.nombre])),
+      ...departamentosCache.map((d) => el("option", { value: d.id, selected: String(d.id) === String(departamentoFiltro) || undefined }, [d.nombre])),
     ]
   );
   return el("div", { class: "field", style: "max-width:320px;margin-bottom:20px" }, [el("label", {}, ["Filtrar por departamento"]), select]);
