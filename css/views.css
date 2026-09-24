@@ -181,11 +181,17 @@
   background: var(--gray-50); border-radius: var(--radius-sm);
   padding: var(--sp-3) var(--sp-4);
   min-width: 0; overflow-wrap: anywhere;
+  /* Horizontal: etiqueta a la izquierda, nombre/nómina/nota a la derecha —
+     con 3 columnas por fila, apilar la etiqueta arriba del nombre hacía
+     que etiquetas como "APROBADOR 2" se cortaran en 2 líneas. */
+  display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
 }
 .admin-role-label{
   font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase;
-  letter-spacing: .04em; color: var(--gray-500); margin-bottom: var(--sp-1);
+  letter-spacing: .04em; color: var(--gray-500);
+  white-space: nowrap; flex-shrink: 0;
 }
+.admin-role-value{ min-width: 0; }
 .admin-role-name{ font-size: var(--fs-sm); font-weight: 600; color: var(--gray-800); }
 .admin-members-header{
   display: flex; align-items: center; justify-content: space-between;

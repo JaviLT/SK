@@ -213,6 +213,14 @@
   max-width: 420px; width: 100%;
   padding: var(--sp-6);
   box-shadow: var(--shadow-lg);
+  /* El modal de "Nuevo equipo" (líder + aprobador 2 + aprobador 3, cada
+     uno con su buscador) es el más largo de la app y no cabía completo en
+     pantallas normales — el admin tenía que achicar la ventana para ver el
+     botón de guardar. Con esto, el modal se limita a la altura visible y
+     su propio contenido hace scroll interno en vez de desbordar la
+     página. */
+  max-height: calc(100vh - var(--sp-8));
+  overflow-y: auto;
 }
 
 /* ============ Toasts ============ */
