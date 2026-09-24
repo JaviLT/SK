@@ -16,6 +16,8 @@
 .brand:hover{ text-decoration: none; }
 .brand-mark{
   width: 36px; height: 36px; border-radius: var(--radius-sm);
+  /* Siempre azul de marca (no --zx-heading): vive sobre el topbar, que es
+     azul en ambos temas, no sobre una superficie que se invierta. */
   background: var(--zx-white); color: var(--zx-blue);
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: var(--fs-sm);
@@ -25,7 +27,22 @@
 .brand-text{ display: flex; flex-direction: column; line-height: 1.15; }
 .brand-text strong{ color: var(--zx-white); font-size: var(--fs-base); font-weight: 700; }
 .brand-text span{ color: #c7d5ff; font-size: var(--fs-xs); font-weight: 300; }
-.app-version-badge{ color: #8fa3e0; font-size: 10px; font-weight: 300; letter-spacing: .02em; }
+
+/* Barra de versión, fija al pie de pantalla (ver js/shell.js ->
+   buildVersionBar()) — reemplaza el texto chiquito que antes vivía junto
+   al logo en el topbar. En móvil se recorre arriba del mobile-nav para no
+   encimarse (ver css/responsive.css). */
+.version-bar{
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  text-align: center;
+  /* Fondo fijo oscuro en ambos temas (no usa --gray-900: ese token se
+     invierte en modo oscuro y quedaría casi blanco, perdiendo contraste
+     con el texto claro de esta barra). */
+  background: #0f172a; color: #9aa5c0;
+  font-size: 10px; font-weight: 400; letter-spacing: .02em;
+  padding: 2px var(--sp-3);
+  pointer-events: none;
+}
 
 .tabs{ display: flex; gap: var(--sp-1); flex: 1; }
 .tab{
@@ -36,10 +53,15 @@
   text-decoration: none; display: inline-flex; align-items: center;
 }
 .tab:hover{ background: rgba(255,255,255,.08); color: var(--zx-white); text-decoration: none; }
-.tab.active{ background: var(--zx-white); color: var(--zx-blue); }
+.tab.active{ background: var(--zx-white); color: var(--zx-blue); } /* siempre azul de marca: vive sobre el topbar, azul en ambos temas */
 
 .topbar-actions{ display: flex; align-items: center; gap: var(--sp-3); flex-shrink: 0; }
+.nuevo-kaizen-topbar{ white-space: nowrap; }
 
+/* El chip de usuario ya no cierra sesión directo al hacer clic — abre un
+   menú desplegable con "Cerrar sesión" como opción (pedido de Javier,
+   sept. 2026), para evitar cierres de sesión accidentales. */
+.user-menu{ position: relative; }
 .user-chip{
   display: flex; align-items: center; gap: var(--sp-2);
   background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
@@ -48,6 +70,25 @@
 }
 .user-chip-info{ display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
 .user-chip-info small{ color: #c7d5ff; font-size: 10px; font-weight: 400; }
+.user-menu-dropdown{
+  position: absolute; top: calc(100% + var(--sp-2)); right: 0;
+  min-width: 180px;
+  background: var(--zx-surface); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200);
+  padding: var(--sp-1); z-index: 60;
+}
+.user-menu-item{
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer;
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
+  font-size: var(--fs-sm); font-weight: 600; color: var(--zx-negative);
+}
+.user-menu-item:hover{ background: var(--zx-negative-bg); }
+/* Variante para opciones del menú que no son destructivas (ej. el
+   interruptor de modo oscuro) — mismo menú que "Cerrar sesión", pero sin
+   el color de alerta rojo. */
+.user-menu-item-neutral{ color: var(--gray-700); }
+.user-menu-item-neutral:hover{ background: var(--gray-100); }
 
 /* ============ Botón flotante "+ Nuevo Kaizen" ============
    Reubicado fuera del topbar (antes competía con las tabs) — queda fijo,
@@ -82,7 +123,7 @@
 .btn-accent:hover{ box-shadow: var(--shadow-md); }
 .btn-primary{ background: var(--zx-blue); color: var(--zx-white); }
 .btn-primary:hover{ box-shadow: var(--shadow-md); }
-.btn-outline{ background: transparent; color: var(--zx-blue); border: 1.5px solid var(--zx-blue); }
+.btn-outline{ background: transparent; color: var(--zx-heading); border: 1.5px solid var(--zx-blue); }
 .btn-outline:hover{ background: var(--zx-highlight); }
 .btn-danger{ background: var(--zx-negative-bg); color: var(--zx-negative); }
 .btn-danger:hover{ background: #fecaca; }
@@ -96,7 +137,7 @@
 
 /* ============ Tarjetas ============ */
 .card{
-  background: var(--zx-white);
+  background: var(--zx-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);
@@ -114,7 +155,7 @@
   padding: 3px var(--sp-3); border-radius: 999px;
   font-size: var(--fs-xs); font-weight: 600; white-space: nowrap;
 }
-.badge-nuevo{ background: var(--zx-highlight); color: var(--zx-blue); }
+.badge-nuevo{ background: var(--zx-highlight); color: var(--zx-heading); }
 .badge-pend{ background: #fef3c7; color: #92400e; }
 .badge-done{ background: var(--zx-positive-bg); color: var(--zx-positive); }
 .badge-rej{ background: var(--zx-negative-bg); color: var(--zx-negative); }
@@ -132,7 +173,7 @@
   padding: var(--sp-3) var(--sp-4);
   border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-sm);
-  background: var(--zx-white);
+  background: var(--zx-surface);
   color: var(--gray-800);
   transition: border-color .15s var(--ease);
   min-height: 44px;
@@ -168,7 +209,7 @@
   cursor: pointer; transition: border-color .15s var(--ease), background .15s var(--ease);
 }
 .enfoque-option:has(input:checked){
-  border-color: var(--zx-blue-accent); background: var(--zx-highlight); color: var(--zx-blue);
+  border-color: var(--zx-blue-accent); background: var(--zx-highlight); color: var(--zx-heading);
 }
 
 .upload-box{
@@ -208,7 +249,7 @@
   z-index: 100;
 }
 .modal{
-  background: var(--zx-white);
+  background: var(--zx-surface);
   border-radius: var(--radius-lg);
   max-width: 420px; width: 100%;
   padding: var(--sp-6);
@@ -232,7 +273,9 @@
 }
 .toast{
   pointer-events: auto;
-  background: var(--gray-900); color: var(--zx-white);
+  /* Igual que .version-bar: fondo fijo oscuro, no --gray-900 (se invierte
+     en modo oscuro). */
+  background: #0f172a; color: var(--zx-white);
   padding: var(--sp-3) var(--sp-5); border-radius: var(--radius-sm);
   font-size: var(--fs-sm); box-shadow: var(--shadow-lg);
   max-width: 360px;
@@ -253,13 +296,13 @@
 
 /* ============ KPI card ============ */
 .kpi-card{
-  background: var(--zx-white);
+  background: var(--zx-surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--gray-200);
   padding: var(--sp-4);
 }
 .kpi-label{ font-size: var(--fs-xs); font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; }
-.kpi-value{ font-size: var(--fs-2xl); font-weight: 700; color: var(--zx-blue); margin-top: var(--sp-1); }
+.kpi-value{ font-size: var(--fs-2xl); font-weight: 700; color: var(--zx-heading); margin-top: var(--sp-1); }
 .kpi-delta{ font-size: var(--fs-xs); font-weight: 600; margin-top: var(--sp-1); }
 .kpi-delta.up{ color: var(--zx-positive); }
 .kpi-delta.down{ color: var(--zx-negative); }

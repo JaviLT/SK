@@ -17,6 +17,16 @@
   --zx-neutral:     #0D18A8;
   --zx-page-bg:     #f8fafc;
   --zx-highlight:   #dbeafe;
+  /* Fondo de tarjetas/modales/inputs — separado de --zx-white porque
+     --zx-white también se usa como color de TEXTO sobre fondos azules
+     (topbar, botones de acento) y esos deben seguir viéndose blancos en
+     modo oscuro. Solo --zx-surface se invierte (ver bloque [data-theme
+     ="dark"] más abajo). */
+  --zx-surface:     #FFFFFF;
+  /* Color de títulos (h1-h4) — separado de --zx-blue porque en modo
+     oscuro el azul primario pierde contraste sobre fondos casi negros; se
+     usa el azul de acento ahí en su lugar (ver [data-theme="dark"]). */
+  --zx-heading:     var(--zx-blue);
 
   /* Escala de grises funcional (no es paleta de marca, es utilitaria) */
   --gray-50:  #f8fafc;
@@ -72,8 +82,40 @@
   --ease: cubic-bezier(.4,0,.2,1);
 }
 
-@media (prefers-color-scheme: dark){
-  /* La app usa siempre tema claro institucional — no se define modo oscuro
-     porque el manual de marca no lo contempla. Se deja el bloque explícito
-     para que quede claro que fue una decisión, no un olvido. */
+/* Modo oscuro (pedido explícito de Javier, sept. 2026 — revierte la
+   decisión anterior de no ofrecerlo). Se activa a mano desde el menú del
+   usuario (ver js/theme.js + js/shell.js), no automáticamente por
+   preferencia del sistema, para que sea una elección explícita y
+   consistente entre dispositivos (se guarda en localStorage). Los colores
+   de marca (--zx-blue, --zx-blue-accent) NO cambian — solo se invierten
+   las superficies neutras (fondo de página, tarjetas, inputs, la escala de
+   grises) para mantener contraste y legibilidad. El logo, el topbar y los
+   botones de acento siguen viéndose exactamente igual que en modo claro. */
+:root[data-theme="dark"]{
+  --zx-page-bg:     #0b1120;
+  --zx-surface:     #1e293b;
+  --zx-highlight:   #1e2a47;
+  --zx-heading:     var(--zx-blue-accent);
+  --zx-positive-bg: #14311f;
+  --zx-negative-bg: #3f1414;
+
+  /* Escala de grises invertida: lo que en claro era "fondo sutil claro"
+     (gray-50) pasa a ser "fondo sutil oscuro", y lo que era "texto oscuro"
+     (gray-800/900) pasa a ser "texto claro" — así todo el resto del CSS,
+     que ya usa estos tokens para bordes/fondos/texto secundario, se
+     adapta solo sin tener que tocar cada regla una por una. */
+  --gray-50:  #18233a;
+  --gray-100: #1f2c47;
+  --gray-200: #2c3b57;
+  --gray-300: #3e5074;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #b6c2d4;
+  --gray-700: #cbd5e1;
+  --gray-800: #e7ecf3;
+  --gray-900: #f8fafc;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.45), 0 1px 1px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
 }

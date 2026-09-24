@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("sk_theme")==="dark"?"dark":"light";}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nuevo Short Kaizen · Short Kaizen · Zubex Industrial</title>
 <meta name="theme-color" content="#0D18A8">
@@ -37,10 +38,17 @@
     </nav>
 
     <div class="topbar-actions">
-      <button class="user-chip" data-logout aria-haspopup="true">
-        <span class="user-chip-info"><span id="user-chip-name">—</span><small id="user-chip-rol"></small></span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <button class="btn btn-accent btn-sm nuevo-kaizen-topbar" data-nuevo-kaizen>+ Nuevo Kaizen</button>
+      <div class="user-menu">
+        <button class="user-chip" id="user-chip-toggle" aria-haspopup="true" aria-expanded="false">
+          <span class="user-chip-info"><span id="user-chip-name">—</span><small id="user-chip-rol"></small></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="user-menu-dropdown" id="user-menu-dropdown" hidden>
+          <button class="user-menu-item user-menu-item-neutral" id="theme-toggle-btn" type="button">🌙 Modo oscuro</button>
+          <button class="user-menu-item" data-logout>Cerrar sesión</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>

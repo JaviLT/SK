@@ -14,6 +14,14 @@
   .sk-autorizaciones{ grid-template-columns: 1fr; }
 }
 
+/* ---- Escritorio/tablet (> 720px) ---- */
+@media (min-width: 721px){
+  /* El botón flotante "+ Nuevo Kaizen" queda solo para móvil, donde no hay
+     topbar — en escritorio ya existe el mismo botón dentro del topbar
+     (pedido de Javier, sept. 2026), y tener los dos era redundante. */
+  .fab-nuevo{ display: none; }
+}
+
 /* ---- Móvil (≤ 720px) ---- */
 @media (max-width: 720px){
   .topbar{ display: none; } /* se sustituye por mobile-nav inferior */
@@ -23,12 +31,16 @@
   .fab-nuevo{ bottom: calc(var(--mobile-nav-h) + var(--sp-4) + env(safe-area-inset-bottom, 0px)); right: var(--sp-4); }
   .fab-nuevo span:not(.plus){ display: none; } /* en móvil solo se ve el "+" para no tapar el mosaico */
 
+  /* La barra de versión se recorre arriba del mobile-nav para no encimarse
+     con él (el mobile-nav también vive fijo al pie de pantalla). */
+  .version-bar{ bottom: var(--mobile-nav-h); }
+
   .mobile-nav{
     display: flex !important;
     position: fixed; bottom: 0; left: 0; right: 0;
     height: var(--mobile-nav-h);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--zx-white);
+    background: var(--zx-surface);
     border-top: 1px solid var(--gray-200);
     box-shadow: 0 -4px 16px rgba(15,23,42,.06);
     z-index: 40;
@@ -67,5 +79,5 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; color: var(--gray-500); font-size: 11px; font-weight: 600;
 }
-.mobile-nav-btn.active{ color: var(--zx-blue); }
+.mobile-nav-btn.active{ color: var(--zx-heading); }
 #mobile-nuevo{ color: var(--zx-blue-accent); }

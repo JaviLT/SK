@@ -19,7 +19,7 @@ body{
 h1,h2,h3,h4{
   font-family: var(--font-base);
   font-weight: 700;
-  color: var(--zx-blue);
+  color: var(--zx-heading);
   margin: 0 0 var(--sp-2);
   line-height: 1.25;
 }

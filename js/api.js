@@ -53,6 +53,56 @@
 //   DELETE /equipos/empleados       { nomina }                   -> { ok: true }
 //   GET    /empleados/:nomina                                    -> Empleado
 //                                    Restringido a admin/mc.
+//   POST   /empleados               { nomina, nombre,
+//                                      departamentoId, equipoId?,
+//                                      posicion, aprobador2Nomina?,
+//                                      aprobador3Nomina? }
+//                                    -> { nomina, nombre, passwordInicial,
+//                                         aprobador2Nomina,
+//                                         aprobador3Nomina, mensaje }
+//                                    Alta de empleados nuevos
+//                                    (KaizenZX_Alta_Empleados_Y_Cambio_Rol_
+//                                    Listo.md, Jesús, sept. 2026).
+//                                    Restringido a admin/mc. `equipoId` es
+//                                    opcional. `posicion` ∈
+//                                    "integrante"|"lider"|"gerente" — de
+//                                    ahí el backend deriva el `rol` de
+//                                    sistema, no se manda aparte.
+//                                    `aprobador2Nomina`/`aprobador3Nomina`
+//                                    se auto-rellenan desde `equipoId` si
+//                                    no se mandan explícitos; mandar ""
+//                                    fuerza dejarlos vacíos aunque el
+//                                    equipo sí tenga uno asignado. 409 si
+//                                    la nómina ya existe.
+//                                    `passwordInicial` viene en texto
+//                                    plano UNA SOLA VEZ en la respuesta —
+//                                    no se puede volver a consultar, hay
+//                                    que mostrarla en pantalla para que el
+//                                    admin la copie.
+//   POST   /usuarios/:nomina/rol    { rol }                      -> { nomina,
+//                                      nombre, rolAnterior, rolNuevo,
+//                                      mensaje }
+//                                    Cambiar el rol de sistema de una
+//                                    persona (mismo documento que alta de
+//                                    empleados). Restringido a admin/mc.
+//                                    `rol` ∈ "solicitante"|"lider"|
+//                                    "gerente"|"admin" — NUNCA "mc" (400
+//                                    si se intenta, bloqueo duro del
+//                                    backend) y nunca el propio usuario
+//                                    autenticado (400, bloqueo duro). Los
+//                                    aprobadores reales de la persona
+//                                    (aprobador2/3_nomina) NUNCA se tocan
+//                                    al cambiar su rol. Si deja de ser
+//                                    "gerente", el backend limpia solo sus
+//                                    filas de `equipos_gerentes`/
+//                                    `departamentos_gerentes`.
+//   GET    /cambios-rol             (sin parámetros)              -> [{
+//                                      id, nominaAfectada,
+//                                      nombreAfectada, rolAnterior,
+//                                      rolNuevo, nominaEjecutor,
+//                                      nombreEjecutor, creadoEn }]
+//                                    Historial de cambios de rol, más
+//                                    reciente primero.
 //
 // Todas las respuestas de error deben usar código HTTP != 2xx y un body
 // { error: "mensaje legible" } — este módulo ya sabe leer ese formato.
@@ -100,6 +150,11 @@ const FUNCTION_MAP = [
   { method: "DELETE", pattern: /^\/equipos\/(?!empleados$)(.+)$/, fn: "equipos-delete" },
   { method: "POST", pattern: /^\/equipos\/(.+)\/empleados$/, fn: "equipos-empleados-add" },
   { method: "GET", pattern: /^\/empleados\/(.+)$/, fn: "empleados-get" },
+  // Alta de empleados + cambio de rol de sistema, ya construidas por Jesús
+  // (KaizenZX_Alta_Empleados_Y_Cambio_Rol_Listo.md, sept. 2026).
+  { method: "POST", pattern: /^\/empleados$/, fn: "empleados-create" },
+  { method: "POST", pattern: /^\/usuarios\/(.+)\/rol$/, fn: "usuarios-cambiar-rol" },
+  { method: "GET", pattern: /^\/cambios-rol$/, fn: "cambios-rol-list" },
 ];
 
 function resolveUrl(path, method) {
@@ -275,5 +330,22 @@ export const api = {
     return CONFIG.MOCK_MODE
       ? mockBackend.buscarEmpleadoPorNomina(nomina)
       : request(`/empleados/${encodeURIComponent(nomina)}`);
+  },
+
+  // ---- Alta de empleados + cambio de rol de sistema (Fase 5.5) ----
+  // KaizenZX_Alta_Empleados_Y_Cambio_Rol_Listo.md, Jesús, sept. 2026.
+
+  async crearEmpleado(payload) {
+    return CONFIG.MOCK_MODE ? mockBackend.crearEmpleado(payload) : request("/empleados", { method: "POST", body: payload });
+  },
+
+  async cambiarRolUsuario(nomina, rol) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.cambiarRolUsuario(nomina, rol)
+      : request(`/usuarios/${encodeURIComponent(nomina)}/rol`, { method: "POST", body: { rol } });
+  },
+
+  async getHistorialCambiosRol() {
+    return CONFIG.MOCK_MODE ? mockBackend.getHistorialCambiosRol() : request("/cambios-rol");
   },
 };

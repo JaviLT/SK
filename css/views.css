@@ -12,7 +12,7 @@
   padding: var(--sp-5);
 }
 .login-card{
-  background: var(--zx-white);
+  background: var(--zx-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--sp-8) var(--sp-6);
@@ -49,20 +49,24 @@
   display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--sp-3); margin-bottom: var(--sp-8);
 }
+/* Encabezado de cada grupo "Equipos <Departamento>" (mis-kaizens.js ->
+   buildMosaicoAgrupado()) — mismo tratamiento que los demás <h3> de
+   sección, sin margen extra arriba del primer grupo. */
+.equipos-departamento-grupo:first-child h3{ margin-top: 0; }
 .equipo-card{
-  background: var(--zx-white); border: 1px solid var(--gray-200);
+  background: var(--zx-surface); border: 1px solid var(--gray-200);
   border-radius: var(--radius-md); padding: var(--sp-4);
   cursor: pointer; transition: box-shadow .15s var(--ease), border-color .15s var(--ease);
 }
 .equipo-card:hover{ box-shadow: var(--shadow-md); border-color: var(--zx-blue-accent); }
 .equipo-card.active{ border-color: var(--zx-blue); background: var(--zx-highlight); }
-.equipo-card .eq-name{ font-weight: 700; font-size: var(--fs-sm); color: var(--zx-blue); margin-bottom: var(--sp-2); }
+.equipo-card .eq-name{ font-weight: 700; font-size: var(--fs-sm); color: var(--zx-heading); margin-bottom: var(--sp-2); }
 .equipo-card .eq-count{ font-size: var(--fs-xl); font-weight: 700; color: var(--gray-800); }
 .equipo-card .eq-sub{ font-size: var(--fs-xs); color: var(--gray-500); }
 
 .kaizen-list{ display: flex; flex-direction: column; gap: var(--sp-3); }
 .kaizen-row{
-  background: var(--zx-white); border: 1px solid var(--gray-200);
+  background: var(--zx-surface); border: 1px solid var(--gray-200);
   border-radius: var(--radius-md); padding: var(--sp-4);
   display: flex; align-items: center; gap: var(--sp-4);
   cursor: pointer; transition: box-shadow .15s var(--ease);
@@ -96,7 +100,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 11px;
 }
-.step-pill.active{ background: var(--zx-highlight); color: var(--zx-blue); }
+.step-pill.active{ background: var(--zx-highlight); color: var(--zx-heading); }
 .step-pill.active .num{ background: var(--zx-blue); }
 .step-pill.done .num{ background: var(--zx-positive); }
 
@@ -171,9 +175,13 @@
   display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--sp-5);
 }
-.admin-team-card .card-header h3{ color: var(--zx-blue); }
+.admin-team-card .card-header h3{ color: var(--zx-heading); }
+/* Filas de rol apiladas de ancho completo (Líder / Aprobador 2 /
+   Aprobador 3), en vez de columnas lado a lado — pedido de Javier, sept.
+   2026: con columnas angostas las etiquetas se cortaban en 2 líneas, y con
+   filas completas hay espacio de sobra. */
 .admin-roles-row{
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4);
+  display: flex; flex-direction: column; gap: var(--sp-2);
   margin-bottom: var(--sp-5); padding-bottom: var(--sp-5);
   border-bottom: 1px solid var(--gray-200);
 }
@@ -181,9 +189,8 @@
   background: var(--gray-50); border-radius: var(--radius-sm);
   padding: var(--sp-3) var(--sp-4);
   min-width: 0; overflow-wrap: anywhere;
-  /* Horizontal: etiqueta a la izquierda, nombre/nómina/nota a la derecha —
-     con 3 columnas por fila, apilar la etiqueta arriba del nombre hacía
-     que etiquetas como "APROBADOR 2" se cortaran en 2 líneas. */
+  /* Horizontal dentro de cada fila: etiqueta a la izquierda, nombre/nómina
+     a la derecha. */
   display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
 }
 .admin-role-label{
@@ -221,7 +228,7 @@
 .ep-bar{ height: 8px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
 .ep-bar-fill{ height: 100%; background: var(--zx-blue-accent); border-radius: 999px; }
 .ep-valor{ font-size: var(--fs-sm); color: var(--gray-600); white-space: nowrap; }
-.ep-pct{ font-size: var(--fs-sm); font-weight: 700; color: var(--zx-blue); min-width: 44px; text-align: right; }
+.ep-pct{ font-size: var(--fs-sm); font-weight: 700; color: var(--zx-heading); min-width: 44px; text-align: right; }
 .ep-pct.up{ color: var(--zx-positive); }
 .dash-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); margin-top: var(--sp-5); }
 .chart-wrap{ position: relative; height: 260px; }

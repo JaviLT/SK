@@ -214,6 +214,8 @@ function paint(view) {
   view.innerHTML = "";
 
   const exportBtn = el("button", { class: "btn btn-outline", onclick: () => exportarExcel() }, ["⬇ Exportar a Excel"]);
+  const cambiarRolBtn = el("button", { class: "btn btn-outline", onclick: () => openCambiarRolModal(view) }, ["Cambiar rol"]);
+  const crearEmpleadoBtn = el("button", { class: "btn btn-outline", onclick: () => openCrearEmpleadoModal(view) }, ["+ Crear empleado"]);
   const nuevoBtn = el("button", { class: "btn btn-accent", onclick: () => openEquipoModal(view) }, ["+ Nuevo equipo"]);
 
   view.appendChild(
@@ -222,7 +224,7 @@ function paint(view) {
         el("h1", {}, ["Administración"]),
         el("p", {}, ["Equipos, aprobadores e integrantes — solo visible para el usuario maestro y Mejora Continua"]),
       ]),
-      el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [exportBtn, nuevoBtn]),
+      el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [exportBtn, cambiarRolBtn, crearEmpleadoBtn, nuevoBtn]),
     ])
   );
 
@@ -324,11 +326,7 @@ function buildEquipoCard(view, eq) {
       ]),
     ]),
 
-    el(
-      "div",
-      { class: "admin-roles-row", style: `grid-template-columns:repeat(${rolesRow.length},1fr)` },
-      rolesRow
-    ),
+    el("div", { class: "admin-roles-row" }, rolesRow),
 
     el("div", { class: "admin-members-header" }, [
       el("h4", {}, [`Integrantes (${eq.miembros.length})`]),
@@ -366,19 +364,17 @@ function roleBlock(label, nombre, email) {
   // Jesús confirmó (KaizenZX_Respuestas_Admin_Conectado.md): `liderNombre`
   // se resuelve buscando `liderEmail` en el catálogo de personal, pero solo
   // una parte de las 326 personas tienen correo institucional cargado en
-  // RH. Si hay `email` pero no `nombre`, el líder SÍ está asignado — solo
-  // no se pudo resolver el nombre por ese hueco de datos. No confundir con
-  // "sin asignar" (sin email tampoco). A Javier no le interesa el correo
-  // del líder (rol solo informativo) — se sigue mostrando aquí si existe,
-  // solo por completitud, pero ya no se captura a mano (ver
-  // nominaBuscarField en el modal de edición).
+  // RH. A Javier no le interesa el correo del líder en absoluto (rol solo
+  // informativo) — pedido explícito: la tarjeta ya NO muestra el correo,
+  // solo el nombre (o "— sin asignar —" si no hay ni nombre ni correo
+  // resuelto). El correo sigue viajando internamente (ver
+  // nominaBuscarField/getCorreo en el modal de edición), solo dejó de
+  // mostrarse aquí.
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
     el("div", { class: "admin-role-value" }, [
       el("div", { class: "admin-role-name" }, [nombre || (email ? "(nombre no disponible)" : "— sin asignar —")]),
-      email ? el("div", { class: "hint" }, [email]) : null,
-      !nombre && email ? el("div", { class: "hint" }, ["Este correo no está en el catálogo de RH — pídele a Mejora Continua que lo cargue."]) : null,
-    ].filter(Boolean)),
+    ]),
   ]);
 }
 
@@ -416,17 +412,22 @@ function buildMembersTable(view, eq) {
 // ---------------------------------------------------------------------------
 // GET /empleados/:nomina (empleados-get) confirmado por Jesús
 // (KaizenZX_Respuestas_Filtro_Aprobadores.md): { nomina, nombre, tipo,
-// posicion, departamento:{id,nombre}, equipo:{id,nombre} } — NO trae correo
-// todavía (lo va a agregar). Y aunque lo agregue, solo 47/326 personas
-// tienen correo institucional capturado en RH — para el resto siempre va a
-// venir vacío. Por eso la nómina solo AUTOCOMPLETA el correo cuando existe;
-// si no, se captura manualmente. `equipo` sí viene siempre que la persona
-// ya esté en uno — se usa para la advertencia de "ya pertenece a otro
-// equipo" (ver advertenciaEquipoExistente()).
+// posicion, departamento:{id,nombre}, equipo:{id,nombre} }.
+// Correo: bug real de backend encontrado y corregido por Jesús
+// (KaizenZX_Correo_Empleados_Get_Corregido.md, 26 sep 2026) — la tabla ya
+// tenía el correo cargado (backfill de 108/109), pero `empleados-get` nunca
+// se actualizó para incluirlo en la respuesta. Ya corregido: el campo se
+// llama ÚNICAMENTE `email` (confirmado con 3 casos reales por Jesús,
+// incluyendo `email:null` limpio para quien no tiene correo capturado) —
+// se quita el intento de `empleado.correo`, ese nombre de campo nunca
+// existió. Para el resto de las personas sin correo capturado en RH, sigue
+// viniendo `null`, así que la nómina solo AUTOCOMPLETA el correo cuando
+// existe. `equipo` sí viene siempre que la persona ya esté en uno — se usa
+// para la advertencia de "ya pertenece a otro equipo" (ver
+// advertenciaEquipoExistente()).
 async function buscarEmpleadoInfo(nomina) {
   const empleado = await api.buscarEmpleadoPorNomina(nomina);
-  const correo = empleado?.email || empleado?.correo || null;
-  return { nombre: empleado?.nombre || nomina, correo, equipo: empleado?.equipo || null };
+  return { nombre: empleado?.nombre || nomina, correo: empleado?.email || null, equipo: empleado?.equipo || null };
 }
 
 // Devuelve un mensaje de advertencia si `equipoDeLaPersona` existe y es
@@ -442,34 +443,44 @@ function advertenciaEquipoExistente(equipoDeLaPersona, equipoActualId) {
   return `⚠ Ya pertenece al equipo "${equipoDeLaPersona.nombre}". Si continúas, se mueve automáticamente a este equipo (deja de aparecer en el anterior) y hereda el Aprobador 2/3 de aquí.`;
 }
 
+// Nómina de ejemplo al azar (4 dígitos) para el placeholder del campo de
+// búsqueda — pedido de Javier, sept. 2026 (antes decía "Nómina del líder"
+// o similar como placeholder).
+function placeholderNomina() {
+  return `Ej. ${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
 // Construye un bloque reutilizable "nómina → buscar → nombre/correo
-// autocompletados + advertencia de equipo existente", usado para Líder,
-// Aprobador 2 y Aprobador 3 dentro de openEquipoModal(). `nominaInicial`
-// prellena el campo con la nómina que el equipo ya tiene asignada (si la
-// hay), para que el submit no la borre por accidente si el admin no toca
-// el campo.
+// resueltos" usado para Líder, Aprobador 2 y Aprobador 3 dentro de
+// openEquipoModal(). `nominaInicial` prellena el campo con la nómina que
+// el equipo ya tiene asignada (si la hay), para que el submit no la borre
+// por accidente si el admin no toca el campo.
 //
-// `showCorreo` controla si se muestra un campo de correo en pantalla
-// (Aprobador 2/3 sí, Líder no — a Javier no le interesa el correo del
-// líder). Cuando se muestra, el campo queda SIEMPRE deshabilitado: el
-// correo solo se llena solo al buscar, nunca se escribe a mano — pedido
+// Rediseño de esta pantalla (pedido de Javier, sept. 2026): ya no hay
+// mensajes de "Encontrado: ... correo cargado automáticamente" ni textos
+// de ayuda genéricos — el nombre y el correo encontrados se muestran como
+// simples etiquetas de texto debajo de su propia etiqueta fija ("Nombre",
+// "Correo"), vacías hasta que se busque. El único mensaje que se conserva
+// es el de error cuando la nómina no existe.
+//
+// `showCorreo` controla si se muestra la sección de correo (Aprobador 2/3
+// sí, Líder no — a Javier no le interesa el correo del líder). El correo
+// nunca se escribe a mano en ningún caso — solo se llena al buscar, pedido
 // explícito de Javier tras el typo real de correo que tuvo la nómina 2442
-// (Sergio España) para evitar que se repita ese tipo de error de captura.
+// (Sergio España), para evitar que se repita ese tipo de error de captura.
 // `getCorreo()` regresa el correo resuelto (o el inicial si no se ha
-// vuelto a buscar) sin importar si hay campo visible o no — así el líder
-// también manda su correo automáticamente al guardar, aunque no tenga
-// campo en pantalla.
-function nominaBuscarField({ placeholder = "Ej. 0006", nominaInicial = "", correoInicial = "", equipoActualId = null, showCorreo = true } = {}) {
-  const nominaInput = el("input", { class: "input", type: "text", placeholder, value: nominaInicial });
+// vuelto a buscar) sin importar si hay sección de correo visible o no —
+// así el líder también manda su correo automáticamente al guardar, aunque
+// no se muestre en pantalla.
+function nominaBuscarField({ nominaInicial = "", nombreInicial = "", correoInicial = "", equipoActualId = null, showCorreo = true } = {}) {
+  const nominaInput = el("input", { class: "input", type: "text", placeholder: placeholderNomina(), value: nominaInicial });
   let correoActual = correoInicial || "";
-  const correoInput = showCorreo
-    ? el("input", { class: "input", type: "email", value: correoActual, disabled: true, placeholder: "Se completa solo al buscar" })
-    : null;
-  const hint = el("p", { class: "hint" }, [
-    showCorreo
-      ? "Escribe la nómina y presiona \"Buscar\" para completar el nombre y el correo automáticamente. El correo solo aparece si ya está capturado en RH — no se puede escribir a mano aquí."
-      : "Escribe la nómina y presiona \"Buscar\" para completar el nombre automáticamente.",
-  ]);
+  // En edición, se prellenan con lo que el equipo ya tiene asignado, para
+  // que el admin vea de entrada quién está asignado sin tener que volver a
+  // buscar — si busca otra nómina, se sobreescriben con lo nuevo.
+  const nombreLabel = el("div", { class: "readonly-field" }, [nombreInicial || "—"]);
+  const correoLabel = showCorreo ? el("div", { class: "readonly-field" }, [correoActual || "—"]) : null;
+  const errorText = el("p", { class: "hint", style: "color:#991b1b" }, []);
   const warning = el("p", { class: "hint", style: "color:#991b1b" }, []);
   let ultimoResultado = null;
 
@@ -488,26 +499,24 @@ function nominaBuscarField({ placeholder = "Ej. 0006", nominaInicial = "", corre
           const info = await buscarEmpleadoInfo(nomina);
           ultimoResultado = info;
           correoActual = info.correo || "";
-          if (correoInput) correoInput.value = correoActual;
-          if (info.correo) {
-            hint.textContent = `Encontrado: ${info.nombre} — correo cargado automáticamente.`;
-          } else if (showCorreo) {
-            hint.textContent = `Encontrado: ${info.nombre} — no tiene correo capturado en RH todavía (pídele a Mejora Continua que lo cargue; no se puede escribir aquí a mano).`;
-          } else {
-            hint.textContent = `Encontrado: ${info.nombre}.`;
-          }
+          errorText.textContent = "";
+          nombreLabel.textContent = info.nombre || "—";
+          if (correoLabel) correoLabel.textContent = correoActual || "—";
           warning.textContent = advertenciaEquipoExistente(info.equipo, equipoActualId) || "";
         } catch (err) {
           ultimoResultado = null;
+          correoActual = "";
           warning.textContent = "";
-          hint.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
+          nombreLabel.textContent = "—";
+          if (correoLabel) correoLabel.textContent = "—";
+          errorText.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
         }
       },
     },
     ["Buscar"]
   );
 
-  return { nominaInput, correoInput, hint, warning, buscarBtn, getResultado: () => ultimoResultado, getCorreo: () => correoActual };
+  return { nominaInput, nombreLabel, correoLabel, errorText, warning, buscarBtn, getResultado: () => ultimoResultado, getCorreo: () => correoActual };
 }
 
 function openEquipoModal(view, equipoExistente) {
@@ -529,20 +538,17 @@ function openEquipoModal(view, equipoExistente) {
   // Líder — rol informativo de organigrama, cualquier empleado de la
   // empresa, se busca por NÓMINA. Viaja como `liderEmail` en POST/PUT
   // /equipos (contrato real confirmado por Jesús — no existe `liderNombre`
-  // como campo de entrada), pero sin campo de correo visible: a Javier no
-  // le interesa el correo del líder (`showCorreo:false`) — el correo
+  // como campo de entrada), pero sin sección de correo visible: a Javier
+  // no le interesa el correo del líder (`showCorreo:false`) — el correo
   // encontrado al buscar se manda solo, y si la persona no tiene correo en
   // RH, el líder se guarda igual, sin correo (limitación real del
   // contrato: sin correo no hay forma de vincular al líder por esta vía).
   const lider = nominaBuscarField({
-    placeholder: "Nómina del líder",
     correoInicial: equipoExistente?.liderEmail || "",
+    nombreInicial: equipoExistente?.liderNombre || "",
     equipoActualId,
     showCorreo: false,
   });
-  const liderActualHint = esEdicion
-    ? el("p", { class: "hint" }, [`Líder actual: ${equipoExistente.liderNombre || equipoExistente.liderEmail || "— sin asignar —"}.`])
-    : null;
 
   // Aprobador 2 / Aprobador 3 — quienes de verdad aprueban los pasos 2 y 3.
   // Ya se guardan vía `aprobador2Nomina`/`aprobador3Nomina` en POST/PUT
@@ -551,16 +557,21 @@ function openEquipoModal(view, equipoExistente) {
   // equipo. Se prellenan con el valor actual del equipo (si lo tiene) para
   // no perderlo si el admin no toca el campo.
   const aprobador2 = nominaBuscarField({
-    placeholder: "Nómina del Aprobador 2",
     nominaInicial: equipoExistente?.aprobador2Nomina || "",
+    nombreInicial: equipoExistente?.aprobador2Nombre || "",
     equipoActualId,
   });
   const aprobador3 = nominaBuscarField({
-    placeholder: "Nómina del Aprobador 3",
     nominaInicial: equipoExistente?.aprobador3Nomina || "",
+    nombreInicial: equipoExistente?.aprobador3Nombre || "",
     equipoActualId,
   });
 
+  // Rediseño de esta pantalla (pedido de Javier, sept. 2026): estructura
+  // fija por rol — etiqueta del rol, "Nómina" + campo/buscar, "Nombre" +
+  // valor, y (si aplica) "Correo" + valor. Sin textos de ayuda genéricos
+  // ni mensajes de confirmación — solo el error cuando la nómina no existe
+  // (`errorText`) y el aviso de "ya pertenece a otro equipo" (`warning`).
   const body = el(
     "div",
     {},
@@ -568,31 +579,34 @@ function openEquipoModal(view, equipoExistente) {
       field("Nombre del equipo *", nombreInput),
       field("Departamento *", departamentoSelect),
 
-      el("p", { class: "hint", style: "font-weight:600;margin-top:8px" }, ["Líder (informativo)"]),
+      el("p", { class: "hint", style: "font-weight:600;margin-top:8px" }, ["Líder del equipo"]),
       el("div", { class: "field" }, [
-        el("label", {}, ["Líder — nómina"]),
+        el("label", {}, ["Número de nómina"]),
         el("div", { style: "display:flex;gap:8px" }, [lider.nominaInput, lider.buscarBtn]),
       ]),
-      lider.hint,
+      lider.errorText,
       lider.warning,
-      liderActualHint,
+      el("div", { class: "field" }, [el("label", {}, ["Nombre"]), lider.nombreLabel]),
 
-      el("p", { class: "hint", style: "font-weight:600;margin-top:16px" }, ["Aprobador 2 y Aprobador 3 (quiénes aprueban de verdad)"]),
+      el("p", { class: "hint", style: "font-weight:600;margin-top:16px" }, ["Aprobador 2"]),
       el("div", { class: "field" }, [
-        el("label", {}, ["Aprobador 2 — nómina"]),
+        el("label", {}, ["Nómina"]),
         el("div", { style: "display:flex;gap:8px" }, [aprobador2.nominaInput, aprobador2.buscarBtn]),
       ]),
-      aprobador2.hint,
+      aprobador2.errorText,
       aprobador2.warning,
-      field("Aprobador 2 — correo (automático)", aprobador2.correoInput),
+      el("div", { class: "field" }, [el("label", {}, ["Nombre"]), aprobador2.nombreLabel]),
+      el("div", { class: "field" }, [el("label", {}, ["Correo"]), aprobador2.correoLabel]),
 
+      el("p", { class: "hint", style: "font-weight:600;margin-top:16px" }, ["Aprobador 3"]),
       el("div", { class: "field" }, [
-        el("label", {}, ["Aprobador 3 — nómina"]),
+        el("label", {}, ["Nómina"]),
         el("div", { style: "display:flex;gap:8px" }, [aprobador3.nominaInput, aprobador3.buscarBtn]),
       ]),
-      aprobador3.hint,
+      aprobador3.errorText,
       aprobador3.warning,
-      field("Aprobador 3 — correo (automático)", aprobador3.correoInput),
+      el("div", { class: "field" }, [el("label", {}, ["Nombre"]), aprobador3.nombreLabel]),
+      el("div", { class: "field" }, [el("label", {}, ["Correo"]), aprobador3.correoLabel]),
 
       el("p", { class: "hint" }, [
         "Al guardar, Aprobador 2 y Aprobador 3 se aplican a TODOS los integrantes actuales del equipo — los kaizens que ya existen no se ven afectados (su aprobador queda congelado desde que se crearon). Deja el campo de nómina en blanco para dejar ese rol sin asignar.",
@@ -756,6 +770,286 @@ function confirmEliminarEmpleado(view, eq, miembro) {
       paint(view);
     })
     .catch((err) => toast(err.message || "No se pudo quitar al integrante.", "tr"));
+}
+
+// ---------------------------------------------------------------------------
+// Modal: crear empleado nuevo (POST /empleados, empleados-create) — Fase
+// 5.5, KaizenZX_Alta_Empleados_Y_Cambio_Rol_Listo.md (Jesús, sept. 2026).
+// Reglas de negocio ya confirmadas con Javier
+// (KaizenZX_Respuestas_Alta_Empleados.md):
+//   1. El aprobador 2/3 se elige por nómina (búsqueda contra el catálogo),
+//      nunca capturando correo a mano.
+//   2. El equipo es opcional al dar de alta — puede quedar sin asignar.
+//   3. La nómina la captura el admin tal como se la da RH, no la genera el
+//      sistema.
+//   4. La contraseña inicial se muestra en pantalla una sola vez para que
+//      el admin la copie y se la dé a la persona — nunca se vuelve a
+//      poder consultar (openPasswordInicialModal(), abajo).
+// ---------------------------------------------------------------------------
+function openCrearEmpleadoModal(view) {
+  let overlayRef;
+
+  const nominaInput = el("input", { class: "input", type: "text", placeholder: placeholderNomina() });
+  const nombreInput = el("input", { class: "input", type: "text", placeholder: "Nombre completo" });
+  const departamentoSelect = el(
+    "select",
+    { class: "select" },
+    [
+      el("option", { value: "" }, ["Selecciona un departamento…"]),
+      ...departamentosCache.map((d) => el("option", { value: d.id }, [d.nombre])),
+    ]
+  );
+  const equipoSelect = el(
+    "select",
+    {
+      class: "select",
+      onchange: () => {
+        const eq = equiposCache.find((e) => String(e.id) === equipoSelect.value);
+        // Auto-relleno desde el equipo elegido (confirmado por Jesús: el
+        // backend hace lo mismo si se manda vacío) — aquí se refleja en
+        // pantalla de una vez para que el admin vea lo que va a heredar,
+        // y lo puede sobreescribir a mano si quiere un aprobador distinto.
+        aprobador2Input.value = eq?.aprobador2Nomina || "";
+        aprobador3Input.value = eq?.aprobador3Nomina || "";
+      },
+    },
+    [
+      el("option", { value: "" }, ["Sin equipo asignado"]),
+      ...equiposCache.map((e) => el("option", { value: e.id }, [e.nombre])),
+    ]
+  );
+  const posicionSelect = el(
+    "select",
+    { class: "select" },
+    [
+      el("option", { value: "integrante" }, ["Integrante"]),
+      el("option", { value: "lider" }, ["Líder"]),
+      el("option", { value: "gerente" }, ["Gerente"]),
+    ]
+  );
+  const aprobador2Input = el("input", { class: "input", type: "text", placeholder: placeholderNomina() });
+  const aprobador3Input = el("input", { class: "input", type: "text", placeholder: placeholderNomina() });
+
+  const body = el("div", {}, [
+    field("Número de nómina *", nominaInput),
+    field("Nombre completo *", nombreInput),
+    field("Departamento *", departamentoSelect),
+    field("Equipo (opcional)", equipoSelect),
+    field("Posición", posicionSelect),
+    el("p", { class: "hint", style: "font-weight:600;margin-top:8px" }, ["Aprobador 2 / Aprobador 3"]),
+    field("Aprobador 2 — nómina", aprobador2Input),
+    field("Aprobador 3 — nómina", aprobador3Input),
+    el("p", { class: "hint" }, [
+      "Se rellenan solos al elegir un equipo (heredan su Aprobador 2/3 actual) — puedes escribir una nómina distinta para sobreescribirlos, o dejarlos vacíos si no aplica.",
+    ]),
+  ]);
+
+  overlayRef = openModal("Crear empleado", body, [
+    el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]),
+    el(
+      "button",
+      {
+        class: "btn btn-accent",
+        onclick: async () => {
+          const nomina = nominaInput.value.trim();
+          const nombre = nombreInput.value.trim();
+          const departamentoId = departamentoSelect.value;
+          if (!nomina || !nombre || !departamentoId) {
+            toast("Completa todos los campos obligatorios (*).", "tr");
+            return;
+          }
+          const payload = {
+            nomina,
+            nombre,
+            departamentoId,
+            posicion: posicionSelect.value,
+          };
+          if (equipoSelect.value) payload.equipoId = equipoSelect.value;
+          // Se mandan siempre que el admin haya escrito algo — vacío
+          // significa "no sobreescribir lo que herede del equipo" salvo
+          // que el admin lo haya limpiado a propósito para forzar "sin
+          // aprobador", tal como confirmó Jesús para el mismo patrón en
+          // equipos.
+          if (aprobador2Input.value.trim()) payload.aprobador2Nomina = aprobador2Input.value.trim();
+          if (aprobador3Input.value.trim()) payload.aprobador3Nomina = aprobador3Input.value.trim();
+
+          try {
+            const resultado = await api.crearEmpleado(payload);
+            closeModal(overlayRef);
+            equiposCache = await api.getEquipos();
+            paint(view);
+            openPasswordInicialModal(resultado);
+          } catch (err) {
+            toast(err.message || "No se pudo crear el empleado.", "tr");
+          }
+        },
+      },
+      ["Crear empleado"]
+    ),
+  ]);
+}
+
+// Muestra la contraseña inicial UNA SOLA VEZ, tal como confirmó Jesús
+// (nunca se puede volver a consultar) — con botón de copiar y advertencia
+// explícita, y sin botón de "Cancelar" (solo "Ya la copié, cerrar") para
+// que el admin no la pierda por cerrar el modal sin querer.
+function openPasswordInicialModal(resultado) {
+  const passwordText = el("div", { class: "readonly-field", style: "font-size:1.1em;font-weight:700;letter-spacing:.03em" }, [
+    resultado.passwordInicial,
+  ]);
+  const body = el("div", {}, [
+    el("p", {}, [`Empleado creado: ${resultado.nombre} (nómina ${resultado.nomina}).`]),
+    field("Contraseña inicial", passwordText),
+    el("p", { class: "hint", style: "color:#991b1b" }, [
+      "⚠ Cópiala y dásela ahora a la persona — no se va a volver a mostrar en ningún lado.",
+    ]),
+  ]);
+  const overlayRef = openModal("Contraseña inicial", body, [
+    el(
+      "button",
+      {
+        class: "btn btn-outline",
+        onclick: async () => {
+          try {
+            await navigator.clipboard.writeText(resultado.passwordInicial);
+            toast("Contraseña copiada.", "tg");
+          } catch {
+            toast("No se pudo copiar automáticamente — selecciónala a mano.", "tr");
+          }
+        },
+      },
+      ["Copiar"]
+    ),
+    el("button", { class: "btn btn-accent", onclick: () => closeModal(overlayRef) }, ["Ya la copié, cerrar"]),
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// Modal: cambiar rol de sistema de una persona (POST /usuarios/:nomina/rol,
+// usuarios-cambiar-rol) — Fase 5.5, KaizenZX_Alta_Empleados_Y_Cambio_Rol_
+// Listo.md (Jesús, sept. 2026). Reglas de negocio confirmadas con Javier
+// (KaizenZX_Falta_Cambiar_Rol_Sistema.md): solo admin/mc, nadie puede
+// cambiar su propio rol, nunca se puede asignar "mc" desde aquí (esa
+// cuenta solo se administra directo en Supabase), y esto nunca toca los
+// aprobadores reales de la persona (aprobador2/3_nomina son independientes
+// del rol de sistema).
+// ---------------------------------------------------------------------------
+function openCambiarRolModal(view) {
+  let overlayRef;
+  const nominaInput = el("input", { class: "input", type: "text", placeholder: placeholderNomina() });
+  const nombreLabel = el("div", { class: "readonly-field" }, ["—"]);
+  const errorText = el("p", { class: "hint", style: "color:#991b1b" }, []);
+  const rolSelect = el(
+    "select",
+    { class: "select" },
+    [
+      el("option", { value: "solicitante" }, ["Integrante (solicitante)"]),
+      el("option", { value: "lider" }, ["Líder"]),
+      el("option", { value: "gerente" }, ["Gerente"]),
+      el("option", { value: "admin" }, ["Administrador"]),
+    ]
+  );
+
+  const buscarBtn = el(
+    "button",
+    {
+      class: "btn btn-outline btn-sm",
+      type: "button",
+      onclick: async () => {
+        const nomina = nominaInput.value.trim();
+        if (!nomina) {
+          toast("Escribe primero la nómina.", "tr");
+          return;
+        }
+        try {
+          const info = await buscarEmpleadoInfo(nomina);
+          errorText.textContent = "";
+          nombreLabel.textContent = info.nombre || "—";
+        } catch (err) {
+          nombreLabel.textContent = "—";
+          errorText.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
+        }
+      },
+    },
+    ["Buscar"]
+  );
+
+  const historialBtn = el(
+    "button",
+    { class: "btn btn-outline btn-sm", type: "button", onclick: () => openHistorialRolModal() },
+    ["Ver historial de cambios"]
+  );
+
+  const body = el("div", {}, [
+    el("div", { class: "field" }, [
+      el("label", {}, ["Número de nómina"]),
+      el("div", { style: "display:flex;gap:8px" }, [nominaInput, buscarBtn]),
+    ]),
+    errorText,
+    el("div", { class: "field" }, [el("label", {}, ["Nombre"]), nombreLabel]),
+    field("Nuevo rol", rolSelect),
+    el("p", { class: "hint" }, [
+      "No se puede asignar el rol \"Mejora Continua\" desde aquí (se administra directo con TI), ni cambiar tu propio rol.",
+    ]),
+    el("div", { style: "margin-top:12px" }, [historialBtn]),
+  ]);
+
+  overlayRef = openModal("Cambiar rol", body, [
+    el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]),
+    el(
+      "button",
+      {
+        class: "btn btn-accent",
+        onclick: async () => {
+          const nomina = nominaInput.value.trim();
+          if (!nomina) {
+            toast("Escribe la nómina de la persona.", "tr");
+            return;
+          }
+          try {
+            const resultado = await api.cambiarRolUsuario(nomina, rolSelect.value);
+            toast(resultado?.mensaje || "Rol actualizado.", "tg");
+            closeModal(overlayRef);
+          } catch (err) {
+            toast(err.message || "No se pudo cambiar el rol.", "tr");
+          }
+        },
+      },
+      ["Cambiar rol"]
+    ),
+  ]);
+}
+
+// Historial de cambios de rol (GET /cambios-rol, cambios-rol-list) — de
+// solo lectura, más reciente primero (ya viene así del backend).
+function openHistorialRolModal() {
+  const body = el("div", { class: "skeleton", style: "height:120px" });
+  const overlayRef = openModal("Historial de cambios de rol", body, [
+    el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cerrar"]),
+  ]);
+
+  api
+    .getHistorialCambiosRol()
+    .then((historial) => {
+      const nuevoBody = !historial?.length
+        ? el("p", { class: "hint" }, ["Todavía no hay cambios de rol registrados."])
+        : el(
+            "div",
+            { class: "admin-member-list" },
+            historial.map((h) =>
+              el("div", { class: "admin-member-row" }, [
+                el("div", {}, [
+                  el("div", { style: "font-weight:600" }, [`${h.nombreAfectada} (${h.nominaAfectada})`]),
+                  el("div", { class: "hint" }, [`"${h.rolAnterior}" → "${h.rolNuevo}" · por ${h.nombreEjecutor} · ${formatDate(h.creadoEn)}`]),
+                ]),
+              ])
+            )
+          );
+      body.replaceWith(nuevoBody);
+    })
+    .catch((err) => {
+      body.replaceWith(el("p", { class: "hint", style: "color:#991b1b" }, [err.message || "No se pudo cargar el historial."]));
+    });
 }
 
 // ---------------------------------------------------------------------------

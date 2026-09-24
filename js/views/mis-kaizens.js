@@ -33,11 +33,21 @@ function estadoKaizen(k) {
   return { label: `Pend. ${NOMBRES_PASO[paso]}`, badge: "badge-pend", grupo: "pendiente" };
 }
 
+let departamentosCache = [];
+
 export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
 
   try {
+    // `getDepartamentos()` se pide aparte, sin dejar que una falla ahí
+    // tumbe toda la pantalla — solo se usa para agrupar el mosaico de
+    // equipos por departamento (ver agruparEquiposPorDepartamento()); si
+    // falla o el endpoint no está listo, el mosaico cae de vuelta a los
+    // equipos sin agrupar en vez de mostrar un error.
     const [equipos, kaizens] = await Promise.all([api.getEquipos(), api.getKaizens()]);
+    if (isStale && isStale()) return;
+    departamentosCache = await api.getDepartamentos().catch(() => []);
+    departamentosCache = (departamentosCache || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
     if (isStale && isStale()) return;
     setState({ equipos, kaizens });
     paint(container);
@@ -123,19 +133,28 @@ function paint(container) {
   view.appendChild(buildStatsRow(alcance.kaizensVisibles));
 
   if (alcance.mostrarMosaico) {
-    view.appendChild(el("h3", {}, ["Equipos"]));
-    view.appendChild(buildMosaico(alcance.equiposVisibles, alcance.kaizensVisibles, container));
+    view.appendChild(buildMosaicoAgrupado(alcance.equiposVisibles, alcance.kaizensVisibles, container));
   }
 
-  view.appendChild(
-    el("div", { class: "view-header", style: "margin-top:8px" }, [
-      el("h3", {}, [state.equipoActivo ? `Short Kaizen — ${state.equipoActivo}` : "Todos los Short Kaizen"]),
-      state.equipoActivo
-        ? el("button", { class: "btn btn-outline btn-sm", onclick: () => { setState({ equipoActivo: null }); paint(container); } }, ["Quitar filtro"])
-        : null,
-    ])
-  );
-  view.appendChild(buildList(alcance.kaizensVisibles, state.equipoActivo));
+  // La lista plana "Todos los Short Kaizen" se quitó SOLO para quien ve el
+  // mosaico de equipos (gerente/mc/admin) — pedido de Javier, sept. 2026:
+  // esa misma información ya se puede ver entrando a cada equipo del
+  // mosaico, y los pendientes de firma ya viven en "Solicitudes". Si desde
+  // ahí filtra por un equipo, sí se muestra su lista (vista acotada, no el
+  // listado completo sin filtrar). Para solicitante/líder, que NO tienen
+  // mosaico, esta lista sigue siendo su única forma de ver sus Short
+  // Kaizen — no se toca.
+  if (!alcance.mostrarMosaico || state.equipoActivo) {
+    view.appendChild(
+      el("div", { class: "view-header", style: "margin-top:8px" }, [
+        el("h3", {}, [state.equipoActivo ? `Short Kaizen — ${state.equipoActivo}` : "Todos los Short Kaizen"]),
+        state.equipoActivo
+          ? el("button", { class: "btn btn-outline btn-sm", onclick: () => { setState({ equipoActivo: null }); paint(container); } }, ["Quitar filtro"])
+          : null,
+      ])
+    );
+    view.appendChild(buildList(alcance.kaizensVisibles, state.equipoActivo));
+  }
 }
 
 function buildStatsRow(kaizens) {
@@ -147,8 +166,8 @@ function buildStatsRow(kaizens) {
     rechazados: grupos.filter((g) => g === "rechazado").length,
   };
   const items = [
-    ["Total SK creados", counts.total],
-    ["Pendientes de firma", counts.pendientes],
+    ["Short Kaizen creados", counts.total],
+    ["Pendientes de aprobación", counts.pendientes],
     ["Aceptados", counts.aceptados],
     ["Rechazados", counts.rechazados],
   ];
@@ -164,35 +183,99 @@ function buildStatsRow(kaizens) {
   );
 }
 
-function buildMosaico(equipos, kaizens, container) {
+// Departamento de un equipo, misma lógica de prioridad que
+// departamentoDeEquipo() en js/views/admin.js (duplicada aquí a propósito
+// — este archivo no comparte módulos con admin.js — pero con el mismo
+// orden de prioridad para no dar resultados distintos entre pantallas):
+// 1) `departamentoId` directo si el backend ya lo trae (21.1, en camino),
+// 2) `departamento` como string si viene así,
+// 3) inferido cruzando el historial de Short Kaizen del equipo (los
+//    kaizens sí traen `departamento`), marcado como estimado,
+// 4) "Departamento sin clasificar" si no hay ninguna pista (equipo sin
+//    kaizens todavía y sin `departamentoId`/`departamento`).
+function departamentoDeEquipoLocal(eq, equipoDepartamentoCache) {
+  if (eq.departamentoId) {
+    const match = departamentosCache.find((d) => d.id === eq.departamentoId);
+    return match?.nombre || String(eq.departamentoId);
+  }
+  if (eq.departamento) return eq.departamento;
+  return equipoDepartamentoCache[eq.nombre] || null;
+}
+
+// Agrupa el mosaico de equipos por departamento (pedido de Javier, sept.
+// 2026): antes era una sola lista plana ordenada alfabéticamente por
+// nombre de equipo — ahora aparece un encabezado de sección por
+// departamento ("Equipos Calidad", "Equipos Ingeniería", …) con sus
+// equipos debajo. Los departamentos se muestran en orden alfabético, y los
+// equipos sin departamento identificable caen en una sección final
+// "Departamento sin clasificar".
+function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
   if (!equipos.length) {
-    return el("div", { class: "empty-state" }, [
-      el("div", { class: "icon" }, ["🏷️"]),
-      el("p", {}, ["No hay equipos asignados a tu cuenta todavía."]),
+    return el("div", {}, [
+      el("h3", {}, ["Equipos"]),
+      el("div", { class: "empty-state" }, [
+        el("div", { class: "icon" }, ["🏷️"]),
+        el("p", {}, ["No hay equipos asignados a tu cuenta todavía."]),
+      ]),
     ]);
   }
+
+  // Igual que en admin.js: se infiere por historial de kaizens cuando el
+  // equipo no trae departamento directo todavía. Se usa TODO el historial
+  // disponible (state.kaizens), no solo `kaizensDelAlcance`, para que la
+  // inferencia no dependa de qué kaizens ve este usuario en particular.
+  const equipoDepartamentoCache = {};
+  (state.kaizens || []).forEach((k) => {
+    if (k.equipo && k.departamento) equipoDepartamentoCache[k.equipo] = k.departamento;
+  });
+
+  const grupos = new Map(); // nombreDepartamento -> equipos[]
+  equipos.forEach((eq) => {
+    const nombreDepto = departamentoDeEquipoLocal(eq, equipoDepartamentoCache) || "Departamento sin clasificar";
+    if (!grupos.has(nombreDepto)) grupos.set(nombreDepto, []);
+    grupos.get(nombreDepto).push(eq);
+  });
+
+  const nombresOrdenados = [...grupos.keys()].sort((a, b) => {
+    if (a === "Departamento sin clasificar") return 1;
+    if (b === "Departamento sin clasificar") return -1;
+    return a.localeCompare(b, "es");
+  });
+
   return el(
     "div",
-    { class: "mosaico" },
-    equipos.map((eq) => {
-      const count = kaizens.filter((k) => k.equipo === eq.nombre).length;
-      const isActive = state.equipoActivo === eq.nombre;
-      return el(
-        "div",
-        {
-          class: `equipo-card${isActive ? " active" : ""}`,
-          onclick: () => {
-            setState({ equipoActivo: isActive ? null : eq.nombre });
-            paint(container);
-          },
-        },
-        [
-          el("div", { class: "eq-name" }, [eq.nombre]),
-          el("div", { class: "eq-count" }, [String(count)]),
-          el("div", { class: "eq-sub" }, ["kaizens registrados"]),
-        ]
-      );
-    })
+    {},
+    nombresOrdenados.map((nombreDepto) =>
+      el("div", { class: "equipos-departamento-grupo" }, [
+        el("h3", {}, [`Equipos ${nombreDepto}`]),
+        el(
+          "div",
+          { class: "mosaico" },
+          grupos.get(nombreDepto)
+            .slice()
+            .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
+            .map((eq) => {
+              const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
+              const isActive = state.equipoActivo === eq.nombre;
+              return el(
+                "div",
+                {
+                  class: `equipo-card${isActive ? " active" : ""}`,
+                  onclick: () => {
+                    setState({ equipoActivo: isActive ? null : eq.nombre });
+                    paint(container);
+                  },
+                },
+                [
+                  el("div", { class: "eq-name" }, [eq.nombre]),
+                  el("div", { class: "eq-count" }, [String(count)]),
+                  el("div", { class: "eq-sub" }, ["kaizens registrados"]),
+                ]
+              );
+            })
+        ),
+      ])
+    )
   );
 }
 

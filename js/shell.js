@@ -18,6 +18,7 @@ import { api } from "./api.js";
 import { setState } from "./state.js";
 import { toast } from "./utils.js";
 import { CONFIG } from "./config.js";
+import { getTheme, toggleTheme } from "./theme.js";
 
 // Cada tab: a qué página apunta y qué roles pueden verla. `roles: null` = todos.
 const NAV_ITEMS = [
@@ -68,18 +69,7 @@ function buildChrome(user, page) {
   if (mobileNav) mobileNav.hidden = false;
   if (fab) fab.hidden = false;
 
-  // Versión visible en el topbar de toda la app — para confirmar a simple
-  // vista que el navegador ya trae la última versión y no una copia vieja
-  // en caché (pedido explícito de Javier, sept. 2026).
-  const brandText = document.querySelector(".brand-text");
-  if (brandText && !document.getElementById("app-version-badge")) {
-    const badge = document.createElement("span");
-    badge.id = "app-version-badge";
-    badge.className = "app-version-badge";
-    badge.textContent = `v${CONFIG.APP_VERSION}`;
-    badge.title = "Versión de la aplicación en ejecución";
-    brandText.appendChild(badge);
-  }
+  buildVersionBar();
 
   const nameEl = document.getElementById("user-chip-name");
   if (nameEl) nameEl.textContent = user.nombre;
@@ -93,6 +83,43 @@ function buildChrome(user, page) {
     node.hidden = !visible;
     if (visible) node.classList.toggle("active", item.page === page);
   });
+
+  // Menú del usuario (pedido de Javier, sept. 2026): ya no se cierra sesión
+  // con un solo clic directo sobre el chip — el clic abre un menú
+  // desplegable con "Cerrar sesión" como opción, para evitar cierres de
+  // sesión accidentales.
+  const userMenuToggle = document.getElementById("user-chip-toggle");
+  const userMenuDropdown = document.getElementById("user-menu-dropdown");
+  if (userMenuToggle && userMenuDropdown) {
+    userMenuToggle.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const abierto = !userMenuDropdown.hidden;
+      userMenuDropdown.hidden = abierto;
+      userMenuToggle.setAttribute("aria-expanded", String(!abierto));
+    });
+    document.addEventListener("click", (ev) => {
+      if (userMenuDropdown.hidden) return;
+      if (userMenuDropdown.contains(ev.target) || userMenuToggle.contains(ev.target)) return;
+      userMenuDropdown.hidden = true;
+      userMenuToggle.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  // Modo oscuro (pedido de Javier, sept. 2026) — mismo menú del usuario.
+  // El tema ya se aplicó de forma síncrona por el script inline anti-
+  // parpadeo en el <head> de cada página; aquí solo se pone el texto del
+  // botón acorde y se conecta el clic.
+  const themeToggleBtn = document.getElementById("theme-toggle-btn");
+  if (themeToggleBtn) {
+    const actualizarTextoTema = () => {
+      themeToggleBtn.textContent = getTheme() === "dark" ? "☀️ Modo claro" : "🌙 Modo oscuro";
+    };
+    actualizarTextoTema();
+    themeToggleBtn.addEventListener("click", () => {
+      toggleTheme();
+      actualizarTextoTema();
+    });
+  }
 
   document.querySelectorAll("[data-logout]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -108,6 +135,24 @@ function buildChrome(user, page) {
       window.location.href = "formulario.html";
     });
   });
+}
+
+// Barra delgada fija en la parte inferior de la pantalla con la versión de
+// la app (pedido de Javier, sept. 2026: antes vivía como texto chiquito
+// dentro del topbar, junto al logo — se movió aquí para no competir
+// visualmente con la marca, y el formato pasó de fecha (`2026.09.24`) a
+// semántico (`X.X.X`). Se crea una sola vez por carga de página (todas las
+// páginas autenticadas la comparten vía este mismo shell), y no se muestra
+// en el flujo de login/cambio de contraseña (initShell nunca llega a
+// buildChrome ahí).
+function buildVersionBar() {
+  if (document.getElementById("version-bar")) return;
+  const bar = document.createElement("div");
+  bar.id = "version-bar";
+  bar.className = "version-bar";
+  bar.textContent = `Short Kaizen v${CONFIG.APP_VERSION}`;
+  bar.title = "Versión de la aplicación en ejecución";
+  document.body.appendChild(bar);
 }
 
 const ROLE_LABEL = {

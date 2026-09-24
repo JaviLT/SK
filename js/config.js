@@ -34,9 +34,12 @@ export const CONFIG = {
   APP_NAME: "Short Kaizen",
   COMPANY_NAME: "Zubex Industrial",
 
-  // Se muestra en el topbar de toda la app (ver js/shell.js) para poder
-  // confirmar a simple vista que el navegador está corriendo la última
-  // versión desplegada y no una copia vieja en caché. Súbele cada vez que
-  // se entregue una nueva versión del frontend.
-  APP_VERSION: "2026.09.24",
+  // Se muestra en la barra de versión al pie de toda la app (ver
+  // js/shell.js -> buildVersionBar()) para poder confirmar a simple vista
+  // que el navegador está corriendo la última versión desplegada y no una
+  // copia vieja en caché. Formato semántico X.X.X (antes era la fecha de
+  // entrega, ej. "2026.09.24" — cambiado a pedido de Javier, sept. 2026).
+  // Súbele (patch/minor/major según el alcance del cambio) cada vez que se
+  // entregue una nueva versión del frontend.
+  APP_VERSION: "1.0.0",
 };

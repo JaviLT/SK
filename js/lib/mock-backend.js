@@ -107,6 +107,10 @@ const DIRECTORIO_NOMINAS_DEMO = {
   "0007": "Colaborador Demo Siete",
 };
 
+// Historial de cambios de rol de sistema (mock de `cambios-rol-list`, ver
+// mockBackend.cambiarRolUsuario/getHistorialCambiosRol más abajo).
+const CAMBIOS_ROL_DEMO = [];
+
 // ---- Usuarios de ejemplo para el login (nómina + password) ----
 // Roles reales del catálogo de personal: integrante ("solicitante" en la
 // app), líder y gerente. Ya NO existe el rol "aprobador" — el paso de
@@ -590,5 +594,63 @@ export const mockBackend = {
     kaizen.actualizadoEn = ahora;
     persistir();
     return delay(structuredClone(kaizen));
+  },
+
+  // ==========================================================================
+  // Alta de empleados nuevos + cambio de rol de sistema (Fase 5.5, Jesús,
+  // sept. 2026, KaizenZX_Alta_Empleados_Y_Cambio_Rol_Listo.md) — mocks
+  // simples solo para no romper la app si algún día se prueba con
+  // MOCK_MODE=true; el backend real ya está construido y probado.
+  // ==========================================================================
+  async crearEmpleado(payload) {
+    const nomina = String(payload?.nomina || "").trim();
+    if (!nomina || !payload?.nombre) {
+      await delay();
+      throw new Error("Falta la nómina o el nombre.");
+    }
+    if (DIRECTORIO_NOMINAS_DEMO[nomina]) {
+      await delay();
+      throw new Error("Ya existe un empleado con esa nómina.");
+    }
+    DIRECTORIO_NOMINAS_DEMO[nomina] = payload.nombre;
+    if (payload.equipoId) {
+      const equipo = EQUIPOS_DEMO.find((e) => String(e.id) === String(payload.equipoId));
+      if (equipo) equipo.miembros.push({ nomina, nombre: payload.nombre });
+    }
+    persistir();
+    return delay({
+      nomina,
+      nombre: payload.nombre,
+      passwordInicial: Math.random().toString(36).slice(2, 8),
+      aprobador2Nomina: payload.aprobador2Nomina || "",
+      aprobador3Nomina: payload.aprobador3Nomina || "",
+      mensaje: "Empleado creado. Copia la contraseña ahora — no se volverá a mostrar.",
+    });
+  },
+
+  async cambiarRolUsuario(nomina, rol) {
+    await delay();
+    const entrada = {
+      id: CAMBIOS_ROL_DEMO.length + 1,
+      nominaAfectada: nomina,
+      nombreAfectada: DIRECTORIO_NOMINAS_DEMO[nomina] || nomina,
+      rolAnterior: "solicitante",
+      rolNuevo: rol,
+      nominaEjecutor: "MOCK",
+      nombreEjecutor: "Usuario de prueba",
+      creadoEn: new Date().toISOString(),
+    };
+    CAMBIOS_ROL_DEMO.unshift(entrada);
+    return {
+      nomina,
+      nombre: entrada.nombreAfectada,
+      rolAnterior: entrada.rolAnterior,
+      rolNuevo: rol,
+      mensaje: `Rol actualizado de "${entrada.rolAnterior}" a "${rol}".`,
+    };
+  },
+
+  async getHistorialCambiosRol() {
+    return delay(structuredClone(CAMBIOS_ROL_DEMO));
   },
 };
