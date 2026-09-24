@@ -50,6 +50,20 @@
 //     GET /equipos, nunca toca ningún aprobador. Correcto y esperado para
 //     "Líder" (siempre fue solo informativo).
 //
+// `GET /equipos` (el listado, usado para pintar las tarjetas) ya trae
+// `aprobador2Nomina`/`aprobador2Nombre`/`aprobador3Nomina`/
+// `aprobador3Nombre` con el nombre resuelto por el backend, igual que
+// `liderNombre` (KaizenZX_Equipos_List_Aprobadores_Listo.md — a Jesús se le
+// había pasado agregarlo al construir la cascada, ya corregido y probado).
+// "" en cualquiera de los dos significa que ese equipo no ha sido editado
+// todavía con el modelo nuevo. Jesús también corrigió de oficio
+// `gerenteNombre`/`gerenteEmail` (el campo viejo de visibilidad) para que
+// sigan la misma prioridad que `kaizens-list`/`kaizens-detail`: primero
+// `aprobador3Nomina` del equipo si existe, y solo si no, caen al respaldo
+// viejo (`equipos_gerentes`/`departamentos_gerentes`) — no se usa ya en
+// este archivo (se reemplazó por `aprobador3Nombre`), pero queda anotado
+// por si algún día hace falta.
+//
 // MOVER a alguien de equipo — YA actualiza su aprobador automáticamente
 // (corregido por Jesús, `KaizenZX_Cascada_Aprobador23_Lista.md`):
 // `equipos-empleados-add` reasigna `equipo_id` sin necesidad de quitar
@@ -242,12 +256,13 @@ function buildEquipoCard(view, eq) {
       // (confirmado por Jesús — no mueve el ruteo de aprobación).
       roleBlock("Líder", eq.liderNombre, eq.liderEmail),
       // aprobador2Nomina/aprobador3Nomina = ruteo REAL, ya editable por
-      // equipo (KaizenZX_Cascada_Aprobador23_Lista.md). GET /equipos
-      // debería traerlos igual que POST/PUT, pero por ahora se muestra solo
-      // la nómina (sin nombre resuelto) — pendiente confirmar con Jesús si
-      // el listado también resuelve nombre/correo como lo hace `liderNombre`.
-      nominaBlock("Aprobador 2", eq.aprobador2Nomina),
-      nominaBlock("Aprobador 3", eq.aprobador3Nomina),
+      // equipo (KaizenZX_Cascada_Aprobador23_Lista.md), y GET /equipos ya
+      // resuelve el nombre igual que liderNombre (confirmado en
+      // KaizenZX_Equipos_List_Aprobadores_Listo.md — se le había pasado a
+      // Jesús agregarlo, ya corregido y probado). "" significa que ese
+      // equipo todavía no ha sido migrado al modelo nuevo.
+      nominaBlock("Aprobador 2", eq.aprobador2Nombre, eq.aprobador2Nomina),
+      nominaBlock("Aprobador 3", eq.aprobador3Nombre, eq.aprobador3Nomina),
     ]),
 
     el("div", { class: "admin-members-header" }, [
@@ -259,16 +274,17 @@ function buildEquipoCard(view, eq) {
   ]);
 }
 
-// Muestra un rol del que hoy solo tenemos la NÓMINA (Aprobador 2/3 en el
-// listado de equipos) — sin nombre resuelto todavía porque no está
-// confirmado si `GET /equipos` regresa nombre/correo para estos campos
-// (sí vienen en la respuesta de POST/PUT, según Jesús). Un `null` no es un
-// error: significa que este equipo todavía no ha sido editado con el
-// modelo nuevo (ver alerta de transición en el encabezado del archivo).
-function nominaBlock(label, nomina) {
+// Muestra Aprobador 2/3 en la tarjeta de equipo, con nombre ya resuelto por
+// el backend (KaizenZX_Equipos_List_Aprobadores_Listo.md — GET /equipos
+// regresa aprobador2Nombre/aprobador3Nombre igual que liderNombre). Cadena
+// vacía "" no es un error: significa que este equipo todavía no ha sido
+// editado con el modelo nuevo (ver alerta de transición en el encabezado
+// del archivo).
+function nominaBlock(label, nombre, nomina) {
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
-    el("div", { class: "admin-role-name" }, [nomina ? `Nómina ${nomina}` : "— sin asignar aún —"]),
+    el("div", { class: "admin-role-name" }, [nombre || "— sin asignar aún —"]),
+    nomina ? el("div", { class: "hint" }, [`Nómina ${nomina}`]) : null,
     !nomina ? el("div", { class: "hint" }, ["Este equipo no ha sido editado con el modelo nuevo — sus integrantes no tienen aprobador asignado por esta vía todavía."]) : null,
   ].filter(Boolean));
 }
