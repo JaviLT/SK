@@ -55,26 +55,36 @@
 // `aprobador3Nombre` con el nombre resuelto por el backend, igual que
 // `liderNombre` (KaizenZX_Equipos_List_Aprobadores_Listo.md — a Jesús se le
 // había pasado agregarlo al construir la cascada, ya corregido y probado).
-// "" en cualquiera de los dos significa que ese equipo no ha sido editado
-// todavía con el modelo nuevo. Jesús también corrigió de oficio
-// `gerenteNombre`/`gerenteEmail` (el campo viejo de visibilidad) para que
-// sigan la misma prioridad que `kaizens-list`/`kaizens-detail`: primero
-// `aprobador3Nomina` del equipo si existe, y solo si no, caen al respaldo
-// viejo (`equipos_gerentes`/`departamentos_gerentes`) — no se usa ya en
-// este archivo (se reemplazó por `aprobador3Nombre`), pero queda anotado
-// por si algún día hace falta.
+// Jesús también corrigió de oficio `gerenteNombre`/`gerenteEmail` (el campo
+// viejo de visibilidad) para que sigan la misma prioridad que
+// `kaizens-list`/`kaizens-detail`: primero `aprobador3Nomina` del equipo si
+// existe, y solo si no, caen al respaldo viejo (`equipos_gerentes`/
+// `departamentos_gerentes`) — no se usa ya en este archivo (se reemplazó
+// por `aprobador3Nombre`), pero queda anotado por si algún día hace falta.
+//
+// BACKFILL YA CORRIDO (KaizenZX_Backfill_Correos_Confirmado.md, 25 sep
+// 2026): los 38 equipos reales ya tienen `aprobador2Nomina` poblado desde
+// sus propios miembros (incluyendo la unificación de C4/Las Papas/Motal
+// Kompras). `aprobador3Nomina` quedó vacío A PROPÓSITO en 11 de los 38 —
+// esos equipos cierran en 2 pasos por diseño de RH (87/326 personas cierran
+// en 2 pasos, concentradas justo en esos 11 equipos completos), NO es un
+// hueco de datos ni algo que un admin tenga que corregir. `nominaBlock()`
+// (ver abajo) distingue este caso ("cierra en 2 pasos", solo si
+// `aprobador2Nomina` ya existe) de un equipo genuinamente sin migrar (los
+// dos campos vacíos — ya no debería pasar para equipos reales tras el
+// backfill, pero sí puede pasar con equipos de prueba nuevos).
 //
 // MOVER a alguien de equipo — YA actualiza su aprobador automáticamente
 // (corregido por Jesús, `KaizenZX_Cascada_Aprobador23_Lista.md`):
 // `equipos-empleados-add` reasigna `equipo_id` sin necesidad de quitar
 // primero (funciona como "mover"), y además asigna automáticamente el
 // `aprobador2_nomina`/`aprobador3_nomina` VIGENTE del equipo destino.
-// ALERTA de transición: la mayoría de los 38 equipos todavía NO tienen
-// `aprobador2Nomina`/`aprobador3Nomina` propios (siguen en `null` hasta que
-// un admin edite ese equipo con el modelo nuevo) — mover a alguien a uno de
-// esos equipos lo deja SIN aprobador2/3 hasta que se edite el equipo. No es
-// bug, es el estado real de transición. Se avisa en `openEmpleadoModal()`
-// cuando el equipo destino tiene ambos campos en null.
+// ALERTA de transición: un equipo de prueba/nuevo sin editar con el modelo
+// nuevo todavía puede tener `aprobador2Nomina`/`aprobador3Nomina` en
+// `null` — mover a alguien ahí lo deja SIN aprobador2/3 hasta que se edite
+// el equipo. No es bug. Se avisa en `openEmpleadoModal()` cuando el equipo
+// destino tiene ambos campos en null (ya no debería pasar para los 38
+// equipos reales tras el backfill).
 //
 // Aviso de "ya pertenece a otro equipo": al buscar una nómina (líder,
 // aprobador o integrante nuevo), si `GET /empleados/:nomina` regresa un
@@ -258,11 +268,28 @@ function buildEquipoCard(view, eq) {
       // aprobador2Nomina/aprobador3Nomina = ruteo REAL, ya editable por
       // equipo (KaizenZX_Cascada_Aprobador23_Lista.md), y GET /equipos ya
       // resuelve el nombre igual que liderNombre (confirmado en
-      // KaizenZX_Equipos_List_Aprobadores_Listo.md — se le había pasado a
-      // Jesús agregarlo, ya corregido y probado). "" significa que ese
-      // equipo todavía no ha sido migrado al modelo nuevo.
-      nominaBlock("Aprobador 2", eq.aprobador2Nombre, eq.aprobador2Nomina),
-      nominaBlock("Aprobador 3", eq.aprobador3Nombre, eq.aprobador3Nomina),
+      // KaizenZX_Equipos_List_Aprobadores_Listo.md). Backfill ya corrido
+      // (KaizenZX_Backfill_Correos_Confirmado.md): los 38 equipos reales
+      // tienen `aprobador2Nomina`. `aprobador3Nomina` quedó vacío en 11 de
+      // 38 A PROPÓSITO — cierran en 2 pasos por diseño de RH, NO es un
+      // hueco de datos. Se distingue de un equipo genuinamente sin migrar
+      // (ambos campos vacíos) mirando si `aprobador2Nomina` sí existe.
+      nominaBlock("Aprobador 2", eq.aprobador2Nombre, eq.aprobador2Nomina, {
+        notaVacia: "Este equipo todavía no ha sido editado con el modelo nuevo — edítalo para asignar un Aprobador 2.",
+      }),
+      nominaBlock(
+        "Aprobador 3",
+        eq.aprobador3Nombre,
+        eq.aprobador3Nomina,
+        eq.aprobador2Nomina
+          ? {
+              nombreVacio: "— no aplica (cierra en 2 pasos) —",
+              notaVacia: "Este equipo cierra en 2 pasos por diseño de RH — no le falta nada, no necesita Aprobador 3 salvo que el negocio decida agregar un tercer paso.",
+            }
+          : {
+              notaVacia: "Este equipo todavía no ha sido editado con el modelo nuevo — edítalo para asignar un Aprobador 3 (si le corresponde).",
+            }
+      ),
     ]),
 
     el("div", { class: "admin-members-header" }, [
@@ -277,15 +304,17 @@ function buildEquipoCard(view, eq) {
 // Muestra Aprobador 2/3 en la tarjeta de equipo, con nombre ya resuelto por
 // el backend (KaizenZX_Equipos_List_Aprobadores_Listo.md — GET /equipos
 // regresa aprobador2Nombre/aprobador3Nombre igual que liderNombre). Cadena
-// vacía "" no es un error: significa que este equipo todavía no ha sido
-// editado con el modelo nuevo (ver alerta de transición en el encabezado
-// del archivo).
-function nominaBlock(label, nombre, nomina) {
+// vacía "" tiene 2 causas distintas, no siempre es "falta algo" — ver el
+// call site en buildEquipoCard(): (a) equipo genuinamente sin migrar al
+// modelo nuevo, o (b) equipo que cierra en 2 pasos por diseño de RH
+// (confirmado por Jesús, KaizenZX_Backfill_Correos_Confirmado.md — 11 de
+// 38 equipos reales). `nombreVacio`/`notaVacia` los distingue en pantalla.
+function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aún —", notaVacia = null } = {}) {
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
-    el("div", { class: "admin-role-name" }, [nombre || "— sin asignar aún —"]),
+    el("div", { class: "admin-role-name" }, [nombre || nombreVacio]),
     nomina ? el("div", { class: "hint" }, [`Nómina ${nomina}`]) : null,
-    !nomina ? el("div", { class: "hint" }, ["Este equipo no ha sido editado con el modelo nuevo — sus integrantes no tienen aprobador asignado por esta vía todavía."]) : null,
+    !nomina && notaVacia ? el("div", { class: "hint" }, [notaVacia]) : null,
   ].filter(Boolean));
 }
 
