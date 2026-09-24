@@ -4,33 +4,31 @@
   padding: var(--sp-6) var(--sp-5) calc(var(--sp-12) + env(safe-area-inset-bottom,0px));
 }
 
-/* ============ Login ============
-   Antes: pantalla llena de un degradado azul. Ahora: fondo neutro claro,
-   una sola tarjeta simple centrada — el azul solo vive en el botón. */
+/* ============ Login ============ */
 .login-screen{
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  background: var(--surface-sunken);
+  background: var(--zx-page-bg);
   padding: var(--sp-5);
 }
 .login-card{
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--zx-surface);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   padding: var(--sp-8) var(--sp-6);
   max-width: 380px; width: 100%;
 }
 .login-mark{
   width: 48px; height: 48px; border-radius: var(--radius-md);
-  background: var(--accent-ink); color: var(--zx-white);
+  background: var(--zx-blue); color: var(--zx-white);
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; margin: 0 auto var(--sp-4);
 }
 .login-logo{ width: 64px; height: 64px; margin: 0 auto var(--sp-4); object-fit: contain; }
 .login-card h1{ text-align: center; font-size: var(--fs-lg); }
-.login-card .sub{ text-align: center; font-size: var(--fs-sm); color: var(--ink-faint); margin-bottom: var(--sp-6); }
+.login-card .sub{ text-align: center; font-size: var(--fs-sm); color: var(--gray-500); margin-bottom: var(--sp-6); }
 .login-error{
-  background: var(--negative-bg); color: var(--negative);
+  background: var(--zx-negative-bg); color: var(--zx-negative);
   font-size: var(--fs-sm); padding: var(--sp-3); border-radius: var(--radius-sm);
   margin-bottom: var(--sp-4); display: none;
 }
@@ -51,42 +49,60 @@
   display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--sp-3); margin-bottom: var(--sp-8);
 }
-/* Grupo "Equipos <Departamento>" — encabezado más discreto (texto + línea
-   fina), en vez de competir visualmente con las tarjetas de equipo. */
+/* Grupo "Equipos <Departamento>" — encabezado clicable que colapsa/expande
+   el grupo (pedido de Javier, sept. 2026): antes se mostraban siempre
+   todos los equipos de cada departamento en el mosaico; ahora cada grupo
+   empieza colapsado y se abre al hacer clic en su encabezado. */
 .equipos-departamento-grupo{ margin-bottom: var(--sp-6); }
 .equipos-departamento-grupo:first-child h3{ margin-top: 0; }
-.equipos-departamento-grupo h3{
+.equipos-departamento-grupo-header{
+  display: flex; align-items: center; gap: var(--sp-2);
+  cursor: pointer; user-select: none;
+  padding: 0 0 var(--sp-2); margin: 0 0 var(--sp-3);
+  border: none; border-bottom: 1px solid var(--gray-200);
+  background: none; font: inherit; color: inherit;
+  width: 100%; text-align: left;
+}
+.equipos-departamento-grupo-header h3{
   font-size: var(--fs-sm); font-weight: 700; text-transform: uppercase;
-  letter-spacing: .06em; color: var(--ink-faint);
-  padding-bottom: var(--sp-2); margin-bottom: var(--sp-3);
-  border-bottom: 1px solid var(--border);
+  letter-spacing: .06em; color: var(--zx-heading);
+  margin: 0;
 }
+.equipos-departamento-grupo-chevron{
+  font-size: var(--fs-xs); color: var(--gray-500);
+  transition: transform .15s var(--ease);
+  flex-shrink: 0;
+}
+.equipos-departamento-grupo.is-open .equipos-departamento-grupo-chevron{ transform: rotate(90deg); }
+.equipos-departamento-grupo-body{ display: none; }
+.equipos-departamento-grupo.is-open .equipos-departamento-grupo-body{ display: block; }
+
 .equipo-card{
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--zx-surface); box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md); padding: var(--sp-4);
-  cursor: pointer; transition: border-color .15s var(--ease);
+  cursor: pointer; transition: box-shadow .15s var(--ease), transform .15s var(--ease);
 }
-.equipo-card:hover{ border-color: var(--accent); }
-.equipo-card.active{ border-color: var(--accent-ink); background: var(--accent-soft); }
-.equipo-card .eq-name{ font-weight: 700; font-size: var(--fs-sm); color: var(--ink); margin-bottom: var(--sp-2); }
-.equipo-card .eq-count{ font-size: var(--fs-xl); font-weight: 700; color: var(--ink); }
-.equipo-card .eq-sub{ font-size: var(--fs-xs); color: var(--ink-faint); }
+.equipo-card:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.equipo-card.active{ box-shadow: var(--shadow-md); background: var(--zx-highlight); }
+.equipo-card .eq-name{ font-weight: 700; font-size: var(--fs-sm); color: var(--gray-800); margin-bottom: var(--sp-2); }
+.equipo-card .eq-count{ font-size: var(--fs-xl); font-weight: 700; color: var(--zx-heading); }
+.equipo-card .eq-sub{ font-size: var(--fs-xs); color: var(--gray-500); }
 
 .kaizen-list{ display: flex; flex-direction: column; gap: var(--sp-2); }
 .kaizen-row{
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--zx-surface); box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md); padding: var(--sp-4);
   display: flex; align-items: center; gap: var(--sp-4);
-  cursor: pointer; transition: border-color .15s var(--ease);
+  cursor: pointer; transition: box-shadow .15s var(--ease);
 }
-.kaizen-row:hover{ border-color: var(--border-strong); background: var(--surface-hover); }
+.kaizen-row:hover{ box-shadow: var(--shadow-md); }
 .kaizen-row .kr-main{ flex: 1; min-width: 0; }
-.kaizen-row .kr-title{ font-weight: 600; font-size: var(--fs-base); color: var(--ink); }
-.kaizen-row .kr-sub{ font-size: var(--fs-xs); color: var(--ink-faint); margin-top: 2px; }
+.kaizen-row .kr-title{ font-weight: 600; font-size: var(--fs-base); color: var(--gray-800); }
+.kaizen-row .kr-sub{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: 2px; }
 
 .empty-state{
   text-align: center; padding: var(--sp-12) var(--sp-5);
-  color: var(--ink-faint);
+  color: var(--gray-500);
 }
 .empty-state .icon{ font-size: 2rem; margin-bottom: var(--sp-3); }
 
@@ -99,24 +115,24 @@
   flex-shrink: 0;
   display: flex; align-items: center; gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4);
-  border-radius: 999px; background: var(--surface-sunken);
-  font-size: var(--fs-xs); font-weight: 600; color: var(--ink-faint);
+  border-radius: 999px; background: var(--gray-100);
+  font-size: var(--fs-xs); font-weight: 600; color: var(--gray-500);
 }
 .step-pill .num{
   width: 20px; height: 20px; border-radius: 50%;
-  background: var(--border-strong); color: var(--zx-white);
+  background: var(--gray-300); color: var(--zx-white);
   display: flex; align-items: center; justify-content: center;
   font-size: 11px;
 }
-.step-pill.active{ background: var(--accent-soft); color: var(--accent-ink); }
-.step-pill.active .num{ background: var(--accent-ink); }
-.step-pill.done .num{ background: var(--positive); }
+.step-pill.active{ background: var(--zx-highlight); color: var(--zx-heading); }
+.step-pill.active .num{ background: var(--zx-blue); }
+.step-pill.done .num{ background: var(--zx-positive); }
 
 .form-grid{ display: grid; gap: var(--sp-5); }
 .form-actions{
   display: flex; justify-content: flex-end; gap: var(--sp-3);
   margin-top: var(--sp-6); padding-top: var(--sp-5);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--gray-200);
 }
 
 /* ============ Detalle ============ */
@@ -128,33 +144,29 @@
 .timeline-step{ display: flex; gap: var(--sp-4); padding-bottom: var(--sp-6); position: relative; }
 .timeline-step:not(:last-child)::before{
   content:''; position: absolute; left: 11px; top: 26px; bottom: 0;
-  width: 2px; background: var(--border);
+  width: 2px; background: var(--gray-200);
 }
 .timeline-dot{
   width: 24px; height: 24px; border-radius: 50%;
-  background: var(--border-strong); color: var(--zx-white);
+  background: var(--gray-300); color: var(--zx-white);
   display: flex; align-items: center; justify-content: center;
   font-size: var(--fs-xs); flex-shrink: 0; z-index: 1;
 }
-.timeline-dot.done{ background: var(--positive); }
-.timeline-dot.rej{ background: var(--negative); }
-.timeline-dot.pending{ background: var(--accent); }
+.timeline-dot.done{ background: var(--zx-positive); }
+.timeline-dot.rej{ background: var(--zx-negative); }
+.timeline-dot.pending{ background: var(--zx-blue-accent); }
 .detail-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
 .detail-photos{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .detail-photos figure{ margin: 0; }
-.detail-photos img{ border-radius: var(--radius-sm); width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--surface-sunken); }
-.detail-photos figcaption{ font-size: var(--fs-xs); color: var(--ink-faint); margin-top: var(--sp-1); text-align: center; }
+.detail-photos img{ border-radius: var(--radius-sm); width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--gray-50); }
+.detail-photos figcaption{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: var(--sp-1); text-align: center; }
 
-/* ============ Encabezado del detalle — imita el reporte descargable en PDF ============
-   Este banner SÍ mantiene el azul de marca sólido: es la pieza que se
-   exporta/imprime como encabezado oficial del reporte, no una superficie
-   de navegación — no debe verse "minimalista", debe verse como el reporte
-   institucional que representa. */
+/* ============ Encabezado del detalle — imita el reporte descargable en PDF ============ */
 .sk-report-header{ flex-direction: column; align-items: stretch; }
 .sk-back-btn{ align-self: flex-start; margin-bottom: var(--sp-3); }
 .sk-report-banner{
   background: var(--zx-blue); color: var(--zx-white);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
   padding: var(--sp-5); display: flex; align-items: center; gap: var(--sp-4);
 }
 .sk-report-banner h1, .sk-report-banner p{ color: var(--zx-white); margin: 0; }
@@ -171,80 +183,89 @@
   display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4);
 }
 .sk-autorizacion-box{
-  background: var(--surface-sunken); border: 1px solid var(--border);
+  background: var(--gray-50); border: 1px solid var(--gray-200);
   border-radius: var(--radius-sm); padding: var(--sp-4);
 }
 
 /* ============ Solicitudes ============ */
 .solicitudes-list{ display: flex; flex-direction: column; gap: var(--sp-3); }
-.solicitud-card{ border-left: 2px solid var(--accent); }
+.solicitud-card{ border-left: 3px solid var(--zx-blue-accent); }
 .solicitud-titulo{ cursor: pointer; }
-.solicitud-titulo:hover{ text-decoration: underline; text-decoration-color: var(--accent); }
+.solicitud-titulo:hover{ text-decoration: underline; text-decoration-color: var(--zx-blue-accent); }
 
 /* ============ Administración (equipos / líderes / gerentes / integrantes) ============
-   Reorganizado (pedido de Javier): las tarjetas de equipo eran muy densas
-   (bloques grises apilados para cada rol, filas grises para cada
-   integrante). Ahora los roles se leen como una mini lista de datos
-   (etiqueta arriba en mayúsculas pequeñas, valor abajo) separados por
-   líneas finas en vez de cajas de color, y la lista de integrantes usa
-   divisores en vez de fondo — mucho menos "bloques" en pantalla. */
+   Roles en cajas con borde (pedido de Javier, sept. 2026, según boceto a
+   mano): Líder ocupa el ancho completo arriba, Aprobador 2 y Aprobador 3
+   van cada uno en su propia caja bordeada debajo — ya no en fila con
+   flex-wrap. Aprobador 2/3 vuelven a mostrar Correo (el Líder sigue sin
+   mostrarlo — decisión ya tomada, ver roleBlock() en admin.js). */
 .admin-grid{
   display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: var(--sp-4);
 }
-.admin-team-card .card-header h3{ color: var(--ink); }
+.admin-team-card .card-header h3{ color: var(--gray-800); }
 .admin-roles-row{
-  display: flex; flex-wrap: wrap; gap: var(--sp-5);
+  display: flex; flex-direction: column; gap: var(--sp-3);
   margin-bottom: var(--sp-5); padding-bottom: var(--sp-5);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gray-200);
 }
 .admin-role-block{
-  min-width: 140px; flex: 1;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
   overflow-wrap: anywhere;
 }
 .admin-role-label{
   font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .06em; color: var(--ink-faint);
+  letter-spacing: .06em; color: var(--gray-500);
   margin-bottom: var(--sp-1);
 }
 .admin-role-value{ min-width: 0; }
-.admin-role-name{ font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
+.admin-role-name{ font-size: var(--fs-sm); font-weight: 600; color: var(--gray-800); }
+.admin-role-correo{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: 2px; }
 .admin-members-header{
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--sp-2); gap: var(--sp-3);
 }
-.admin-members-header h4{ font-size: var(--fs-sm); color: var(--ink-soft); font-weight: 600; }
+.admin-members-header h4{ font-size: var(--fs-sm); color: var(--gray-700); font-weight: 600; }
 .admin-member-list{ display: flex; flex-direction: column; }
 .admin-member-row{
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--sp-3); padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gray-200);
 }
 .admin-member-row:last-child{ border-bottom: none; }
+/* Con muchos integrantes la lista es scrollable, pero sin verse como una
+   caja blanca aparte (pedido de Javier): sin fondo ni borde propios, solo
+   un leve degradado arriba/abajo (mask) que insinúa que hay más contenido
+   al hacer scroll. Los equipos con pocos integrantes (sin esta clase)
+   siguen viéndose exactamente igual que antes. */
 .admin-member-list-scroll{
   max-height: 320px; overflow-y: auto; padding-right: var(--sp-2);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
 }
 
-/* ============ Dashboard ============
-   KPIs y cumplimiento por equipo con menos separación de color (antes cada
-   número usaba el azul de marca) — el número queda en tinta neutra y el
-   color solo marca la variación, para que resalte lo que sí importa. */
+/* Buscador de equipos, arriba del mosaico de tarjetas de Administración */
+.admin-search{ margin-bottom: var(--sp-5); max-width: 380px; }
+
+/* ============ Dashboard ============ */
 .equipo-progreso-list{ display: flex; flex-direction: column; }
 .equipo-progreso-row{
   display: grid; grid-template-columns: 1.4fr 2fr auto auto;
   align-items: center; gap: var(--sp-4);
   padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gray-200);
 }
 .equipo-progreso-row:last-child{ border-bottom: none; }
-.ep-bar{ height: 6px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden; }
-.ep-bar-fill{ height: 100%; background: var(--accent); border-radius: 999px; }
-.ep-valor{ font-size: var(--fs-sm); color: var(--ink-soft); white-space: nowrap; }
-.ep-pct{ font-size: var(--fs-sm); font-weight: 700; color: var(--ink); min-width: 44px; text-align: right; }
-.ep-pct.up{ color: var(--positive); }
+.ep-bar{ height: 6px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.ep-bar-fill{ height: 100%; background: var(--zx-blue-accent); border-radius: 999px; }
+.ep-valor{ font-size: var(--fs-sm); color: var(--gray-700); white-space: nowrap; }
+.ep-pct{ font-size: var(--fs-sm); font-weight: 700; color: var(--gray-800); min-width: 44px; text-align: right; }
+.ep-pct.up{ color: var(--zx-positive); }
 .dash-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-top: var(--sp-4); }
 .chart-wrap{ position: relative; height: 260px; }
 .methodology-note{
-  font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400;
-  border-top: 1px solid var(--border); padding-top: var(--sp-3); margin-top: var(--sp-6);
+  font-size: var(--fs-xs); color: var(--gray-500); font-weight: 400;
+  border-top: 1px solid var(--gray-200); padding-top: var(--sp-3); margin-top: var(--sp-6);
 }

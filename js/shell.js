@@ -73,8 +73,21 @@ function buildChrome(user, page) {
 
   const nameEl = document.getElementById("user-chip-name");
   if (nameEl) nameEl.textContent = user.nombre;
+  // Pedido de Javier (sept. 2026): el chip ya no muestra el rol del
+  // sistema — muestra el equipo al que pertenece (`user.equipo`, ver
+  // contrato de /auth/login en api.js). Si no pertenece a ningún equipo
+  // (gerentes/mc/admin normalmente no tienen uno asignado), se muestra
+  // solo el nombre y se oculta la segunda línea por completo.
   const roleEl = document.getElementById("user-chip-rol");
-  if (roleEl) roleEl.textContent = ROLE_LABEL[user.rol] || user.rol;
+  if (roleEl) {
+    if (user.equipo) {
+      roleEl.textContent = user.equipo;
+      roleEl.hidden = false;
+    } else {
+      roleEl.textContent = "";
+      roleEl.hidden = true;
+    }
+  }
 
   document.querySelectorAll("[data-nav]").forEach((node) => {
     const item = NAV_ITEMS.find((n) => n.page === node.dataset.nav);

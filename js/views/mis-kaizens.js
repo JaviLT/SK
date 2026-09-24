@@ -245,37 +245,63 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
   return el(
     "div",
     {},
-    nombresOrdenados.map((nombreDepto) =>
-      el("div", { class: "equipos-departamento-grupo" }, [
-        el("h3", {}, [`Equipos ${nombreDepto}`]),
-        el(
-          "div",
-          { class: "mosaico" },
-          grupos.get(nombreDepto)
-            .slice()
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
-            .map((eq) => {
-              const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
-              const isActive = state.equipoActivo === eq.nombre;
-              return el(
-                "div",
-                {
-                  class: `equipo-card${isActive ? " active" : ""}`,
-                  onclick: () => {
-                    setState({ equipoActivo: isActive ? null : eq.nombre });
-                    paint(container);
+    nombresOrdenados.map((nombreDepto) => {
+      // Colapsable, colapsado por defecto (pedido de Javier, sept. 2026):
+      // antes los equipos de cada departamento se veían siempre completos,
+      // lo que hacía el mosaico muy largo con varios departamentos. Ahora
+      // cada grupo empieza cerrado y se abre al hacer clic en su
+      // encabezado. El estado de abierto/cerrado vive solo en el DOM (la
+      // clase "is-open"), no en `state` — no hace falta persistirlo entre
+      // repintados de esta misma vista.
+      const grupoEl = el("div", { class: "equipos-departamento-grupo" });
+      const header = el(
+        "button",
+        {
+          class: "equipos-departamento-grupo-header",
+          type: "button",
+          onclick: () => grupoEl.classList.toggle("is-open"),
+        },
+        [
+          el("span", { class: "equipos-departamento-grupo-chevron" }, ["▶"]),
+          el("h3", {}, [`Equipos ${nombreDepto}`]),
+        ]
+      );
+      const body = el(
+        "div",
+        { class: "equipos-departamento-grupo-body" },
+        [
+          el(
+            "div",
+            { class: "mosaico" },
+            grupos.get(nombreDepto)
+              .slice()
+              .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
+              .map((eq) => {
+                const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
+                const isActive = state.equipoActivo === eq.nombre;
+                return el(
+                  "div",
+                  {
+                    class: `equipo-card${isActive ? " active" : ""}`,
+                    onclick: () => {
+                      setState({ equipoActivo: isActive ? null : eq.nombre });
+                      paint(container);
+                    },
                   },
-                },
-                [
-                  el("div", { class: "eq-name" }, [eq.nombre]),
-                  el("div", { class: "eq-count" }, [String(count)]),
-                  el("div", { class: "eq-sub" }, ["kaizens registrados"]),
-                ]
-              );
-            })
-        ),
-      ])
-    )
+                  [
+                    el("div", { class: "eq-name" }, [eq.nombre]),
+                    el("div", { class: "eq-count" }, [String(count)]),
+                    el("div", { class: "eq-sub" }, ["kaizens registrados"]),
+                  ]
+                );
+              })
+          ),
+        ]
+      );
+      grupoEl.appendChild(header);
+      grupoEl.appendChild(body);
+      return grupoEl;
+    })
   );
 }
 

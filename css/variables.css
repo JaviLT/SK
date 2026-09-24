@@ -1,97 +1,65 @@
 /*
   Tokens de marca — Manual de Estandarización de Reportes IA (Zubex Industrial)
-  No modificar los colores de marca (--zx-blue / --zx-blue-accent) sin
-  actualizar también el manual de referencia.
+  No modificar estos valores sin actualizar también el manual de referencia.
 
-  REDISEÑO MINIMALISTA (pedido de Javier, sept. 2026): "que no se parezca
-  en nada a lo actual". Decisiones de negocio confirmadas con
-  AskUserQuestion antes de tocar código:
-    1. El azul de marca pasa a ser ACENTO, no color dominante — el fondo es
-       blanco/gris neutro y el azul aparece solo en botones, enlaces,
-       estados activos y detalles puntuales (antes el topbar y varias
-       superficies eran azules).
-    2. Además del estilo visual, se reorganiza el layout de las pantallas
-       más cargadas (Administración, Dashboard, mosaico de equipos).
-    3. Modo oscuro recalculado desde cero junto con el claro (antes era una
-       inversión mecánica de la escala de grises del sistema viejo).
-  Los colores de marca en sí (#0D18A8 / #227EF6) NO cambiaron — solo cómo y
-  cuánto se usan.
+  NOTA (sept. 2026): se probó una versión minimalista (azul como acento sobre
+  fondo neutro, sin sombras) y Javier pidió regresar al esquema de color
+  anterior — azul de marca como color dominante otra vez — aunque conservando
+  algunos ajustes de estructura de esa ronda (ver css/components.css y
+  css/views.css para el detalle). Este archivo vuelve a los valores de marca
+  de antes del rediseño minimalista.
 */
 :root{
-  /* Colores de marca (oficiales, sin cambios de valor — ver 1.1 del manual) */
-  --zx-blue:        #0D18A8;
-  --zx-blue-accent: #227EF6;
+  /* Paleta primaria de marca */
+  --zx-blue:        #0D18A8;   /* Azul Zubex — dominante */
+  --zx-blue-accent: #227EF6;   /* Azul Zubex Brillante — interactivo/acento */
   --zx-white:       #FFFFFF;
   --zx-black:       #000000;
 
-  /* ---- Sistema neutro (nuevo, minimalista) ----
-     Antes varias superficies (topbar, fondos de bloque, sombras) tenían
-     tinte azul. Ahora la escala neutra es gris puro — el azul solo entra
-     donde hay una acción o un estado, nunca como fondo estructural. */
-  --ink:        #14161a;  /* texto principal */
-  --ink-soft:   #5b5f68;  /* texto secundario */
-  --ink-faint:  #9498a3;  /* texto terciario / placeholders */
+  /* Paleta semántica */
+  --zx-positive:    #166534;
+  --zx-positive-bg: #dcfce7;
+  --zx-negative:    #991b1b;
+  --zx-negative-bg: #fee2e2;
+  --zx-neutral:     #0D18A8;
+  --zx-page-bg:     #f8fafc;
+  --zx-highlight:   #dbeafe;
+  /* Fondo de tarjetas/modales/inputs — separado de --zx-white porque
+     --zx-white también se usa como color de TEXTO sobre fondos azules
+     (topbar, botones de acento) y esos deben seguir viéndose blancos en
+     modo oscuro. Solo --zx-surface se invierte (ver bloque [data-theme
+     ="dark"] más abajo). */
+  --zx-surface:     #FFFFFF;
+  /* Color de títulos (h1-h4) — separado de --zx-blue porque en modo
+     oscuro el azul primario pierde contraste sobre fondos casi negros; se
+     usa el azul de acento ahí en su lugar (ver [data-theme="dark"]). */
+  --zx-heading:     var(--zx-blue);
 
-  --surface:        #ffffff; /* tarjetas, modal, inputs */
-  --surface-sunken:  #f7f7f8; /* fondo de página, bloques secundarios */
-  --surface-hover:   #f0f1f3; /* hover sobre superficie */
+  /* Escala de grises funcional (no es paleta de marca, es utilitaria) */
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
 
-  --border:        #e6e7ea;
-  --border-strong: #d5d7dc;
-
-  /* Azul de marca usado como acento de interacción — no como fondo de
-     página ni de tarjetas. */
-  --accent:      var(--zx-blue-accent);
-  --accent-ink:  var(--zx-blue);       /* texto/ícono sobre fondo claro que necesita más peso que el acento */
-  --accent-soft: #eaf1ff;              /* fondo tenue para estados activos/seleccionados */
-
-  /* Paleta semántica — mismo significado que antes (verde=mejora,
-     rojo=deterioro, sección 1.2 del manual), tonos ajustados a fondos
-     neutros en vez de azulados. */
-  --positive:    #15803d;
-  --positive-bg: #eafbf1;
-  --negative:    #b91c1c;
-  --negative-bg: #fdedec;
-  --warning:     #92400e;
-  --warning-bg:  #fef6e6;
-
-  /* Compatibilidad hacia atrás: algunas vistas todavía referencian estos
-     nombres — se mapean al sistema nuevo para no tener que tocar cada CSS
-     de golpe. */
-  --zx-page-bg:     var(--surface-sunken);
-  --zx-surface:     var(--surface);
-  --zx-highlight:   var(--accent-soft);
-  --zx-heading:     var(--ink);
-  --zx-positive:    var(--positive);
-  --zx-positive-bg: var(--positive-bg);
-  --zx-negative:    var(--negative);
-  --zx-negative-bg: var(--negative-bg);
-  --zx-neutral:     var(--ink);
-  --gray-50:  var(--surface-sunken);
-  --gray-100: #eeeff1;
-  --gray-200: var(--border);
-  --gray-300: var(--border-strong);
-  --gray-400: #b3b6bd;
-  --gray-500: var(--ink-faint);
-  --gray-600: #74777f;
-  --gray-700: var(--ink-soft);
-  --gray-800: var(--ink);
-  --gray-900: #0a0b0d;
-
-  /* Tipografía — se conserva el fallback aprobado (Poppins/Segoe UI), pero
-     con jerarquía más ligera: menos peso en títulos, más aire entre
-     niveles, para la lectura minimalista que pidió Javier. */
+  /* Tipografía — fallback aprobado para HTML: Poppins → Segoe UI → sans-serif */
   --font-base: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
 
+  /* Escala tipográfica */
   --fs-xs:   0.75rem;
   --fs-sm:   0.8125rem;
   --fs-base: 0.9375rem;
   --fs-md:   1.0625rem;
-  --fs-lg:   1.1875rem;
-  --fs-xl:   1.5rem;
-  --fs-2xl:  1.875rem;
+  --fs-lg:   1.25rem;
+  --fs-xl:   1.625rem;
+  --fs-2xl:  2rem;
 
-  /* Espaciado — escala de 4px, sin cambios (ya funcionaba bien) */
+  /* Espaciado — escala de 4px */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -102,17 +70,16 @@
   --sp-10: 40px;
   --sp-12: 48px;
 
-  /* Radios — más contenidos (menos "burbuja"), y sombras casi planas: el
-     minimalismo viene de quitar peso visual, no de agregar profundidad. */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
+  /* Radios y sombras */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px rgba(13, 24, 168, 0.08);
+  --shadow-lg: 0 12px 32px rgba(13, 24, 168, 0.14);
 
-  /* Layout — fluido, sin cambios de valor */
-  --topbar-h: 60px;
+  /* Layout — fluido */
+  --topbar-h: 64px;
   --mobile-nav-h: 64px;
   --content-max: min(1680px, 96vw);
 
@@ -120,55 +87,32 @@
   --ease: cubic-bezier(.4,0,.2,1);
 }
 
-/* Modo oscuro — recalculado desde cero junto con el claro (no es una
-   inversión mecánica de la escala de grises anterior). Mismo principio
-   minimalista: superficies neutras oscuras puras (sin tinte azul), el azul
-   de marca sigue siendo acento y no cambia de valor entre temas — solo se
-   usa --accent-ink (más brillante) donde --zx-blue perdería contraste. */
+/* Modo oscuro — se activa a mano desde el menú del usuario (js/theme.js +
+   js/shell.js), no automáticamente por preferencia del sistema. Los colores
+   de marca (--zx-blue, --zx-blue-accent) NO cambian — solo se invierten las
+   superficies neutras (fondo de página, tarjetas, inputs, la escala de
+   grises) para mantener contraste y legibilidad. El logo, el topbar y los
+   botones de acento siguen viéndose igual que en modo claro. */
 :root[data-theme="dark"]{
-  --ink:        #eef0f3;
-  --ink-soft:   #a7abb5;
-  --ink-faint:  #767a85;
+  --zx-page-bg:     #0b1120;
+  --zx-surface:     #1e293b;
+  --zx-highlight:   #1e2a47;
+  --zx-heading:     var(--zx-blue-accent);
+  --zx-positive-bg: #14311f;
+  --zx-negative-bg: #3f1414;
 
-  --surface:        #1a1b1f;
-  --surface-sunken: #101114;
-  --surface-hover:  #232429;
+  --gray-50:  #18233a;
+  --gray-100: #1f2c47;
+  --gray-200: #2c3b57;
+  --gray-300: #3e5074;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #b6c2d4;
+  --gray-700: #cbd5e1;
+  --gray-800: #e7ecf3;
+  --gray-900: #f8fafc;
 
-  --border:        #2b2d33;
-  --border-strong: #3a3c44;
-
-  --accent:      var(--zx-blue-accent);
-  --accent-ink:  var(--zx-blue-accent); /* --zx-blue pierde contraste en fondos casi negros */
-  --accent-soft: #16233c;
-
-  --positive:    #4ade80;
-  --positive-bg: #12271c;
-  --negative:    #f87171;
-  --negative-bg: #341414;
-  --warning:     #fbbf24;
-  --warning-bg:  #2e2410;
-
-  --zx-page-bg:     var(--surface-sunken);
-  --zx-surface:     var(--surface);
-  --zx-highlight:   var(--accent-soft);
-  --zx-heading:     var(--ink);
-  --zx-positive:    var(--positive);
-  --zx-positive-bg: var(--positive-bg);
-  --zx-negative:    var(--negative);
-  --zx-negative-bg: var(--negative-bg);
-  --zx-neutral:     var(--ink);
-  --gray-50:  var(--surface-sunken);
-  --gray-100: #1f2024;
-  --gray-200: var(--border);
-  --gray-300: var(--border-strong);
-  --gray-400: #53565e;
-  --gray-500: var(--ink-faint);
-  --gray-600: #8b8f99;
-  --gray-700: var(--ink-soft);
-  --gray-800: var(--ink);
-  --gray-900: #f5f6f7;
-
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-  --shadow-md: 0 6px 20px rgba(0,0,0,.45);
-  --shadow-lg: 0 16px 40px rgba(0,0,0,.55);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.45), 0 1px 1px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
 }

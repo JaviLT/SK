@@ -140,6 +140,74 @@ let equiposCache = [];
 let departamentosCache = []; // [{id, nombre}] — GET /departamentos (antes string[] en el mock)
 let equipoDepartamentoCache = {}; // { [nombreEquipo]: nombreDepartamento } — inferido de kaizens, ver departamentoDeEquipo()
 let departamentoFiltro = "";
+// Buscador de equipos (pedido de Javier, sept. 2026): filtra por nombre de
+// equipo, en vez de tener que bajar en una lista larga. Se combina con el
+// filtro de departamento (ambos aplican a la vez, no son excluyentes).
+let busquedaEquipo = "";
+
+// Cache de correos resueltos por nómina (Aprobador 2/3) — varios equipos
+// pueden compartir la misma persona como aprobador, así que se resuelve una
+// sola vez por nómina aunque aparezca en varias tarjetas. Vive a nivel de
+// módulo porque solo es un cache de lectura, no estado de negocio.
+const correoPorNominaCache = {};
+function obtenerCorreoCacheado(nomina) {
+  if (!nomina) return Promise.resolve(null);
+  if (!(nomina in correoPorNominaCache)) {
+    correoPorNominaCache[nomina] = buscarEmpleadoInfo(nomina)
+      .then((info) => info.correo)
+      .catch(() => null);
+  }
+  return Promise.resolve(correoPorNominaCache[nomina]);
+}
+
+// Menú de acciones genérico (pedido de Javier, sept. 2026): reemplaza
+// varios botones sueltos por un solo botón que despliega las opciones. Se
+// cierra solo con un único listener de click a nivel de documento,
+// adjuntado una sola vez (no en cada paint()) para no ir acumulando
+// listeners fantasma en cada repintado de la vista.
+let actionMenuGlobalListenerListo = false;
+function ensureActionMenuGlobalListener() {
+  if (actionMenuGlobalListenerListo) return;
+  actionMenuGlobalListenerListo = true;
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".action-menu-dropdown").forEach((d) => {
+      d.hidden = true;
+    });
+  });
+}
+function buildActionMenu(triggerLabel, triggerClass, opciones) {
+  ensureActionMenuGlobalListener();
+  const dropdown = el(
+    "div",
+    { class: "action-menu-dropdown", hidden: true },
+    opciones.map((op) =>
+      el(
+        "button",
+        {
+          class: `action-menu-item${op.danger ? " action-menu-item-danger" : ""}`,
+          onclick: (ev) => {
+            ev.stopPropagation();
+            dropdown.hidden = true;
+            op.onClick();
+          },
+        },
+        [op.label]
+      )
+    )
+  );
+  const toggle = el(
+    "button",
+    {
+      class: triggerClass,
+      onclick: (ev) => {
+        ev.stopPropagation();
+        dropdown.hidden = !dropdown.hidden;
+      },
+    },
+    [triggerLabel]
+  );
+  return el("div", { class: "action-menu" }, [toggle, dropdown]);
+}
 
 export async function render(container, params, isStale) {
   const view = el("div", { class: "view", id: "admin-view" });
@@ -213,31 +281,43 @@ function departamentoDeEquipo(eq) {
 function paint(view) {
   view.innerHTML = "";
 
-  const exportBtn = el("button", { class: "btn btn-outline", onclick: () => exportarExcel() }, ["⬇ Exportar a Excel"]);
-  const cambiarRolBtn = el("button", { class: "btn btn-outline", onclick: () => openCambiarRolModal(view) }, ["Cambiar rol"]);
-  const crearEmpleadoBtn = el("button", { class: "btn btn-outline", onclick: () => openCrearEmpleadoModal(view) }, ["+ Crear empleado"]);
-  const nuevoBtn = el("button", { class: "btn btn-accent", onclick: () => openEquipoModal(view) }, ["+ Nuevo equipo"]);
+  // Botón único de acciones (pedido de Javier, sept. 2026): antes eran 3
+  // botones sueltos ("Cambiar rol", "+ Crear empleado", "+ Nuevo equipo") —
+  // ahora un solo botón despliega las tres opciones. También se quitó el
+  // botón "Exportar a Excel" y el subtítulo de la pantalla, ambos por
+  // pedido explícito.
+  const accionesMenu = buildActionMenu("Acciones ▾", "btn btn-accent", [
+    { label: "Cambiar rol", onClick: () => openCambiarRolModal(view) },
+    { label: "+ Crear empleado", onClick: () => openCrearEmpleadoModal(view) },
+    { label: "+ Nuevo equipo", onClick: () => openEquipoModal(view) },
+  ]);
 
   view.appendChild(
     el("div", { class: "view-header" }, [
-      el("div", {}, [
-        el("h1", {}, ["Administración"]),
-        el("p", {}, ["Equipos, aprobadores e integrantes — solo visible para el usuario maestro y Mejora Continua"]),
-      ]),
-      el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [exportBtn, cambiarRolBtn, crearEmpleadoBtn, nuevoBtn]),
+      el("div", {}, [el("h1", {}, ["Administración"])]),
+      el("div", { style: "display:flex;gap:10px;flex-wrap:wrap" }, [accionesMenu]),
     ])
   );
 
   view.appendChild(buildFiltroDepartamento(view));
+  view.appendChild(buildBuscadorEquipo(view));
 
   // Comparación por String(): el <select> siempre entrega su value como
   // string, pero el id de departamento puede venir numérico si ya se
   // desplegó `departamentoId` real en el backend (antes solo existía el
   // id-string del mock) — comparar con === sin normalizar dejaba el filtro
   // siempre vacío (15 !== "15"). Bug reportado por Javier, sep. 2026.
-  const equiposFiltrados = departamentoFiltro
+  let equiposFiltrados = departamentoFiltro
     ? equiposCache.filter((eq) => String(departamentoDeEquipo(eq)?.id ?? "") === String(departamentoFiltro))
     : equiposCache;
+
+  // Buscador de equipos (pedido de Javier, sept. 2026): filtra además por
+  // nombre de equipo, insensible a mayúsculas/acentos.
+  if (busquedaEquipo.trim()) {
+    const normaliza = (s) => (s || "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const q = normaliza(busquedaEquipo);
+    equiposFiltrados = equiposFiltrados.filter((eq) => normaliza(eq.nombre).includes(q));
+  }
 
   if (!equiposCache.length) {
     view.appendChild(
@@ -254,14 +334,39 @@ function paint(view) {
     view.appendChild(
       el("div", { class: "empty-state" }, [
         el("div", { class: "icon" }, ["🔍"]),
-        el("h3", {}, ["Sin equipos en este departamento"]),
-        el("p", {}, ["Elige otro departamento o quita el filtro."]),
+        el("h3", {}, ["Sin equipos que coincidan"]),
+        el("p", {}, ["Prueba otro departamento o ajusta la búsqueda."]),
       ])
     );
     return;
   }
 
   view.appendChild(el("div", { class: "admin-grid" }, equiposFiltrados.map((eq) => buildEquipoCard(view, eq))));
+}
+
+function buildBuscadorEquipo(view) {
+  const input = el("input", {
+    class: "input",
+    type: "search",
+    placeholder: "Buscar equipo por nombre…",
+    value: busquedaEquipo,
+    oninput: (e) => {
+      busquedaEquipo = e.target.value;
+      paint(view);
+    },
+  });
+  // Re-enfoca el campo tras repintar, para poder seguir escribiendo sin
+  // que el cursor se pierda cada vez que paint() reconstruye la vista.
+  if (busquedaEquipo) {
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  }
+  return el("div", { class: "field search-field admin-search" }, [
+    el("span", { class: "search-icon" }, ["🔍"]),
+    input,
+  ]);
 }
 
 function buildFiltroDepartamento(view) {
@@ -319,16 +424,20 @@ function buildEquipoCard(view, eq) {
     );
   }
 
+  // Editar/Eliminar unificados en un solo botón (pedido de Javier, sept.
+  // 2026): antes eran 2 botones separados en cada tarjeta de equipo.
+  const accionesEquipo = buildActionMenu("Opciones ▾", "btn btn-outline btn-sm", [
+    { label: "Editar", onClick: () => openEquipoModal(view, eq) },
+    { label: "Eliminar", danger: true, onClick: () => confirmEliminarEquipo(view, eq) },
+  ]);
+
   return el("div", { class: "card admin-team-card" }, [
     el("div", { class: "card-header" }, [
       el("div", {}, [
         el("h3", {}, [eq.nombre]),
         el("div", { class: "hint" }, [deptoTexto]),
       ]),
-      el("div", { style: "display:flex;gap:8px" }, [
-        el("button", { class: "btn btn-outline btn-sm", onclick: () => openEquipoModal(view, eq) }, ["Editar"]),
-        el("button", { class: "btn btn-danger btn-sm", onclick: () => confirmEliminarEquipo(view, eq) }, ["Eliminar"]),
-      ]),
+      accionesEquipo,
     ]),
 
     el("div", { class: "admin-roles-row" }, rolesRow),
@@ -351,15 +460,25 @@ function buildEquipoCard(view, eq) {
 // (confirmado por Jesús, KaizenZX_Backfill_Correos_Confirmado.md — 11 de
 // 38 equipos reales). `nombreVacio`/`notaVacia` los distingue en pantalla.
 function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aún —", notaVacia = null } = {}) {
-  // Layout horizontal: etiqueta a la izquierda, nombre/nómina/nota a la
-  // derecha, en vez de apilado (pedido de Javier — con 3 columnas la
-  // etiqueta se cortaba en 2 líneas, ej. "APROBADO / R 2"). Ver
-  // `.admin-role-block` en css/views.css.
+  // Caja bordeada, con Correo visible (pedido de Javier, sept. 2026, según
+  // boceto a mano) — a diferencia del Líder, aquí SÍ importa el correo
+  // porque Aprobador 2/3 son quienes de verdad reciben las notificaciones
+  // de aprobación. El correo no viene en GET /equipos (solo nombre/nómina)
+  // — se resuelve aparte con `obtenerCorreoCacheado()` y se rellena async
+  // sin bloquear el resto de la tarjeta.
+  const correoEl = el("div", { class: "admin-role-correo" }, ["Correo: —"]);
+  if (nomina) {
+    correoEl.textContent = "Correo: buscando…";
+    obtenerCorreoCacheado(nomina).then((correo) => {
+      correoEl.textContent = correo ? `Correo: ${correo}` : "Correo: no disponible en RH";
+    });
+  }
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
     el("div", { class: "admin-role-value" }, [
       el("div", { class: "admin-role-name" }, [nombre || nombreVacio]),
       nomina ? el("div", { class: "hint" }, [`Nómina ${nomina}`]) : null,
+      nomina ? correoEl : null,
       !nomina && notaVacia ? el("div", { class: "hint" }, [notaVacia]) : null,
     ].filter(Boolean)),
   ]);

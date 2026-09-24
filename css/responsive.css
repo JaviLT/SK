@@ -39,8 +39,8 @@
     position: fixed; bottom: 0; left: 0; right: 0;
     height: var(--mobile-nav-h);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    background: var(--zx-blue);
+    box-shadow: var(--shadow-md);
     z-index: 40;
   }
 
@@ -76,7 +76,7 @@
 .mobile-nav-btn{
   flex: 1; background: none; border: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; color: var(--ink-faint); font-size: 11px; font-weight: 600;
+  gap: 2px; color: #c7d5ff; font-size: 11px; font-weight: 600;
 }
-.mobile-nav-btn.active{ color: var(--accent-ink); }
-#mobile-nuevo{ color: var(--accent); }
+.mobile-nav-btn.active{ color: var(--zx-white); }
+#mobile-nuevo{ color: var(--zx-white); }
