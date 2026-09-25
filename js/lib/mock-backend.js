@@ -32,6 +32,14 @@ export const DEPARTAMENTOS = [
   "REC. HUM.", "SOSTENIBILIDAD", "VIGILANCIA",
 ];
 
+// Grupo de departamento (Proceso Productivo / Áreas de Servicio /
+// Administrativos) — pedido de Javier para el Dashboard, sept. 2026. Sin
+// asignar por default (`null`), igual que va a regresar el backend real
+// mientras un admin no lo haya clasificado (confirmado por Jesús en
+// KaizenZX_Respuesta_Grupo_Departamento_Y_Mc.md). Vive a nivel de módulo
+// para simular persistencia entre pantallas mientras dura la sesión.
+const gruposPorDepartamentoDemo = {};
+
 export const ENFOQUES = ["Rentabilidad", "Bienestar del personal", "Sustentabilidad", "Mejora en el proceso"];
 
 export const META_SK_POR_EQUIPO_MES = 4;
@@ -313,7 +321,12 @@ export const mockBackend = {
   },
 
   async getDepartamentos() {
-    return delay([...DEPARTAMENTOS]);
+    return delay(DEPARTAMENTOS.map((nombre) => ({ id: nombre, nombre, grupo: gruposPorDepartamentoDemo[nombre] || null })));
+  },
+
+  async asignarGrupoDepartamentos(grupo, departamentoIds) {
+    (departamentoIds || []).forEach((id) => { gruposPorDepartamentoDemo[id] = grupo || null; });
+    return delay({ ok: true });
   },
 
   async cambiarPassword(passwordActual, passwordNueva) {

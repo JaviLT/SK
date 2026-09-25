@@ -121,6 +121,12 @@ const FUNCTION_MAP = [
   { method: "GET", pattern: /^\/auth\/session$/, fn: "auth-session" },
   { method: "POST", pattern: /^\/auth\/cambiar-password$/, fn: "auth-cambiar-password" }, // pendiente en el backend, ver doc para Jesús
   { method: "GET", pattern: /^\/departamentos$/, fn: "departamentos-list" }, // pendiente en el backend, ver doc para Jesús
+  // Asignación masiva de grupo de departamento (Proceso Productivo / Áreas
+  // de Servicio / Administrativos) — confirmado con Jesús en
+  // KaizenZX_Respuesta_Grupo_Departamento_Y_Mc.md (sept. 2026), pendiente de
+  // construir de su lado. `GET /departamentos` va a incluir el campo
+  // `grupo` (null mientras no se asigne) en la misma respuesta de arriba.
+  { method: "POST", pattern: /^\/departamentos\/grupo$/, fn: "departamentos-asignar-grupo" }, // pendiente en el backend, ver doc para Jesús
   { method: "GET", pattern: /^\/equipos$/, fn: "equipos-list" },
   { method: "GET", pattern: /^\/kaizens$/, fn: "kaizens-list" },
   { method: "GET", pattern: /^\/kaizens\/(.+)$/, fn: "kaizens-detail" },
@@ -251,6 +257,19 @@ export const api = {
 
   async getDepartamentos() {
     return CONFIG.MOCK_MODE ? mockBackend.getDepartamentos() : request("/departamentos");
+  },
+
+  /**
+   * Asigna un grupo (proceso_productivo | areas_servicio | administrativo)
+   * a varios departamentos de un jalón — pedido por Javier para el
+   * Dashboard (KaizenZX_Grupos_Departamento_Dashboard.md), confirmado por
+   * Jesús como endpoint de asignación masiva (aún sin construir de su
+   * lado a la fecha de este código).
+   */
+  async asignarGrupoDepartamentos(grupo, departamentoIds) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.asignarGrupoDepartamentos(grupo, departamentoIds)
+      : request("/departamentos/grupo", { method: "POST", body: { grupo, departamentoIds } });
   },
 
   async getEquipos() {

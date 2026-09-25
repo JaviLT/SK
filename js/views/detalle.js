@@ -1,5 +1,6 @@
 import { el, formatDate, formatDateTime, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
+import { state } from "../state.js";
 
 export async function render(container, params, isStale) {
   const view = el("div", { class: "view", id: "detalle-view" });
@@ -32,7 +33,11 @@ function paint(view, k) {
     el("div", { class: "detail-header sk-report-header" }, [
       el("button", {
         class: "btn btn-outline btn-sm sk-back-btn",
-        onclick: () => { window.location.href = "mis-kaizens.html"; },
+        // Pedido de Javier (sept. 2026): "Volver" siempre regresa a
+        // Solicitudes (antes iba a Mis Kaizens) — el detalle se abre casi
+        // siempre desde ahí para aprobar/rechazar, así que es a donde debe
+        // regresar sin importar de dónde se haya entrado.
+        onclick: () => { window.location.href = "solicitudes.html"; },
       }, ["← Volver"]),
       el("div", { class: "sk-report-banner" }, [
         el("img", { src: "assets/logo-mark.png", alt: "Short Kaizen", class: "sk-report-logo" }),
@@ -81,9 +86,72 @@ function paint(view, k) {
     el("div", { class: "card", style: "margin-top:20px" }, [el("h3", {}, ["Autorizaciones"]), buildAutorizaciones(k)])
   );
 
+  // Pedido de Javier (sept. 2026): poder aprobar/rechazar directo desde el
+  // detalle, no solo desde la pestaña Solicitudes. Reutiliza exactamente la
+  // misma llamada de un clic (`api.aprobarEnApp`, ya usada en
+  // solicitudes.js) y la misma regla de autorización por rol/nómina — se
+  // duplica aquí a propósito (mismo criterio que otras duplicaciones ya
+  // documentadas en el proyecto, como `departamentoDeEquipo()`), porque
+  // solicitudes.js no expone estas funciones como módulo reutilizable.
+  if (puedeDecidir(k)) {
+    view.appendChild(
+      el("div", { class: "card", style: "margin-top:20px" }, [
+        el("h3", {}, ["Tu decisión"]),
+        el("p", { class: "hint", style: "margin-bottom:12px" }, ["Este Short Kaizen está esperando tu aprobación."]),
+        el("div", { style: "display:flex;gap:12px" }, [
+          el("button", { class: "btn btn-success", onclick: () => decidir(k, "aprobar", view) }, ["✓ Aprobar"]),
+          el("button", { class: "btn btn-danger", onclick: () => decidir(k, "rechazar", view) }, ["✕ Rechazar"]),
+        ]),
+      ])
+    );
+  }
+
   view.appendChild(
     el("div", { class: "card", style: "margin-top:20px" }, [el("h3", {}, ["Línea de tiempo"]), buildTimeline(k)])
   );
+}
+
+// Mismo criterio de autorización que `pendientesParaUsuario()` en
+// solicitudes.js (duplicado a propósito, ver comentario arriba): mc decide
+// cualquier pendiente del paso 1; admin decide cualquier paso; líder/gerente
+// solo si su nómina coincide exactamente con la congelada en el kaizen para
+// el paso actual (nunca por rol/equipo/departamento).
+function estadoActualParaDecision(k) {
+  const m = /^pend_(aprobacion[123])$/.exec(k.status || "");
+  if (!m) return null;
+  const paso = m[1];
+  const info = {
+    aprobacion1: { paso: 1, nomina: null },
+    aprobacion2: { paso: 2, nomina: k.nominaAprobacion2 },
+    aprobacion3: { paso: 3, nomina: k.nominaAprobacion3 },
+  };
+  return info[paso];
+}
+
+function puedeDecidir(k) {
+  const user = state.user || {};
+  const actual = estadoActualParaDecision(k);
+  if (!actual) return false;
+  if (user.rol === "mc") return actual.paso === 1;
+  if (user.rol === "admin") return true;
+  if (user.rol === "lider" || user.rol === "gerente") {
+    return (actual.paso === 2 || actual.paso === 3) && actual.nomina === user.nomina;
+  }
+  return false;
+}
+
+async function decidir(k, decision, view) {
+  const verbo = decision === "aprobar" ? "aprobar" : "rechazar";
+  if (!confirm(`¿Seguro que quieres ${verbo} SK-${shortId(k.id)}?`)) return;
+  try {
+    await api.aprobarEnApp(k.id, decision);
+    toast(decision === "aprobar" ? "Short Kaizen aprobado." : "Short Kaizen rechazado.", "tg");
+    const actualizado = await api.getKaizen(k.id);
+    view.innerHTML = "";
+    paint(view, actualizado);
+  } catch (err) {
+    toast(err.message || "No se pudo procesar tu decisión.", "tr");
+  }
 }
 
 // El kaizen puede cerrar en 2 o 3 pasos según la fila del creador (ver

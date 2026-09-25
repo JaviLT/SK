@@ -290,6 +290,11 @@ function paint(view) {
     { label: "Cambiar rol", onClick: () => openCambiarRolModal(view) },
     { label: "+ Crear empleado", onClick: () => openCrearEmpleadoModal(view) },
     { label: "+ Nuevo equipo", onClick: () => openEquipoModal(view) },
+    // Pedido de Javier para el Dashboard (sept. 2026, ver
+    // KaizenZX_Grupos_Departamento_Dashboard.md): clasificar cada
+    // departamento en uno de 3 grupos de negocio. Los equipos heredan el
+    // grupo de su departamento automáticamente, no se asignan uno por uno.
+    { label: "Asignar grupo a departamentos", onClick: () => openAsignarGrupoModal(view) },
   ]);
 
   view.appendChild(
@@ -1331,6 +1336,96 @@ function loadExcelJS() {
 // ---------------------------------------------------------------------------
 function field(labelText, input) {
   return el("div", { class: "field" }, [el("label", {}, [labelText]), input]);
+}
+
+// Los 3 grupos de negocio confirmados con Jesús (KaizenZX_Respuesta_Grupo_
+// Departamento_Y_Mc.md, sept. 2026) — la clave es lo que se guarda en el
+// backend, el label es solo lo que ve el usuario.
+const GRUPOS_DEPARTAMENTO = [
+  { value: "proceso_productivo", label: "Proceso Productivo" },
+  { value: "areas_servicio", label: "Áreas de Servicio" },
+  { value: "administrativo", label: "Administrativos" },
+];
+
+// Modal "Asignar grupo a departamentos" (pedido de Javier para el
+// Dashboard, sept. 2026): el admin elige uno de los 3 grupos y marca qué
+// departamentos pertenecen a él — los equipos de esos departamentos
+// heredan el grupo automáticamente (no se asigna por equipo). Un
+// departamento solo puede pertenecer a un grupo a la vez: si estaba en
+// otro grupo y se marca aquí, se mueve; si estaba en este grupo y se
+// desmarca, se limpia (se llama al mismo endpoint con `grupo: null`).
+//
+// NOTA: el endpoint de asignación masiva (`POST /departamentos/grupo`)
+// todavía no está construido del lado de Jesús a la fecha de este código
+// (confirmado como viable en KaizenZX_Respuesta_Grupo_Departamento_Y_Mc.md,
+// pendiente de que lo construya) — en MOCK_MODE ya funciona completo contra
+// `mock-backend.js` para poder seguir probando esta pantalla mientras
+// tanto.
+function openAsignarGrupoModal(view) {
+  let grupoSeleccionado = GRUPOS_DEPARTAMENTO[0].value;
+  const listaEl = el("div", { class: "admin-member-list-scroll", style: "max-height:280px" });
+
+  function renderLista() {
+    listaEl.innerHTML = "";
+    departamentosCache
+      .slice()
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
+      .forEach((d) => {
+        const enEsteGrupo = d.grupo === grupoSeleccionado;
+        const otroGrupo = d.grupo && !enEsteGrupo ? GRUPOS_DEPARTAMENTO.find((g) => g.value === d.grupo)?.label : null;
+        const checkbox = el("input", { type: "checkbox", checked: enEsteGrupo || undefined, "data-depto-id": d.id });
+        listaEl.appendChild(
+          el(
+            "label",
+            { style: "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100)" },
+            [checkbox, el("span", {}, [d.nombre]), otroGrupo ? el("span", { class: "hint" }, [`(hoy: ${otroGrupo})`]) : null].filter(Boolean)
+          )
+        );
+      });
+  }
+  renderLista();
+
+  const grupoSelect = el(
+    "select",
+    { class: "select", onchange: (e) => { grupoSeleccionado = e.target.value; renderLista(); } },
+    GRUPOS_DEPARTAMENTO.map((g) => el("option", { value: g.value }, [g.label]))
+  );
+
+  const body = el("div", {}, [
+    field("Grupo", grupoSelect),
+    el("p", { class: "hint", style: "margin:10px 0 6px" }, [
+      "Marca los departamentos que pertenecen a este grupo. Un departamento solo puede estar en un grupo a la vez.",
+    ]),
+    listaEl,
+  ]);
+
+  const guardarBtn = el("button", { class: "btn btn-primary" }, ["Guardar"]);
+  const overlay = openModal("Asignar grupo a departamentos", body, [
+    el("button", { class: "btn btn-outline", onclick: () => closeModal(overlay) }, ["Cancelar"]),
+    guardarBtn,
+  ]);
+
+  guardarBtn.addEventListener("click", async () => {
+    guardarBtn.disabled = true;
+    guardarBtn.textContent = "Guardando…";
+    try {
+      const checkboxes = [...listaEl.querySelectorAll("input[type=checkbox]")];
+      const marcados = checkboxes.filter((c) => c.checked).map((c) => c.getAttribute("data-depto-id"));
+      const previamenteEnGrupo = departamentosCache.filter((d) => d.grupo === grupoSeleccionado).map((d) => String(d.id));
+      const quitados = previamenteEnGrupo.filter((id) => !marcados.includes(id));
+      if (marcados.length) await api.asignarGrupoDepartamentos(grupoSeleccionado, marcados);
+      if (quitados.length) await api.asignarGrupoDepartamentos(null, quitados);
+      const frescos = await api.getDepartamentos().catch(() => departamentosCache);
+      departamentosCache = (frescos || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
+      toast("Grupo de departamentos actualizado.", "tg");
+      closeModal(overlay);
+      paint(view);
+    } catch (err) {
+      toast(err.message || "No se pudo guardar el grupo.", "tr");
+      guardarBtn.disabled = false;
+      guardarBtn.textContent = "Guardar";
+    }
+  });
 }
 
 function openModal(title, bodyNode, actions) {

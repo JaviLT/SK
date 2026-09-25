@@ -366,6 +366,13 @@ function buildList(kaizens, equipoActivo) {
       el("p", {}, ["Aún no hay kaizens para mostrar aquí."]),
     ]);
   }
+  // Pedido de Javier (sept. 2026): al filtrar por un equipo (clic en su
+  // tarjeta), este listado debe dejar ver con claridad 3 datos de cada
+  // Short Kaizen — quién lo creó, su descripción breve, y su estatus. Se
+  // amplió para todos los usos de buildList() (no solo el filtrado por
+  // equipo), ya que es la misma información útil en cualquier contexto
+  // donde se muestra esta lista (solicitante/líder sin mosaico también se
+  // benefician de ver la descripción breve de un vistazo).
   return el(
     "div",
     { class: "kaizen-list" },
@@ -380,8 +387,9 @@ function buildList(kaizens, equipoActivo) {
         [
           el("div", { class: "kr-main" }, [
             el("div", { class: "kr-title" }, [`SK-${shortId(k.id)} · ${k.areaLinea || k.donde || "—"}`]),
-            el("div", { class: "kr-sub" }, [`${k.equipo || "Sin equipo"} · ${k.nombre} · ${formatDate(k.fechaId)}`]),
-          ]),
+            el("div", { class: "kr-sub" }, [`Creado por ${k.nombre || "—"} (${k.nomina || "—"}) · ${k.equipo || "Sin equipo"} · ${formatDate(k.fechaId)}`]),
+            k.breveDescripcion ? el("div", { class: "kr-desc" }, [k.breveDescripcion]) : null,
+          ].filter(Boolean)),
           el("span", { class: `badge ${meta.badge}` }, [meta.label]),
         ]
       );

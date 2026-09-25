@@ -169,7 +169,11 @@ function buildCard(k, container) {
         { class: "solicitud-titulo", onclick: () => { window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}`; } },
         [
           el("div", { style: "font-weight:700" }, [`SK-${shortId(k.id)} · ${k.areaLinea || k.donde || "—"}`]),
-          el("div", { class: "hint" }, [`${k.equipo} · ${k.nombre} (${k.nomina}) · ${formatDate(k.fechaId)}`]),
+          // Pedido de Javier (sept. 2026): mostrar fecha de implementación
+          // (fechaImpl) en vez de fecha de identificación (fechaId) — el
+          // campo ya existe en cada kaizen (ver formulario.js/api.js), no
+          // requiere ningún cambio de backend.
+          el("div", { class: "hint" }, [`${k.equipo} · ${k.nombre} (${k.nomina}) · ${formatDate(k.fechaImpl)}`]),
         ]
       ),
       el("span", { class: "badge badge-pend" }, [`Esperando ${estadoActual(k)?.label || "aprobación"}`]),
