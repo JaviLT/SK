@@ -24,6 +24,15 @@
 //     meta mensual por los meses transcurridos del año en curso (incluye el
 //     actual), para que el % de cumplimiento siga siendo una comparación
 //     razonable contra un acumulado, no contra una meta de un solo mes.
+//   - Actualización (pedido de Javier): el filtro ya no se limita a "mes
+//     actual"/"todos los meses" — ahora se puede elegir CUALQUIER mes del
+//     año en curso (enero..diciembre), además de "Todos los meses". El
+//     valor del filtro pasó de ser la palabra "actual" a un string
+//     "YYYY-MM" (el mes elegido) o "todos"; por default sigue siendo el mes
+//     en curso. Solo se listan los meses del año en curso (no años
+//     anteriores) — suficiente para el caso de negocio ("ver rendimiento
+//     anual a fin de año"), documentado aquí por si en el futuro hace falta
+//     navegar años previos.
 // ============================================================================
 
 import { el, formatDateTime } from "../utils.js";
@@ -31,7 +40,13 @@ import { api } from "../api.js";
 import { META_SK_POR_EQUIPO_MES } from "../lib/mock-backend.js";
 
 let chartInstances = [];
-let mesFiltro = "actual"; // "actual" | "todos"
+
+function mesActualStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+let mesFiltro = mesActualStr(); // "YYYY-MM" (mes específico) | "todos"
 
 export async function render(container, params, isStale) {
   const view = el("div", { class: "view", id: "dashboard-view" });
@@ -59,8 +74,8 @@ function coincideConFiltro(fechaISO) {
   if (!fechaISO) return false;
   if (mesFiltro === "todos") return true;
   const d = new Date(fechaISO);
-  const ahora = new Date();
-  return d.getFullYear() === ahora.getFullYear() && d.getMonth() === ahora.getMonth();
+  const [anio, mes] = mesFiltro.split("-").map(Number);
+  return d.getFullYear() === anio && d.getMonth() + 1 === mes;
 }
 
 // Meses "transcurridos" del año en curso, para escalar la meta cuando se ve
@@ -70,12 +85,14 @@ function mesesEnPeriodo() {
   return mesFiltro === "todos" ? new Date().getMonth() + 1 : 1;
 }
 
-function nombreMesActual() {
-  return new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+// Nombre legible de un valor de filtro "YYYY-MM" (no de "todos").
+function nombreMes(valorMes) {
+  const [anio, mes] = valorMes.split("-").map(Number);
+  return new Date(anio, mes - 1, 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
 }
 
 function nombrePeriodo() {
-  return mesFiltro === "todos" ? "Todos los meses (acumulado del año)" : nombreMesActual();
+  return mesFiltro === "todos" ? "Todos los meses (acumulado del año)" : nombreMes(mesFiltro);
 }
 
 async function paint(view, equipos, kaizens, departamentos) {
@@ -128,10 +145,20 @@ async function paint(view, equipos, kaizens, departamentos) {
   }
 }
 
-// Selector "Mes actual" / "Todos los meses" (pedido de Javier, sept. 2026).
-// Re-pinta todo el dashboard con los mismos `equipos`/`kaizens` ya cargados
-// (el filtro es 100% del lado del cliente, no requiere volver a pedir datos).
+// Selector de periodo (pedido de Javier, sept. 2026 — ampliado para permitir
+// elegir CUALQUIER mes del año en curso, no solo "mes actual"/"todos los
+// meses"). Re-pinta todo el dashboard con los mismos `equipos`/`kaizens` ya
+// cargados (el filtro es 100% del lado del cliente, no requiere volver a
+// pedir datos).
 function buildSelectorMes(view, equipos, kaizens, departamentos) {
+  const anioActual = new Date().getFullYear();
+  const opcionesMes = [];
+  for (let mes = 1; mes <= 12; mes++) {
+    const valor = `${anioActual}-${String(mes).padStart(2, "0")}`;
+    const etiqueta = new Date(anioActual, mes - 1, 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+    opcionesMes.push(el("option", { value: valor, selected: mesFiltro === valor || undefined }, [etiqueta]));
+  }
+
   const select = el(
     "select",
     {
@@ -143,7 +170,7 @@ function buildSelectorMes(view, equipos, kaizens, departamentos) {
       },
     },
     [
-      el("option", { value: "actual", selected: mesFiltro === "actual" || undefined }, ["Mes actual"]),
+      ...opcionesMes,
       el("option", { value: "todos", selected: mesFiltro === "todos" || undefined }, ["Todos los meses"]),
     ]
   );
