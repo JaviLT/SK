@@ -223,6 +223,10 @@
 .admin-role-value{ min-width: 0; }
 .admin-role-name{ font-size: var(--fs-sm); font-weight: 600; color: var(--gray-800); }
 .admin-role-correo{ font-size: var(--fs-xs); color: var(--gray-500); margin-top: 2px; }
+/* Líder centrado (pedido de Javier, sept. 2026) — Aprobador 2/3 quedan
+   alineados a la izquierda, como antes. */
+.admin-role-block-centrado{ text-align: center; }
+.admin-role-block-centrado .admin-role-label{ text-align: center; }
 .admin-members-header{
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--sp-2); gap: var(--sp-3);
@@ -247,7 +251,7 @@
 }
 
 /* Buscador de equipos, arriba del mosaico de tarjetas de Administración */
-.admin-search{ margin-bottom: var(--sp-5); max-width: 380px; }
+.admin-search{ margin-bottom: 0; max-width: 380px; flex: 1; min-width: 220px; }
 
 /* ============ Dashboard ============ */
 .equipo-progreso-list{ display: flex; flex-direction: column; }

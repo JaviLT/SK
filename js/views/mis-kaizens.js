@@ -35,6 +35,29 @@ function estadoKaizen(k) {
 
 let departamentosCache = [];
 
+// "Sin equipo" (pedido de Javier, sept. 2026): en cada departamento del
+// mosaico se agrega un equipo ficticio "Sin equipo" con los Short Kaizen
+// creados por gente que no tiene un equipo asignado (`k.equipo` vacío),
+// filtrados a ese departamento (`k.departamento`, campo que sí viaja en
+// cada kaizen). Como no es un equipo real, `state.equipoActivo` (que en
+// todo el resto del archivo es simplemente el nombre del equipo) usa un
+// valor especial con prefijo para poder distinguir "Sin equipo de
+// Calidad" de "Sin equipo de Extrusión" sin inventar un segundo campo de
+// estado.
+const SIN_EQUIPO_PREFIX = "__sin_equipo__:";
+function sentinelSinEquipo(nombreDepto) {
+  return SIN_EQUIPO_PREFIX + nombreDepto;
+}
+function esSentinelSinEquipo(valor) {
+  return typeof valor === "string" && valor.startsWith(SIN_EQUIPO_PREFIX);
+}
+function departamentoDelSentinel(valor) {
+  return valor.slice(SIN_EQUIPO_PREFIX.length);
+}
+function etiquetaEquipoActivo(valor) {
+  return esSentinelSinEquipo(valor) ? `Sin equipo — ${departamentoDelSentinel(valor)}` : valor;
+}
+
 export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
 
@@ -83,7 +106,7 @@ function alcanceParaUsuario() {
       mostrarMosaico: false,
       equiposVisibles: [],
       kaizensVisibles: state.kaizens.filter((k) => k.nomina === user.nomina),
-      titulo: "Mis Kaizens",
+      titulo: "Mis Short Kaizen",
       subtitulo: "Short Kaizen que has enviado",
     };
   }
@@ -94,7 +117,7 @@ function alcanceParaUsuario() {
       mostrarMosaico: false,
       equiposVisibles,
       kaizensVisibles: state.kaizens.filter((k) => k.equipo === user.equipo),
-      titulo: `Mis Kaizens — ${user.equipo || "tu equipo"}`,
+      titulo: `Mis Short Kaizen — ${user.equipo || "tu equipo"}`,
       subtitulo: "Short Kaizen de tu equipo",
     };
   }
@@ -106,7 +129,7 @@ function alcanceParaUsuario() {
       mostrarMosaico: true,
       equiposVisibles,
       kaizensVisibles: state.kaizens.filter((k) => k.departamento === user.departamento || nombresEquipos.has(k.equipo)),
-      titulo: `Mis Kaizens — ${user.departamento || "tu departamento"}`,
+      titulo: `Mis Short Kaizen — ${user.departamento || "tu departamento"}`,
       subtitulo: "Selecciona un equipo para ver sus Short Kaizen",
     };
   }
@@ -115,8 +138,8 @@ function alcanceParaUsuario() {
     mostrarMosaico: true,
     equiposVisibles: state.equipos,
     kaizensVisibles: state.kaizens,
-    titulo: "Mis Kaizens",
-    subtitulo: "Registro y seguimiento de Short Kaizen",
+    titulo: "Mis Short Kaizen",
+    subtitulo: null,
   };
 }
 
@@ -127,7 +150,9 @@ function paint(container) {
   const alcance = alcanceParaUsuario();
 
   view.appendChild(
-    el("div", { class: "view-header" }, [el("div", {}, [el("h1", {}, [alcance.titulo]), el("p", {}, [alcance.subtitulo])])])
+    el("div", { class: "view-header" }, [
+      el("div", {}, [el("h1", {}, [alcance.titulo]), alcance.subtitulo ? el("p", {}, [alcance.subtitulo]) : null].filter(Boolean)),
+    ])
   );
 
   view.appendChild(buildStatsRow(alcance.kaizensVisibles));
@@ -147,7 +172,7 @@ function paint(container) {
   if (!alcance.mostrarMosaico || state.equipoActivo) {
     view.appendChild(
       el("div", { class: "view-header", style: "margin-top:8px" }, [
-        el("h3", {}, [state.equipoActivo ? `Short Kaizen — ${state.equipoActivo}` : "Todos los Short Kaizen"]),
+        el("h3", {}, [state.equipoActivo ? `Short Kaizen — ${etiquetaEquipoActivo(state.equipoActivo)}` : "Todos los Short Kaizen"]),
         state.equipoActivo
           ? el("button", { class: "btn btn-outline btn-sm", onclick: () => { setState({ equipoActivo: null }); paint(container); } }, ["Quitar filtro"])
           : null,
@@ -266,37 +291,58 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
           el("h3", {}, [`Equipos ${nombreDepto}`]),
         ]
       );
+      const tarjetasEquipos = grupos.get(nombreDepto)
+        .slice()
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
+        .map((eq) => {
+          const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
+          const isActive = state.equipoActivo === eq.nombre;
+          return el(
+            "div",
+            {
+              class: `equipo-card${isActive ? " active" : ""}`,
+              onclick: () => {
+                setState({ equipoActivo: isActive ? null : eq.nombre });
+                paint(container);
+              },
+            },
+            [
+              el("div", { class: "eq-name" }, [eq.nombre]),
+              el("div", { class: "eq-count" }, [String(count)]),
+              el("div", { class: "eq-sub" }, ["kaizens registrados"]),
+            ]
+          );
+        });
+
+      // "Sin equipo" (pedido de Javier, sept. 2026): tarjeta fija al final
+      // de cada departamento con los Short Kaizen de gente sin equipo
+      // asignado en ese departamento — siempre presente, aunque el conteo
+      // sea 0, para que sea consistente entre departamentos.
+      const sentinel = sentinelSinEquipo(nombreDepto);
+      const countSinEquipo = kaizensDelAlcance.filter((k) => !k.equipo && k.departamento === nombreDepto).length;
+      const sinEquipoActive = state.equipoActivo === sentinel;
+      tarjetasEquipos.push(
+        el(
+          "div",
+          {
+            class: `equipo-card${sinEquipoActive ? " active" : ""}`,
+            onclick: () => {
+              setState({ equipoActivo: sinEquipoActive ? null : sentinel });
+              paint(container);
+            },
+          },
+          [
+            el("div", { class: "eq-name" }, ["Sin equipo"]),
+            el("div", { class: "eq-count" }, [String(countSinEquipo)]),
+            el("div", { class: "eq-sub" }, ["kaizens registrados"]),
+          ]
+        )
+      );
+
       const body = el(
         "div",
         { class: "equipos-departamento-grupo-body" },
-        [
-          el(
-            "div",
-            { class: "mosaico" },
-            grupos.get(nombreDepto)
-              .slice()
-              .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
-              .map((eq) => {
-                const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
-                const isActive = state.equipoActivo === eq.nombre;
-                return el(
-                  "div",
-                  {
-                    class: `equipo-card${isActive ? " active" : ""}`,
-                    onclick: () => {
-                      setState({ equipoActivo: isActive ? null : eq.nombre });
-                      paint(container);
-                    },
-                  },
-                  [
-                    el("div", { class: "eq-name" }, [eq.nombre]),
-                    el("div", { class: "eq-count" }, [String(count)]),
-                    el("div", { class: "eq-sub" }, ["kaizens registrados"]),
-                  ]
-                );
-              })
-          ),
-        ]
+        [el("div", { class: "mosaico" }, tarjetasEquipos)]
       );
       grupoEl.appendChild(header);
       grupoEl.appendChild(body);
@@ -306,7 +352,13 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
 }
 
 function buildList(kaizens, equipoActivo) {
-  const filtered = equipoActivo ? kaizens.filter((k) => k.equipo === equipoActivo) : kaizens;
+  let filtered = kaizens;
+  if (esSentinelSinEquipo(equipoActivo)) {
+    const depto = departamentoDelSentinel(equipoActivo);
+    filtered = kaizens.filter((k) => !k.equipo && k.departamento === depto);
+  } else if (equipoActivo) {
+    filtered = kaizens.filter((k) => k.equipo === equipoActivo);
+  }
   if (!filtered.length) {
     return el("div", { class: "empty-state" }, [
       el("div", { class: "icon" }, ["📭"]),
@@ -328,7 +380,7 @@ function buildList(kaizens, equipoActivo) {
         [
           el("div", { class: "kr-main" }, [
             el("div", { class: "kr-title" }, [`SK-${shortId(k.id)} · ${k.areaLinea || k.donde || "—"}`]),
-            el("div", { class: "kr-sub" }, [`${k.equipo} · ${k.nombre} · ${formatDate(k.fechaId)}`]),
+            el("div", { class: "kr-sub" }, [`${k.equipo || "Sin equipo"} · ${k.nombre} · ${formatDate(k.fechaId)}`]),
           ]),
           el("span", { class: `badge ${meta.badge}` }, [meta.label]),
         ]

@@ -299,8 +299,16 @@ function paint(view) {
     ])
   );
 
-  view.appendChild(buildFiltroDepartamento(view));
-  view.appendChild(buildBuscadorEquipo(view));
+  // Buscador y filtro en extremos opuestos de la misma fila (pedido de
+  // Javier, sept. 2026): antes iban uno debajo del otro, con el filtro
+  // primero. Ahora el buscador queda a la izquierda y el filtro de
+  // departamento a la derecha.
+  view.appendChild(
+    el("div", { style: "display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px" }, [
+      buildBuscadorEquipo(view),
+      buildFiltroDepartamento(view),
+    ])
+  );
 
   // Comparación por String(): el <select> siempre entrega su value como
   // string, pero el id de departamento puede venir numérico si ya se
@@ -385,7 +393,7 @@ function buildFiltroDepartamento(view) {
       ...departamentosCache.map((d) => el("option", { value: d.id, selected: String(d.id) === String(departamentoFiltro) || undefined }, [d.nombre])),
     ]
   );
-  return el("div", { class: "field", style: "max-width:320px;margin-bottom:20px" }, [el("label", {}, ["Filtrar por departamento"]), select]);
+  return el("div", { class: "field", style: "max-width:320px;margin-bottom:0" }, [el("label", {}, ["Filtrar por departamento"]), select]);
 }
 
 function buildEquipoCard(view, eq) {
@@ -443,7 +451,7 @@ function buildEquipoCard(view, eq) {
     el("div", { class: "admin-roles-row" }, rolesRow),
 
     el("div", { class: "admin-members-header" }, [
-      el("h4", {}, [`Integrantes (${eq.miembros.length})`]),
+      el("h4", {}, [`${eq.miembros.length} integrantes`]),
       el("button", { class: "btn btn-outline btn-sm", onclick: () => openEmpleadoModal(view, eq) }, ["+ Agregar integrante"]),
     ]),
 
@@ -460,24 +468,26 @@ function buildEquipoCard(view, eq) {
 // (confirmado por Jesús, KaizenZX_Backfill_Correos_Confirmado.md — 11 de
 // 38 equipos reales). `nombreVacio`/`notaVacia` los distingue en pantalla.
 function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aún —", notaVacia = null } = {}) {
-  // Caja bordeada, con Correo visible (pedido de Javier, sept. 2026, según
-  // boceto a mano) — a diferencia del Líder, aquí SÍ importa el correo
-  // porque Aprobador 2/3 son quienes de verdad reciben las notificaciones
-  // de aprobación. El correo no viene en GET /equipos (solo nombre/nómina)
-  // — se resuelve aparte con `obtenerCorreoCacheado()` y se rellena async
-  // sin bloquear el resto de la tarjeta.
-  const correoEl = el("div", { class: "admin-role-correo" }, ["Correo: —"]);
+  // Formato "1234 - Nombre" tal cual (pedido de Javier, sept. 2026): antes
+  // la nómina iba abajo como referencia secundaria ("Nómina 1234"); ahora
+  // va pegada al nombre, como un solo dato. El correo (pedido de Javier,
+  // según boceto a mano) ya no lleva el prefijo "Correo:" — solo la
+  // dirección tal cual, en la línea de abajo. El correo no viene en GET
+  // /equipos (solo nombre/nómina) — se resuelve aparte con
+  // `obtenerCorreoCacheado()` y se rellena async sin bloquear el resto de
+  // la tarjeta.
+  const correoEl = el("div", { class: "admin-role-correo" }, ["—"]);
   if (nomina) {
-    correoEl.textContent = "Correo: buscando…";
+    correoEl.textContent = "buscando…";
     obtenerCorreoCacheado(nomina).then((correo) => {
-      correoEl.textContent = correo ? `Correo: ${correo}` : "Correo: no disponible en RH";
+      correoEl.textContent = correo || "no disponible en RH";
     });
   }
+  const nombreTexto = nombre ? (nomina ? `${nomina} - ${nombre}` : nombre) : nombreVacio;
   return el("div", { class: "admin-role-block" }, [
     el("div", { class: "admin-role-label" }, [label]),
     el("div", { class: "admin-role-value" }, [
-      el("div", { class: "admin-role-name" }, [nombre || nombreVacio]),
-      nomina ? el("div", { class: "hint" }, [`Nómina ${nomina}`]) : null,
+      el("div", { class: "admin-role-name" }, [nombreTexto]),
       nomina ? correoEl : null,
       !nomina && notaVacia ? el("div", { class: "hint" }, [notaVacia]) : null,
     ].filter(Boolean)),
@@ -494,7 +504,16 @@ function roleBlock(label, nombre, email) {
   // resuelto). El correo sigue viajando internamente (ver
   // nominaBuscarField/getCorreo en el modal de edición), solo dejó de
   // mostrarse aquí.
-  return el("div", { class: "admin-role-block" }, [
+  //
+  // Centrado (pedido de Javier, sept. 2026): `.admin-role-block-centrado`
+  // en css/views.css. Javier también pidió el formato "1234 - Nombre"
+  // aquí igual que en Aprobador 2/3 — NO se puede hacer todavía: el
+  // contrato real (confirmado por Jesús) identifica al líder únicamente
+  // por `liderEmail`, GET /equipos nunca regresa una nómina de líder
+  // (`liderNomina` no existe). Sigue anotado como pendiente real de
+  // backend (ver sección 29.2/33 del documento de contexto) — habría que
+  // preguntarle a Jesús si puede agregar `liderNomina` al contrato.
+  return el("div", { class: "admin-role-block admin-role-block-centrado" }, [
     el("div", { class: "admin-role-label" }, [label]),
     el("div", { class: "admin-role-value" }, [
       el("div", { class: "admin-role-name" }, [nombre || (email ? "(nombre no disponible)" : "— sin asignar —")]),
