@@ -4,7 +4,7 @@
 // Solo la ven quienes pueden aprobar (líder, gerente, mc, admin — ver
 // js/shell.js). Aquí se aprueba/rechaza DIRECTO, con un solo clic, sin pedir
 // contraseña otra vez (la sesión ya identifica a quien decide) — distinto
-// del flujo por link de correo (js/views/aprobacion.js), que no se toca.
+// del flujo por link de correo con token (ya retirado en oct. 2026).
 //
 // Alcance por rol:
 //   - lider/gerente: Short Kaizen donde SU nómina coincide exactamente con
@@ -161,6 +161,15 @@ function buildCard(k, container) {
       paint(container);
     } catch (err) {
       toast(err.message || "No se pudo procesar tu decisión.", "tr");
+      // 409: otra persona ya decidió (o el SK ya no está pendiente): se
+      // recarga la lista para que desaparezca de Solicitudes.
+      if (/ya fue decidido|no está pendiente/i.test(err.message || "")) {
+        try {
+          setState({ kaizens: await api.getKaizens() });
+          paint(container);
+          return;
+        } catch { /* si la recarga falla, se deja el estado de los botones */ }
+      }
       aprobarBtn.disabled = false;
       rechazarBtn.disabled = false;
     }

@@ -30,6 +30,10 @@ export async function render(container) {
           toast("La nueva contraseña no coincide en ambos campos.", "tr");
           return;
         }
+        if (nuevaInput.value === actualInput.value) {
+          toast("La nueva contraseña debe ser distinta de la actual.", "tr");
+          return;
+        }
         submitBtn.disabled = true;
         submitBtn.textContent = "Guardando…";
         try {

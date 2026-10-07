@@ -158,6 +158,15 @@ async function decidir(k, decision, view) {
     paint(view, actualizado);
   } catch (err) {
     toast(err.message || "No se pudo procesar tu decisión.", "tr");
+    // 409: otra persona ya decidió (o el SK ya no está pendiente) → se
+    // recarga el SK para mostrar su estado real y quitar los botones.
+    if (/ya fue decidido|no está pendiente/i.test(err.message || "")) {
+      try {
+        const actualizado = await api.getKaizen(k.id);
+        view.innerHTML = "";
+        paint(view, actualizado);
+      } catch { /* se deja la pantalla como está */ }
+    }
   }
 }
 

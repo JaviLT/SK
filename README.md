@@ -42,7 +42,7 @@ sola página con router de JavaScript): **cada pantalla es su propio archivo
 
 ```
 shortkaizen/
-├── index.html                 # Redirige a login.html / mis-kaizens.html / aprobacion.html
+├── index.html                 # Redirige a login.html / mis-kaizens.html
 ├── login.html                 # Inicio de sesión
 ├── cambiar-password.html      # Cambio de contraseña obligatorio (primer login)
 ├── mis-kaizens.html           # "Mis Kaizens" (antes "Solicitudes") — KPIs + lista, según rol
@@ -51,7 +51,6 @@ shortkaizen/
 ├── detalle.html                # Detalle de un kaizen + exportar PDF (parecido al PDF)
 ├── dashboard.html               # Cumplimiento de metas (sin cambios de diseño esta ronda)
 ├── admin.html                   # Equipos/empleados/gerentes + exportar Excel (admin y mc)
-├── aprobacion.html              # Se abre desde el link del correo (?token=...) — sin sesión
 ├── assets/
 │   ├── logo-sk.png             # Logo completo (círculo + wordmark) — imagen entregada
 │   └── logo-mark.png           # Solo el monograma circular — usado en topbar/PDF/login
@@ -69,13 +68,13 @@ shortkaizen/
     ├── utils.js                   # Helpers (DOM seguro, fechas, toasts, imágenes)
     ├── pages/                     # Un módulo mínimo por página — llama a shell.js + a la vista
     │   ├── login.js, cambiar-password.js, mis-kaizens.js, solicitudes.js,
-    │   │   formulario.js, detalle.js, dashboard.js, admin.js, aprobacion.js
+    │   │   formulario.js, detalle.js, dashboard.js, admin.js
     ├── lib/
     │   ├── mock-backend.js         # Backend simulado, persistido en localStorage (solo dev)
     │   └── signature-pad.js        # (sin uso actualmente)
     └── views/
         ├── login.js, cambiar-password.js, mis-kaizens.js, solicitudes.js,
-        │   formulario.js, aprobacion.js, detalle.js, dashboard.js, admin.js
+        │   formulario.js, detalle.js, dashboard.js, admin.js
         # Cada archivo exporta render(container, params, isStale) — la lógica de
         # cada pantalla vive aquí; js/pages/*.js solo la invoca desde su página.
 ```
@@ -105,11 +104,12 @@ ES nativos requieren que el navegador los cargue vía `http://`, no `file://`.)
 
 ### Pestaña "Solicitudes" (nueva)
 
-Antes, aprobar un Short Kaizen solo era posible desde el link del correo
-(`aprobacion.html?token=...`), que sigue existiendo tal cual (pide
-contraseña, no cambió). Ahora, quien puede aprobar y ya inició sesión en la
-app también ve la pestaña **Solicitudes**, donde aprueba/rechaza con **un
-solo clic — sin volver a pedir contraseña** (la sesión ya lo identifica).
+Los correos de aprobación llevan un link directo a la app
+(`detalle.html?id=<id>`); si no hay sesión se pasa por el login y se regresa
+al mismo SK. Quien puede aprobar ve la pestaña **Solicitudes** (y los
+botones en el detalle), donde aprueba con un clic y rechaza escribiendo un
+**motivo obligatorio** (5–500 caracteres). La pantalla antigua
+`aprobacion.html` (token + contraseña) se eliminó en oct. 2026.
 
 ### Rol "mc" (nuevo)
 

@@ -196,6 +196,14 @@ async function request(path, { method = "GET", body } = {}) {
     const rawText = await res.clone().text().catch(() => "");
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+      // Cambio de contraseña inicial exigido por el backend (propuesta de
+      // Jesús, oct. 2026): 403 con { code: "password_change_required" }.
+      if (res.status === 403 && data.code === "password_change_required") {
+        setRequiereCambioPassword(true);
+        if (!/cambiar-password\.html$/.test(window.location.pathname)) {
+          window.location.replace("cambiar-password.html");
+        }
+      }
       const fallback = rawText ? `Error de red (${res.status}): ${rawText.slice(0, 200)}` : `Error de red (${res.status})`;
       throw new Error(data.error || fallback);
     }
@@ -210,6 +218,16 @@ async function request(path, { method = "GET", body } = {}) {
 
 function getSessionToken() {
   return sessionStorage.getItem(SESSION_KEY);
+}
+const REQ_PW_KEY = "sk_req_pw";
+function getRequiereCambioPassword() {
+  try { return sessionStorage.getItem(REQ_PW_KEY) === "1"; } catch { return false; }
+}
+function setRequiereCambioPassword(valor) {
+  try {
+    if (valor) sessionStorage.setItem(REQ_PW_KEY, "1");
+    else sessionStorage.removeItem(REQ_PW_KEY);
+  } catch { /* sin sessionStorage: se ignora */ }
 }
 function setSessionToken(token) {
   if (token) sessionStorage.setItem(SESSION_KEY, token);
@@ -226,11 +244,16 @@ export const api = {
       ? await mockBackend.login(nomina, password)
       : await request("/auth/login", { method: "POST", body: { nomina, password } });
     setSessionToken(result.token);
+    // `auth-session` NO devuelve `requiereCambioPassword` (confirmado por
+    // Jesús, oct. 2026): se guarda al iniciar sesión para que recargar la
+    // página no permita saltarse el cambio obligatorio de contraseña.
+    setRequiereCambioPassword(Boolean(result.user?.requiereCambioPassword));
     return result.user;
   },
 
   logout() {
     setSessionToken(null);
+    setRequiereCambioPassword(false);
   },
 
   hasSession() {
@@ -242,7 +265,13 @@ export const api = {
     if (!token) return null;
     if (CONFIG.MOCK_MODE) return mockBackend.getSession(token);
     try {
-      return await request("/auth/session");
+      const user = await request("/auth/session");
+      // Si el backend algún día la devuelve, manda el backend; si no, la
+      // que se guardó al iniciar sesión.
+      if (user && typeof user.requiereCambioPassword !== "boolean") {
+        user.requiereCambioPassword = getRequiereCambioPassword();
+      }
+      return user;
     } catch {
       setSessionToken(null);
       return null;
@@ -251,9 +280,14 @@ export const api = {
 
   /** Cambio de contraseña obligatorio en el primer login (ver ¿Qué falta del backend? en el doc para Jesús) */
   async cambiarPassword(passwordActual, passwordNueva) {
-    return CONFIG.MOCK_MODE
-      ? mockBackend.cambiarPassword(passwordActual, passwordNueva)
-      : request("/auth/cambiar-password", { method: "POST", body: { passwordActual, passwordNueva } });
+    const result = CONFIG.MOCK_MODE
+      ? await mockBackend.cambiarPassword(passwordActual, passwordNueva)
+      : await request("/auth/cambiar-password", { method: "POST", body: { passwordActual, passwordNueva } });
+    // Jesús propone que el cambio de contraseña devuelva un token nuevo (ya
+    // sin la marca de cambio pendiente): si llega, se reemplaza el actual.
+    if (result && typeof result.token === "string" && result.token) setSessionToken(result.token);
+    setRequiereCambioPassword(false);
+    return result;
   },
 
   async getDepartamentos() {
@@ -270,7 +304,13 @@ export const api = {
   async asignarGrupoDepartamentos(grupo, departamentoIds) {
     return CONFIG.MOCK_MODE
       ? mockBackend.asignarGrupoDepartamentos(grupo, departamentoIds)
-      : request("/departamentos/grupo", { method: "POST", body: { grupo, departamentoIds } });
+      : request("/departamentos/grupo", {
+          method: "POST",
+          // El backend exige enteros positivos (400 "Todos los departamentoIds
+          // deben ser enteros positivos." si llegan como texto): los ids salen
+          // de atributos del DOM y llegan como string, se convierten aquí.
+          body: { grupo, departamentoIds: (departamentoIds || []).map((id) => (/^\d+$/.test(String(id)) ? Number(id) : id)) },
+        });
   },
 
   async getEquipos() {
@@ -289,23 +329,9 @@ export const api = {
     return CONFIG.MOCK_MODE ? mockBackend.crearKaizen(payload) : request("/kaizens", { method: "POST", body: payload });
   },
 
-  /** Se llama al abrir un link de aprobación (?token=...) proveniente del correo */
-  async obtenerDatosAprobacion(token) {
-    return CONFIG.MOCK_MODE
-      ? mockBackend.obtenerDatosAprobacion(token)
-      : request(`/approvals/${encodeURIComponent(token)}`);
-  },
-
-  /** Envía la decisión (aprobar/rechazar) de un paso de aprobación */
-  async procesarAprobacion(token, payload) {
-    return CONFIG.MOCK_MODE
-      ? mockBackend.procesarAprobacion(token, payload)
-      : request(`/approvals/${encodeURIComponent(token)}`, { method: "POST", body: payload });
-  },
-
   /**
-   * Aprobación/rechazo de un clic desde la pestaña "Solicitudes" dentro de la
-   * app (no desde el link de correo) — no pide contraseña otra vez: el
+   * Aprobación/rechazo desde la app (Solicitudes o detalle del SK; los links
+   * por token/contraseña ya no existen desde oct. 2026) — no pide contraseña otra vez: el
    * backend real debe identificar a quien decide por la sesión (el token
    * Bearer ya enviado en cada request), nunca por un campo del body.
    */

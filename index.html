@@ -14,7 +14,7 @@
 <!--
   index.html ya NO es la SPA — cada pantalla es ahora su propio archivo .html
   real (ver README.md). Esta página solo redirige a donde corresponda:
-  al link de aprobación si trae ?token=, o a Mis Kaizens / Login según haya
+  a Mis Kaizens / Login según haya
   sesión iniciada o no.
 -->
 <div class="boot-loader">
@@ -23,13 +23,8 @@
 </div>
 <script type="module">
   import { api } from "./js/api.js";
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("token")) {
-    window.location.replace(`aprobacion.html?token=${encodeURIComponent(params.get("token"))}`);
-  } else {
-    const user = await api.restoreSession().catch(() => null);
-    window.location.replace(user ? "mis-kaizens.html" : "login.html");
-  }
+  const user = await api.restoreSession().catch(() => null);
+  window.location.replace(user ? "mis-kaizens.html" : "login.html");
 </script>
 </body>
 </html>
