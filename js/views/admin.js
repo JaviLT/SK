@@ -149,15 +149,63 @@ let busquedaEquipo = "";
 // pueden compartir la misma persona como aprobador, así que se resuelve una
 // sola vez por nómina aunque aparezca en varias tarjetas. Vive a nivel de
 // módulo porque solo es un cache de lectura, no estado de negocio.
-const correoPorNominaCache = {};
-function obtenerCorreoCacheado(nomina) {
-  if (!nomina) return Promise.resolve(null);
-  if (!(nomina in correoPorNominaCache)) {
-    correoPorNominaCache[nomina] = buscarEmpleadoInfo(nomina)
-      .then((info) => info.correo)
-      .catch(() => null);
+//
+// Corrección (oct. 2026, error reportado por Javier): antes se lanzaba una
+// consulta a `empleados-get` por cada nómina distinta TODAS A LA VEZ al
+// pintar las ~38 tarjetas, el backend respondía 429 (Too Many Requests) y
+// cada falla se guardaba en el cache como `null`, que la tarjeta mostraba
+// como "no disponible en RH" aunque el correo sí existiera (y el límite
+// agotado también tumbaba el buscador de nómina del modal de líder). Ahora:
+//   1) las consultas van en una cola, de una en una y con una pausa entre
+//      cada una, para no rebasar el límite del backend;
+//   2) si una consulta falla (p. ej. 429) se reintenta con espera creciente;
+//   3) los errores NUNCA se guardan en el cache (solo "ok" y "sin correo
+//      real en RH"), y se muestran como "no se pudo consultar", distinto de
+//      "no disponible en RH";
+//   4) si `GET /equipos` algún día trae `aprobador2Email`/`aprobador3Email`
+//      (se le pidió a Jesús), se usa ese dato directo y no se consulta nada.
+const correoPorNominaCache = {}; // { [nomina]: { estado: "ok"|"sin_correo", correo } } — nunca errores
+const colaCorreos = [];
+let colaCorreosActiva = false;
+const PAUSA_ENTRE_CONSULTAS_MS = 700;
+const REINTENTOS_CORREO = 3;
+
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function procesarColaCorreos() {
+  if (colaCorreosActiva) return;
+  colaCorreosActiva = true;
+  while (colaCorreos.length) {
+    const { nomina, resolve } = colaCorreos.shift();
+    if (correoPorNominaCache[nomina]) {
+      resolve(correoPorNominaCache[nomina]);
+      continue;
+    }
+    let resultado = { estado: "error", correo: null };
+    for (let intento = 1; intento <= REINTENTOS_CORREO; intento++) {
+      try {
+        const info = await buscarEmpleadoInfo(nomina);
+        resultado = info.correo ? { estado: "ok", correo: info.correo } : { estado: "sin_correo", correo: null };
+        correoPorNominaCache[nomina] = resultado; // solo éxitos al cache
+        break;
+      } catch {
+        if (intento < REINTENTOS_CORREO) await esperar(1500 * intento);
+      }
+    }
+    resolve(resultado);
+    await esperar(PAUSA_ENTRE_CONSULTAS_MS);
   }
-  return Promise.resolve(correoPorNominaCache[nomina]);
+  colaCorreosActiva = false;
+}
+
+// Regresa { estado: "ok" | "sin_correo" | "error", correo }.
+function obtenerCorreoCacheado(nomina) {
+  if (!nomina) return Promise.resolve({ estado: "sin_correo", correo: null });
+  if (correoPorNominaCache[nomina]) return Promise.resolve(correoPorNominaCache[nomina]);
+  return new Promise((resolve) => {
+    colaCorreos.push({ nomina, resolve });
+    procesarColaCorreos();
+  });
 }
 
 // Menú de acciones genérico (pedido de Javier, sept. 2026): reemplaza
@@ -426,12 +474,14 @@ function buildEquipoCard(view, eq) {
     // (KaizenZX_Backfill_Correos_Confirmado.md): los 38 equipos reales
     // tienen `aprobador2Nomina`.
     nominaBlock("Aprobador 2", eq.aprobador2Nombre, eq.aprobador2Nomina, {
+      email: typeof eq.aprobador2Email === "string" ? eq.aprobador2Email : null,
       notaVacia: "Este equipo todavía no ha sido editado con el modelo nuevo — edítalo para asignar un Aprobador 2.",
     }),
   ];
   if (aprobador3Aplica) {
     rolesRow.push(
       nominaBlock("Aprobador 3", eq.aprobador3Nombre, eq.aprobador3Nomina, {
+        email: typeof eq.aprobador3Email === "string" ? eq.aprobador3Email : null,
         notaVacia: "Este equipo todavía no ha sido editado con el modelo nuevo — edítalo para asignar un Aprobador 3 (si le corresponde).",
       })
     );
@@ -472,7 +522,7 @@ function buildEquipoCard(view, eq) {
 // modelo nuevo, o (b) equipo que cierra en 2 pasos por diseño de RH
 // (confirmado por Jesús, KaizenZX_Backfill_Correos_Confirmado.md — 11 de
 // 38 equipos reales). `nombreVacio`/`notaVacia` los distingue en pantalla.
-function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aún —", notaVacia = null } = {}) {
+function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aún —", notaVacia = null, email = null } = {}) {
   // Formato "1234 - Nombre" tal cual (pedido de Javier, sept. 2026): antes
   // la nómina iba abajo como referencia secundaria ("Nómina 1234"); ahora
   // va pegada al nombre, como un solo dato. El correo (pedido de Javier,
@@ -482,10 +532,17 @@ function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aú
   // `obtenerCorreoCacheado()` y se rellena async sin bloquear el resto de
   // la tarjeta.
   const correoEl = el("div", { class: "admin-role-correo" }, ["—"]);
-  if (nomina) {
+  if (nomina && typeof email === "string") {
+    // El backend ya lo trae en GET /equipos (Jesús, oct. 2026): "" significa
+    // que esa persona NO tiene correo capturado — no se vuelve a consultar
+    // `empleados-get` (límite de 60 consultas/hora por sesión).
+    correoEl.textContent = email || "no disponible en RH";
+  } else if (nomina) {
     correoEl.textContent = "buscando…";
-    obtenerCorreoCacheado(nomina).then((correo) => {
-      correoEl.textContent = correo || "no disponible en RH";
+    obtenerCorreoCacheado(nomina).then(({ estado, correo }) => {
+      if (estado === "ok") correoEl.textContent = correo;
+      else if (estado === "sin_correo") correoEl.textContent = "no disponible en RH";
+      else correoEl.textContent = "no se pudo consultar";
     });
   }
   const nombreTexto = nombre ? (nomina ? `${nomina} - ${nombre}` : nombre) : nombreVacio;
@@ -1421,7 +1478,17 @@ function openAsignarGrupoModal(view) {
       closeModal(overlay);
       paint(view);
     } catch (err) {
-      toast(err.message || "No se pudo guardar el grupo.", "tr");
+      // "Failed to fetch" = el navegador no pudo ni llegar a la función
+      // (típico cuando `departamentos-asignar-grupo` todavía no está
+      // desplegada en el backend: el preflight CORS falla). Se explica en
+      // claro en vez de mostrar el mensaje técnico.
+      const sinConexion = /failed to fetch|networkerror|load failed/i.test(err?.message || "");
+      toast(
+        sinConexion
+          ? "No se pudo guardar: esta función todavía no está disponible en el servidor. Avisa a TI (Jesús)."
+          : err.message || "No se pudo guardar el grupo.",
+        "tr"
+      );
       guardarBtn.disabled = false;
       guardarBtn.textContent = "Guardar";
     }

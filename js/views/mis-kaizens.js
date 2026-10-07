@@ -97,11 +97,64 @@ function paintError(container, err) {
   );
 }
 
+// Visibilidad de equipos (corrección oct. 2026, pendiente reportado por
+// Javier: usuarios que deberían ver varios equipos no veían ninguno).
+// Dos causas probables, ambas atendidas aquí:
+//   1) `GET /equipos` ya no trae el NOMBRE del departamento por equipo (solo
+//      `departamentoId`, o nada), así que el filtro viejo de gerente
+//      (`eq.departamento === user.departamento`) no hacía match con nadie.
+//      Ahora se resuelve el departamento igual que en el mosaico
+//      (`departamentoDeEquipoLocal`), comparando sin mayúsculas/espacios, y
+//      `user.departamento` puede traer varios departamentos separados por
+//      coma (el contrato dice que un gerente puede tener varios).
+//   2) Quien figura como Aprobador 2/3 de un equipo debe poder ver ese
+//      equipo aunque su rol de sistema no sea "gerente" (p. ej. un
+//      Aprobador 3 con rol lider/solicitante). Se agregan a su alcance
+//      todos los equipos donde su nómina es `aprobador2Nomina` o
+//      `aprobador3Nomina`.
+// OJO: esto solo amplía lo que el frontend MUESTRA de lo que el backend ya
+// entregó; si `GET /equipos`/`GET /kaizens` filtran por rol en el servidor,
+// Jesús debe confirmar que también devuelven estos equipos (ver md de
+// Jesús, punto de visibilidad).
+const normalizaTexto = (v) => String(v?.nombre ?? v ?? "").trim().toLowerCase();
+
+function departamentosDelUsuario(user) {
+  const raw = user.departamento;
+  const lista = Array.isArray(raw) ? raw : String(raw || "").split(/[,;|]/);
+  return lista.map(normalizaTexto).filter(Boolean);
+}
+
+function equiposDondeEsAprobador(user) {
+  const nomina = String(user.nomina || "");
+  if (!nomina) return [];
+  return state.equipos.filter((eq) => String(eq.aprobador2Nomina || "") === nomina || String(eq.aprobador3Nomina || "") === nomina);
+}
+
 function alcanceParaUsuario() {
   const user = state.user || {};
   const rol = user.rol;
+  const comoAprobador = rol === "admin" || rol === "mc" ? [] : equiposDondeEsAprobador(user);
+
+  // Unión de equipos sin repetir por nombre.
+  const unirEquipos = (...listas) => {
+    const vistos = new Set();
+    return listas.flat().filter((eq) => (vistos.has(eq.nombre) ? false : (vistos.add(eq.nombre), true)));
+  };
+  const kaizensDeEquipos = (equipos, extra = () => false) => {
+    const nombres = new Set(equipos.map((eq) => eq.nombre));
+    return state.kaizens.filter((k) => nombres.has(k.equipo) || extra(k));
+  };
 
   if (rol === "solicitante") {
+    if (comoAprobador.length) {
+      return {
+        mostrarMosaico: true,
+        equiposVisibles: comoAprobador,
+        kaizensVisibles: kaizensDeEquipos(comoAprobador, (k) => k.nomina === user.nomina),
+        titulo: "Mis Short Kaizen",
+        subtitulo: "Selecciona un equipo para ver sus Short Kaizen",
+      };
+    }
     return {
       mostrarMosaico: false,
       equiposVisibles: [],
@@ -112,24 +165,34 @@ function alcanceParaUsuario() {
   }
 
   if (rol === "lider") {
-    const equiposVisibles = state.equipos.filter((eq) => eq.nombre === user.equipo);
+    const propios = state.equipos.filter((eq) => eq.nombre === user.equipo);
+    const equiposVisibles = unirEquipos(propios, comoAprobador);
+    const variosEquipos = equiposVisibles.length > 1;
     return {
-      mostrarMosaico: false,
+      mostrarMosaico: variosEquipos,
       equiposVisibles,
-      kaizensVisibles: state.kaizens.filter((k) => k.equipo === user.equipo),
-      titulo: `Mis Short Kaizen — ${user.equipo || "tu equipo"}`,
-      subtitulo: "Short Kaizen de tu equipo",
+      kaizensVisibles: kaizensDeEquipos(equiposVisibles, (k) => k.equipo === user.equipo),
+      titulo: variosEquipos ? "Mis Short Kaizen" : `Mis Short Kaizen — ${user.equipo || "tu equipo"}`,
+      subtitulo: variosEquipos ? "Selecciona un equipo para ver sus Short Kaizen" : "Short Kaizen de tu equipo",
     };
   }
 
   if (rol === "gerente") {
-    const equiposVisibles = state.equipos.filter((eq) => eq.departamento === user.departamento);
-    const nombresEquipos = new Set(equiposVisibles.map((eq) => eq.nombre));
+    const deptos = departamentosDelUsuario(user);
+    const cacheDepto = {};
+    state.kaizens.forEach((k) => {
+      if (k.equipo && k.departamento) cacheDepto[k.equipo] = k.departamento;
+    });
+    const porDepartamento = state.equipos.filter((eq) => {
+      const d = normalizaTexto(departamentoDeEquipoLocal(eq, cacheDepto));
+      return d && deptos.includes(d);
+    });
+    const equiposVisibles = unirEquipos(porDepartamento, comoAprobador);
     return {
       mostrarMosaico: true,
       equiposVisibles,
-      kaizensVisibles: state.kaizens.filter((k) => k.departamento === user.departamento || nombresEquipos.has(k.equipo)),
-      titulo: `Mis Short Kaizen — ${user.departamento || "tu departamento"}`,
+      kaizensVisibles: kaizensDeEquipos(equiposVisibles, (k) => deptos.includes(normalizaTexto(k.departamento))),
+      titulo: user.departamento ? `Mis Short Kaizen — ${user.departamento}` : "Mis Short Kaizen",
       subtitulo: "Selecciona un equipo para ver sus Short Kaizen",
     };
   }
@@ -220,7 +283,9 @@ function buildStatsRow(kaizens) {
 //    kaizens todavía y sin `departamentoId`/`departamento`).
 function departamentoDeEquipoLocal(eq, equipoDepartamentoCache) {
   if (eq.departamentoId) {
-    const match = departamentosCache.find((d) => d.id === eq.departamentoId);
+    // String() en ambos lados: el backend manda el id como número y el
+    // catálogo puede traerlo como string (mismo bug que en admin.js, 31.1).
+    const match = departamentosCache.find((d) => String(d.id) === String(eq.departamentoId));
     return match?.nombre || String(eq.departamentoId);
   }
   if (eq.departamento) return eq.departamento;

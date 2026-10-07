@@ -493,7 +493,7 @@ export const mockBackend = {
   // backend real debe identificar al que aprueba por la sesión (el token
   // Bearer), NUNCA por un dato que mande el cliente en el body.
   // ==========================================================================
-  async aprobarEnApp(kaizenId, decision, actor) {
+  async aprobarEnApp(kaizenId, decision, actor, razonRechazo = null) {
     const kaizen = db.kaizens.find((k) => k.id === kaizenId);
     if (!kaizen) throw new Error("Kaizen no encontrado.");
     if (!actor) throw new Error("Sesión inválida.");
@@ -547,6 +547,7 @@ export const mockBackend = {
         kaizen.status = "rej_g";
       }
     }
+    if (decision !== "aprobar" && razonRechazo) kaizen.rechazoRazon = razonRechazo;
     kaizen.actualizadoEn = ahora;
     persistir();
     return delay(structuredClone(kaizen));

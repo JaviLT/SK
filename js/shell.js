@@ -24,7 +24,7 @@ import { getTheme, toggleTheme } from "./theme.js";
 const NAV_ITEMS = [
   { page: "mis-kaizens", href: "mis-kaizens.html", label: "Mis Kaizens", roles: null },
   { page: "solicitudes", href: "solicitudes.html", label: "Solicitudes", roles: ["lider", "gerente", "mc", "admin"] },
-  { page: "dashboard", href: "dashboard.html", label: "Dashboard", roles: null },
+  { page: "dashboard", href: "dashboard.html", label: "Tablero general", roles: null },
   { page: "admin", href: "admin.html", label: "Administración", roles: ["admin", "mc"] },
 ];
 
@@ -44,6 +44,12 @@ export async function initShell({ page, requireAuth = true, allowPendingPassword
 
   if (!user) {
     if (requireAuth) {
+      // Recuerda a dónde iba (p. ej. detalle.html?id=123 desde el link de un
+      // correo) para volver ahí tras iniciar sesión — ver login.js.
+      try {
+        const destino = window.location.pathname.split("/").pop() + window.location.search;
+        sessionStorage.setItem("sk_return_to", destino);
+      } catch { /* sin sessionStorage: se ignora, cae a la pantalla por defecto */ }
       window.location.replace("login.html");
       return { user: null, root: null };
     }

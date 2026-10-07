@@ -39,7 +39,8 @@
 //                                    NO se manda nombre/firma/razón: el
 //                                    backend identifica a quien aprueba por
 //                                    el token + su contraseña.
-//   POST   /kaizens/:id/decision    { decision }                 -> Kaizen
+//   POST   /kaizens/:id/decision    { decision, razonRechazo? }  -> Kaizen
+//                                    razonRechazo: obligatorio al rechazar (oct. 2026)
 //                                    Aprobación de un clic desde la pestaña
 //                                    "Solicitudes" (con sesión). Autoriza por
 //                                    nómina exacta congelada en el kaizen,
@@ -308,11 +309,16 @@ export const api = {
    * backend real debe identificar a quien decide por la sesión (el token
    * Bearer ya enviado en cada request), nunca por un campo del body.
    */
-  async aprobarEnApp(kaizenId, decision) {
+  async aprobarEnApp(kaizenId, decision, razonRechazo = null) {
     const { state } = await import("./state.js");
+    // `razonRechazo` solo viaja al rechazar (obligatorio — lo pide el modal de
+    // js/lib/motivo-rechazo.js). El backend lo guarda en
+    // `rechazoAprobacionNRazon` y lo incluye en el correo al solicitante.
+    const body = { decision };
+    if (decision === "rechazar") body.razonRechazo = String(razonRechazo || "").trim();
     return CONFIG.MOCK_MODE
-      ? mockBackend.aprobarEnApp(kaizenId, decision, state.user)
-      : request(`/kaizens/${encodeURIComponent(kaizenId)}/decision`, { method: "POST", body: { decision } });
+      ? mockBackend.aprobarEnApp(kaizenId, decision, state.user, body.razonRechazo)
+      : request(`/kaizens/${encodeURIComponent(kaizenId)}/decision`, { method: "POST", body });
   },
 
   // ---- Administración de equipos/empleados (Fase 5) ----

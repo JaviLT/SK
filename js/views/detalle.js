@@ -1,5 +1,6 @@
 import { el, formatDate, formatDateTime, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
+import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state } from "../state.js";
 
 export async function render(container, params, isStale) {
@@ -141,10 +142,16 @@ function puedeDecidir(k) {
 }
 
 async function decidir(k, decision, view) {
-  const verbo = decision === "aprobar" ? "aprobar" : "rechazar";
-  if (!confirm(`¿Seguro que quieres ${verbo} SK-${shortId(k.id)}?`)) return;
+  let motivo = null;
+  if (decision === "aprobar") {
+    if (!confirm(`¿Seguro que quieres aprobar SK-${shortId(k.id)}?`)) return;
+  } else {
+    // Rechazar exige motivo (pedido de Javier, oct. 2026).
+    motivo = await pedirMotivoRechazo(`SK-${shortId(k.id)}`);
+    if (motivo === null) return;
+  }
   try {
-    await api.aprobarEnApp(k.id, decision);
+    await api.aprobarEnApp(k.id, decision, motivo);
     toast(decision === "aprobar" ? "Short Kaizen aprobado." : "Short Kaizen rechazado.", "tg");
     const actualizado = await api.getKaizen(k.id);
     view.innerHTML = "";

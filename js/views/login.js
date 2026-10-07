@@ -41,7 +41,16 @@ export async function render(container) {
             return;
           }
           toast(`Bienvenido, ${user.nombre.split(" ")[0]}`, "tg");
-          window.location.href = "mis-kaizens.html";
+          // Si venía de un link (p. ej. el de un correo de aprobación),
+          // regresa a esa pantalla; solo se aceptan páginas relativas de
+          // esta misma app (nada de URLs externas).
+          let destino = "mis-kaizens.html";
+          try {
+            const guardado = sessionStorage.getItem("sk_return_to");
+            sessionStorage.removeItem("sk_return_to");
+            if (guardado && /^[a-z0-9-]+\.html(\?[^#\s]*)?$/i.test(guardado) && !/^(login|index)\.html/i.test(guardado)) destino = guardado;
+          } catch { /* se ignora */ }
+          window.location.href = destino;
         } catch (err) {
           errorBox.textContent = err.message || "No se pudo iniciar sesión.";
           errorBox.classList.add("show");

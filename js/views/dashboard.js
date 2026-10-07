@@ -107,7 +107,7 @@ async function paint(view, equipos, kaizens, departamentos) {
 
   view.appendChild(
     el("div", { class: "view-header" }, [
-      el("div", {}, [el("h1", {}, ["Dashboard"]), el("p", {}, [`Cumplimiento de Short Kaizen — ${nombrePeriodo()}`])]),
+      el("div", {}, [el("h1", {}, ["Tablero general"]), el("p", {}, [`Cumplimiento de Short Kaizen — ${nombrePeriodo()}`])]),
       buildSelectorMes(view, equipos, kaizens, departamentos),
     ])
   );

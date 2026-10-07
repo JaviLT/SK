@@ -21,6 +21,7 @@
 
 import { el, formatDate, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
+import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state, setState } from "../state.js";
 
 // `status` es la fuente de verdad (confirmado por Jesús, no derivar de las
@@ -142,12 +143,18 @@ function buildCard(k, container) {
   const rechazarBtn = el("button", { class: "btn btn-danger btn-sm" }, ["✕ Rechazar"]);
 
   const decidir = async (decision) => {
-    const verbo = decision === "aprobar" ? "aprobar" : "rechazar";
-    if (!confirm(`¿Seguro que quieres ${verbo} SK-${shortId(k.id)}?`)) return;
+    let motivo = null;
+    if (decision === "aprobar") {
+      if (!confirm(`¿Seguro que quieres aprobar SK-${shortId(k.id)}?`)) return;
+    } else {
+      // Rechazar exige motivo (pedido de Javier, oct. 2026).
+      motivo = await pedirMotivoRechazo(`SK-${shortId(k.id)}`);
+      if (motivo === null) return;
+    }
     aprobarBtn.disabled = true;
     rechazarBtn.disabled = true;
     try {
-      await api.aprobarEnApp(k.id, decision);
+      await api.aprobarEnApp(k.id, decision, motivo);
       toast(decision === "aprobar" ? "Short Kaizen aprobado." : "Short Kaizen rechazado.", "tg");
       const kaizens = await api.getKaizens();
       setState({ kaizens });
