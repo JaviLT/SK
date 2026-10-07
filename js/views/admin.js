@@ -1471,7 +1471,29 @@ function openAsignarGrupoModal(view) {
       const previamenteEnGrupo = departamentosCache.filter((d) => d.grupo === grupoSeleccionado).map((d) => String(d.id));
       const quitados = previamenteEnGrupo.filter((id) => !marcados.includes(id));
       if (marcados.length) await api.asignarGrupoDepartamentos(grupoSeleccionado, marcados);
-      if (quitados.length) await api.asignarGrupoDepartamentos(null, quitados);
+      if (quitados.length) {
+        try {
+          await api.asignarGrupoDepartamentos(null, quitados);
+        } catch (err2) {
+          // Las dos llamadas no son atómicas (observación de Jesús, oct.
+          // 2026): si la primera pasó y la segunda falló, la asignación quedó
+          // a medias. Se recarga lo que realmente quedó guardado (en vez de
+          // dar por buena la selección local) y se avisa.
+          if (marcados.length) {
+            const reales = await api.getDepartamentos().catch(() => null);
+            if (reales) departamentosCache = reales.map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
+            toast(
+              `El guardado quedó incompleto: se asignaron los departamentos marcados, pero no se pudieron quitar los desmarcados (${err2?.message || "error"}). Revisa y vuelve a guardar.`,
+              "tr",
+              7000
+            );
+            closeModal(overlay);
+            paint(view);
+            return;
+          }
+          throw err2;
+        }
+      }
       const frescos = await api.getDepartamentos().catch(() => departamentosCache);
       departamentosCache = (frescos || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
       toast("Grupo de departamentos actualizado.", "tg");
