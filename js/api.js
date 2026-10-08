@@ -161,6 +161,9 @@ const FUNCTION_MAP = [
   // (KaizenZX_Alta_Empleados_Y_Cambio_Rol_Listo.md, sept. 2026).
   { method: "POST", pattern: /^\/empleados$/, fn: "empleados-create" },
   { method: "POST", pattern: /^\/usuarios\/(.+)\/rol$/, fn: "usuarios-cambiar-rol" },
+  // Restablecer contraseña (admin/mc) — función NUEVA pedida a Jesús, oct.
+  // 2026 (KaizenZX_Restablecer_Password.md); aún sin desplegar.
+  { method: "POST", pattern: /^\/usuarios\/(.+)\/restablecer-password$/, fn: "usuarios-restablecer-password" },
   { method: "GET", pattern: /^\/cambios-rol$/, fn: "cambios-rol-list" },
 ];
 
@@ -394,6 +397,18 @@ export const api = {
     return CONFIG.MOCK_MODE
       ? mockBackend.cambiarRolUsuario(nomina, rol)
       : request(`/usuarios/${encodeURIComponent(nomina)}/rol`, { method: "POST", body: { rol } });
+  },
+
+  /**
+   * Restablece la contraseña de un usuario (solo admin/mc). El backend genera
+   * una contraseña temporal, la devuelve UNA vez y marca a la persona para
+   * cambiarla en su próximo inicio de sesión.
+   * -> { nomina, nombre, passwordTemporal, mensaje }
+   */
+  async restablecerPassword(nomina) {
+    return CONFIG.MOCK_MODE
+      ? mockBackend.restablecerPassword(nomina)
+      : request(`/usuarios/${encodeURIComponent(nomina)}/restablecer-password`, { method: "POST", body: {} });
   },
 
   async getHistorialCambiosRol() {

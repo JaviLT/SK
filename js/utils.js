@@ -117,3 +117,22 @@ export function getQueryParam(name) {
 export function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
+
+/**
+ * Envuelve un <input type="password"> con un botón "Mostrar/Ocultar" para que
+ * la persona pueda verificar lo que escribió (pedido de Javier, oct. 2026).
+ * Devuelve el contenedor; el input original sigue siendo el mismo nodo, así
+ * que `input.value` funciona igual que antes.
+ */
+export function conBotonMostrar(input) {
+  const boton = el("button", { type: "button", class: "pass-toggle", "aria-label": "Mostrar contraseña", "aria-pressed": "false" }, ["Mostrar"]);
+  boton.addEventListener("click", () => {
+    const visible = input.type === "text";
+    input.type = visible ? "password" : "text";
+    boton.textContent = visible ? "Mostrar" : "Ocultar";
+    boton.setAttribute("aria-label", visible ? "Mostrar contraseña" : "Ocultar contraseña");
+    boton.setAttribute("aria-pressed", String(!visible));
+    input.focus();
+  });
+  return el("div", { class: "pass-wrap" }, [input, boton]);
+}

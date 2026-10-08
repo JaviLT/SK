@@ -6,7 +6,7 @@
 // página a la que el usuario puede llegar — no hay tabs ni menú disponibles.
 // ============================================================================
 
-import { el, toast } from "../utils.js";
+import { el, toast, conBotonMostrar } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
 
@@ -50,9 +50,9 @@ export async function render(container) {
       },
     },
     [
-      el("div", { class: "field" }, [el("label", {}, ["Contraseña temporal (la que te dieron)"]), actualInput]),
-      el("div", { class: "field" }, [el("label", {}, ["Nueva contraseña"]), nuevaInput]),
-      el("div", { class: "field" }, [el("label", {}, ["Confirmar nueva contraseña"]), confirmarInput]),
+      el("div", { class: "field" }, [el("label", {}, ["Contraseña temporal (la que te dieron)"]), conBotonMostrar(actualInput)]),
+      el("div", { class: "field" }, [el("label", {}, ["Nueva contraseña"]), conBotonMostrar(nuevaInput)]),
+      el("div", { class: "field" }, [el("label", {}, ["Confirmar nueva contraseña"]), conBotonMostrar(confirmarInput)]),
       submitBtn,
     ]
   );

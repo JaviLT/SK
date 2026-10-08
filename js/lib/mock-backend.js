@@ -642,6 +642,18 @@ export const mockBackend = {
     });
   },
 
+  async restablecerPassword(nomina) {
+    await delay();
+    const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    const passwordTemporal = Array.from({ length: 10 }, () => alfabeto[Math.floor(Math.random() * alfabeto.length)]).join("");
+    return {
+      nomina,
+      nombre: DIRECTORIO_NOMINAS_DEMO[nomina] || nomina,
+      passwordTemporal,
+      mensaje: "Contraseña restablecida. La persona deberá cambiarla al iniciar sesión.",
+    };
+  },
+
   async cambiarRolUsuario(nomina, rol) {
     await delay();
     const entrada = {

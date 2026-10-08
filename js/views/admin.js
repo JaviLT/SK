@@ -336,6 +336,7 @@ function paint(view) {
   // pedido explícito.
   const accionesMenu = buildActionMenu("Acciones ▾", "btn btn-accent", [
     { label: "Cambiar rol", onClick: () => openCambiarRolModal(view) },
+    { label: "Restablecer contraseña", onClick: () => openRestablecerPasswordModal() },
     { label: "+ Crear empleado", onClick: () => openCrearEmpleadoModal(view) },
     { label: "+ Nuevo equipo", onClick: () => openEquipoModal(view) },
     // Pedido de Javier para el Dashboard (sept. 2026, ver
@@ -466,7 +467,7 @@ function buildEquipoCard(view, eq) {
   const rolesRow = [
     // liderNombre/liderEmail = rol de organigrama, puramente informativo
     // (confirmado por Jesús — no mueve el ruteo de aprobación).
-    roleBlock("Líder", eq.liderNombre, eq.liderEmail),
+    roleBlock("Líder", eq.liderNombre, eq.liderEmail, eq.liderNomina),
     // aprobador2Nomina/aprobador3Nomina = ruteo REAL, ya editable por
     // equipo (KaizenZX_Cascada_Aprobador23_Lista.md), y GET /equipos ya
     // resuelve el nombre igual que liderNombre (confirmado en
@@ -556,7 +557,7 @@ function nominaBlock(label, nombre, nomina, { nombreVacio = "— sin asignar aú
   ]);
 }
 
-function roleBlock(label, nombre, email) {
+function roleBlock(label, nombre, email, nomina = null) {
   // Jesús confirmó (KaizenZX_Respuestas_Admin_Conectado.md): `liderNombre`
   // se resuelve buscando `liderEmail` en el catálogo de personal, pero solo
   // una parte de las 326 personas tienen correo institucional cargado en
@@ -578,7 +579,9 @@ function roleBlock(label, nombre, email) {
   return el("div", { class: "admin-role-block admin-role-block-centrado" }, [
     el("div", { class: "admin-role-label" }, [label]),
     el("div", { class: "admin-role-value" }, [
-      el("div", { class: "admin-role-name" }, [nombre || (email ? "(nombre no disponible)" : "— sin asignar —")]),
+      el("div", { class: "admin-role-name" }, [
+        nombre ? (nomina ? `${nomina} - ${nombre}` : nombre) : email || nomina ? "(nombre no disponible)" : "— sin asignar —",
+      ]),
     ]),
   ]);
 }
@@ -677,6 +680,10 @@ function placeholderNomina() {
 // vuelto a buscar) sin importar si hay sección de correo visible o no —
 // así el líder también manda su correo automáticamente al guardar, aunque
 // no se muestre en pantalla.
+// Cambiar a `true` cuando Jesús acepte `liderNomina` en POST/PUT /equipos
+// (hoy el líder solo se asigna por `liderEmail`; ver KaizenZX_Respuestas_Ronda5).
+const LIDER_POR_NOMINA_SOPORTADO = true; // Jesús lo desplegó el 8 oct 2026 (KaizenZX_Lider_Por_Nomina_Listo.md)
+
 function nominaBuscarField({ nominaInicial = "", nombreInicial = "", correoInicial = "", equipoActualId = null, showCorreo = true } = {}) {
   const nominaInput = el("input", { class: "input", type: "text", placeholder: placeholderNomina(), value: nominaInicial });
   let correoActual = correoInicial || "";
@@ -708,6 +715,14 @@ function nominaBuscarField({ nominaInicial = "", nombreInicial = "", correoInici
           nombreLabel.textContent = info.nombre || "—";
           if (correoLabel) correoLabel.textContent = correoActual || "—";
           warning.textContent = advertenciaEquipoExistente(info.equipo, equipoActualId) || "";
+          if (!showCorreo && !correoActual && !LIDER_POR_NOMINA_SOPORTADO) {
+            warning.textContent = `${warning.textContent ? warning.textContent + " " : ""}Sin correo en RH: todavía no se puede asignar como líder.`;
+          }
+          // Solo el campo del líder (showCorreo:false): el líder debe ser
+          // integrante del equipo (regla de Javier, oct. 2026).
+          if (!showCorreo && (!info.equipo || String(info.equipo.id) !== String(equipoActualId))) {
+            warning.textContent = `${warning.textContent ? warning.textContent + " " : ""}El líder debe ser integrante del equipo: se agregará como integrante al guardar.`;
+          }
         } catch (err) {
           ultimoResultado = null;
           correoActual = "";
@@ -749,6 +764,7 @@ function openEquipoModal(view, equipoExistente) {
   // RH, el líder se guarda igual, sin correo (limitación real del
   // contrato: sin correo no hay forma de vincular al líder por esta vía).
   const lider = nominaBuscarField({
+    nominaInicial: equipoExistente?.liderNomina || "",
     correoInicial: equipoExistente?.liderEmail || "",
     nombreInicial: equipoExistente?.liderNombre || "",
     equipoActualId,
@@ -841,19 +857,67 @@ function openEquipoModal(view, equipoExistente) {
             return;
           }
 
+          // El líder hoy solo se puede identificar por CORREO (`liderEmail`):
+          // el contrato no tiene `liderNomina`. Si la persona buscada no tiene
+          // correo en RH, antes se omitía `liderEmail` y el backend dejaba al
+          // líder anterior pero respondía OK ("Equipo actualizado" falso).
+          // Mientras el backend no acepte `liderNomina` se bloquea con un
+          // mensaje claro (pedido a Jesús, oct. 2026).
+          const nominaLider = lider.nominaInput.value.trim();
+          const liderResuelto = lider.getResultado();
+          const liderSinCorreo = Boolean(nominaLider) && liderResuelto && !correo;
+          if (liderSinCorreo && !LIDER_POR_NOMINA_SOPORTADO) {
+            toast(
+              `${liderResuelto.nombre || "Esa persona"} no tiene correo registrado en RH, y el sistema todavía solo puede asignar líderes por correo. No se guardó el cambio de líder.`,
+              "tr",
+              7000
+            );
+            return;
+          }
+
           const payload = { nombre, departamentoId };
-          if (correo) payload.liderEmail = correo;
+          if (LIDER_POR_NOMINA_SOPORTADO) {
+            // `equipos.lider_nomina` es la única fuente de verdad (Jesús, oct.
+            // 2026): se manda SOLO `liderNomina` — con `liderEmail` a la vez
+            // el backend responde 400. "" desasigna; en PUT, omitir ambos
+            // deja al líder como está.
+            if (nominaLider) payload.liderNomina = nominaLider;
+            else if (esEdicion && equipoExistente?.liderNomina) payload.liderNomina = "";
+          } else if (correo) {
+            payload.liderEmail = correo;
+          }
           // Se mandan siempre (incluso vacíos): "" desasigna, tal como
           // confirmó Jesús. Así, si el admin borra el campo a propósito,
           // se refleja en el backend en vez de quedarse con el valor viejo.
           payload.aprobador2Nomina = aprobador2Nomina;
           payload.aprobador3Nomina = aprobador3Nomina;
 
+          // El líder debe ser integrante del equipo (Javier, oct. 2026). Si se
+          // cambió el líder y la persona no está en este equipo, se agrega
+          // como integrante (el backend mueve de equipo automáticamente).
+          const liderCambio = Boolean(nominaLider) && nominaLider !== String(equipoExistente?.liderNomina || "");
+          if (liderCambio && !liderResuelto) {
+            toast("Presiona «Buscar» en el campo del líder para verificar a la persona antes de guardar.", "tr");
+            return;
+          }
+          const liderYaEsMiembro =
+            esEdicion && liderResuelto?.equipo && String(liderResuelto.equipo.id) === String(equipoExistente.id);
+          const hayQueAgregarLider = liderCambio && !liderYaEsMiembro;
+
           try {
             let equipoResultado;
             if (esEdicion) {
+              if (hayQueAgregarLider) await api.agregarEmpleado(equipoExistente.id, nominaLider);
               equipoResultado = await api.actualizarEquipo(equipoExistente.id, payload);
               toast("Equipo actualizado.", "tg");
+            } else if (hayQueAgregarLider && LIDER_POR_NOMINA_SOPORTADO) {
+              // En un equipo nuevo el líder aún no puede ser integrante: se
+              // crea sin líder, se agrega la persona y luego se fija el líder.
+              const { liderNomina: _l, ...sinLider } = payload;
+              equipoResultado = await api.crearEquipo(sinLider);
+              await api.agregarEmpleado(equipoResultado.id, nominaLider);
+              equipoResultado = await api.actualizarEquipo(equipoResultado.id, payload);
+              toast("Equipo creado.", "tg");
             } else {
               equipoResultado = await api.crearEquipo(payload);
               toast("Equipo creado.", "tg");
@@ -964,6 +1028,12 @@ function openEmpleadoModal(view, eq) {
 }
 
 function confirmEliminarEmpleado(view, eq, miembro) {
+  // El líder debe ser integrante del equipo: no se puede quitar mientras siga
+  // siendo el líder (primero se cambia el líder en "Editar equipo").
+  if (eq.liderNomina && String(eq.liderNomina) === String(miembro.nomina)) {
+    toast(`${miembro.nombre} es el líder de este equipo. Primero cambia el líder en «Editar equipo» y luego quítalo.`, "tr", 6000);
+    return;
+  }
   if (!confirm(`¿Quitar a ${miembro.nombre} (nómina ${miembro.nomina}) del equipo "${eq.nombre}"?`)) return;
   // DELETE /equipos/empleados solo necesita la nómina — el backend resuelve
   // el equipo (confirmado por Jesús), no hace falta pasar el id del equipo.
@@ -1223,6 +1293,132 @@ function openCambiarRolModal(view) {
       ["Cambiar rol"]
     ),
   ]);
+}
+
+// Modal "Restablecer contraseña" (pedido de Javier, oct. 2026): si alguien
+// olvida su contraseña, el admin/mc lo busca por nómina y genera una
+// contraseña temporal nueva; al volver a entrar, la persona está obligada a
+// cambiarla (mismo flujo del primer inicio de sesión). La contraseña la genera
+// el backend (`POST /usuarios/:nomina/restablecer-password`) y se muestra
+// UNA sola vez aquí, para dársela a la persona por un medio seguro.
+function openRestablecerPasswordModal() {
+  let overlayRef;
+  let empleado = null;
+  const nominaInput = el("input", { class: "input", type: "text", placeholder: placeholderNomina() });
+  const nombreLabel = el("div", { class: "readonly-field" }, ["—"]);
+  const errorText = el("p", { class: "hint", style: "color:#991b1b" }, []);
+  const restablecerBtn = el("button", { class: "btn btn-accent", disabled: true }, ["Restablecer contraseña"]);
+  const cerrarBtn = el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]);
+
+  const buscar = async () => {
+    const nomina = nominaInput.value.trim();
+    empleado = null;
+    restablecerBtn.disabled = true;
+    nombreLabel.textContent = "—";
+    if (!nomina) {
+      toast("Escribe primero la nómina.", "tr");
+      return;
+    }
+    try {
+      const info = await buscarEmpleadoInfo(nomina);
+      empleado = { nomina, nombre: info.nombre || nomina };
+      errorText.textContent = "";
+      nombreLabel.textContent = empleado.nombre;
+      restablecerBtn.disabled = false;
+    } catch (err) {
+      errorText.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
+    }
+  };
+  // Si se cambia la nómina después de buscar, hay que volver a buscar.
+  nominaInput.addEventListener("input", () => {
+    empleado = null;
+    restablecerBtn.disabled = true;
+    nombreLabel.textContent = "—";
+  });
+  nominaInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); buscar(); }
+  });
+
+  const body = el("div", {}, [
+    el("div", { class: "field" }, [
+      el("label", {}, ["Número de nómina"]),
+      el("div", { style: "display:flex;gap:8px" }, [
+        nominaInput,
+        el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: buscar }, ["Buscar"]),
+      ]),
+    ]),
+    errorText,
+    el("div", { class: "field" }, [el("label", {}, ["Nombre"]), nombreLabel]),
+    el("p", { class: "hint" }, [
+      "Se generará una contraseña temporal nueva. La contraseña actual dejará de funcionar y la persona tendrá que definir una nueva al iniciar sesión.",
+    ]),
+  ]);
+
+  restablecerBtn.addEventListener("click", async () => {
+    if (!empleado) return;
+    if (!confirm(`¿Restablecer la contraseña de ${empleado.nombre} (nómina ${empleado.nomina})? Su contraseña actual dejará de funcionar.`)) return;
+    restablecerBtn.disabled = true;
+    restablecerBtn.textContent = "Restableciendo…";
+    try {
+      const resultado = await api.restablecerPassword(empleado.nomina);
+      mostrarPasswordTemporal(resultado, empleado);
+    } catch (err) {
+      // "Failed to fetch": la función todavía no existe en el servidor.
+      const sinConexion = /failed to fetch|networkerror|load failed/i.test(err?.message || "");
+      toast(
+        sinConexion
+          ? "No se pudo restablecer: esta función todavía no está disponible en el servidor. Avisa a TI (Jesús)."
+          : err.message || "No se pudo restablecer la contraseña.",
+        "tr",
+        6000
+      );
+      restablecerBtn.disabled = false;
+      restablecerBtn.textContent = "Restablecer contraseña";
+    }
+  });
+
+  // Pantalla de resultado: la contraseña temporal solo se muestra aquí, una vez.
+  function mostrarPasswordTemporal(resultado, persona) {
+    const password = resultado?.passwordTemporal || "";
+    const passInput = el("input", { class: "input", type: "text", readonly: true, value: password, style: "font-family:monospace;font-size:1.1rem;letter-spacing:.05em" });
+    const copiarBtn = el("button", { class: "btn btn-outline btn-sm", type: "button" }, ["Copiar"]);
+    copiarBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(password);
+        toast("Contraseña copiada.", "tg");
+      } catch {
+        passInput.select();
+        toast("Selecciona la contraseña y cópiala manualmente (Ctrl+C).", "default");
+      }
+    });
+    // Ya con la contraseña a la vista: clic fuera del modal NO lo cierra (se
+    // perdería la única oportunidad de copiarla).
+    overlayRef.addEventListener("click", (e) => { if (e.target === overlayRef) e.stopImmediatePropagation(); }, true);
+    const modal = overlayRef.querySelector(".modal");
+    modal.innerHTML = "";
+    modal.appendChild(el("h2", { style: "margin-bottom:12px" }, ["Contraseña restablecida"]));
+    modal.appendChild(el("p", {}, [`${resultado?.nombre || persona.nombre} (nómina ${persona.nomina})`]));
+    modal.appendChild(
+      password
+        ? el("div", { class: "field", style: "margin-top:12px" }, [
+            el("label", {}, ["Contraseña temporal"]),
+            el("div", { style: "display:flex;gap:8px" }, [passInput, copiarBtn]),
+          ])
+        : el("p", { class: "hint", style: "color:#991b1b" }, ["El servidor no devolvió la contraseña temporal. Intenta restablecerla de nuevo."])
+    );
+    modal.appendChild(
+      el("p", { class: "hint", style: "margin-top:10px" }, [
+        "Entrégasela a la persona por un medio seguro. Solo se muestra esta vez: al cerrar esta ventana no se podrá volver a ver. Al iniciar sesión con ella, el sistema le pedirá definir una contraseña nueva.",
+      ])
+    );
+    modal.appendChild(
+      el("div", { class: "form-actions", style: "margin-top:16px" }, [
+        el("button", { class: "btn btn-primary", onclick: () => closeModal(overlayRef) }, ["Listo, ya la copié"]),
+      ])
+    );
+  }
+
+  overlayRef = openModal("Restablecer contraseña", body, [cerrarBtn, restablecerBtn]);
 }
 
 // Historial de cambios de rol (GET /cambios-rol, cambios-rol-list) — de

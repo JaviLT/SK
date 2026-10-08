@@ -130,16 +130,28 @@ function equiposDondeEsAprobador(user) {
   return state.equipos.filter((eq) => String(eq.aprobador2Nomina || "") === nomina || String(eq.aprobador3Nomina || "") === nomina);
 }
 
+// Equipos donde la persona figura como LÍDER (`equipos.lider_nomina`, ya
+// disponible como `liderNomina` en GET /equipos). Quien es líder de un equipo
+// debe ver todos los SK de ese equipo en su perfil, sin depender de que su
+// rol de sistema sea "lider" (pedido de Javier, oct. 2026).
+function equiposDondeEsLider(user) {
+  const nomina = String(user.nomina || "");
+  if (!nomina) return [];
+  return state.equipos.filter((eq) => String(eq.liderNomina || "") === nomina);
+}
+
 function alcanceParaUsuario() {
   const user = state.user || {};
   const rol = user.rol;
-  const comoAprobador = rol === "admin" || rol === "mc" ? [] : equiposDondeEsAprobador(user);
 
   // Unión de equipos sin repetir por nombre.
   const unirEquipos = (...listas) => {
     const vistos = new Set();
     return listas.flat().filter((eq) => (vistos.has(eq.nombre) ? false : (vistos.add(eq.nombre), true)));
   };
+  // Equipos extra a los que tiene acceso por ser Aprobador 2/3 o Líder.
+  const comoAprobador =
+    rol === "admin" || rol === "mc" ? [] : unirEquipos(equiposDondeEsAprobador(user), equiposDondeEsLider(user));
   const kaizensDeEquipos = (equipos, extra = () => false) => {
     const nombres = new Set(equipos.map((eq) => eq.nombre));
     return state.kaizens.filter((k) => nombres.has(k.equipo) || extra(k));

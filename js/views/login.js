@@ -1,4 +1,4 @@
-import { el, toast } from "../utils.js";
+import { el, toast, conBotonMostrar } from "../utils.js";
 import { api } from "../api.js";
 import { setState } from "../state.js";
 import { CONFIG } from "../config.js";
@@ -62,7 +62,7 @@ export async function render(container) {
     },
     [
       el("div", { class: "field" }, [el("label", { for: "login-nomina" }, ["Número de nómina"]), nominaInput]),
-      el("div", { class: "field" }, [el("label", { for: "login-pass" }, ["Contraseña"]), passInput]),
+      el("div", { class: "field" }, [el("label", { for: "login-pass" }, ["Contraseña"]), conBotonMostrar(passInput)]),
       submitBtn,
     ]
   );
