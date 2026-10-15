@@ -1,8 +1,9 @@
 // ============================================================================
 // solicitudes.js — Pestaña "Solicitudes" (NUEVA).
 //
-// Solo la ven quienes pueden aprobar (líder, gerente, mc, admin — ver
-// js/shell.js). Aquí se aprueba/rechaza DIRECTO, con un solo clic, sin pedir
+// La ven quienes pueden aprobar (líder, gerente, mc, admin — ver js/shell.js)
+// y, sin importar su rol de sistema, quien sea Aprobador 2 o 3 de algún
+// equipo (oct. 2026). Aquí se aprueba/rechaza DIRECTO, con un solo clic, sin pedir
 // contraseña otra vez (la sesión ya identifica a quien decide) — distinto
 // del flujo por link de correo con token (ya retirado en oct. 2026).
 //
@@ -23,6 +24,7 @@ import { el, formatDate, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
 import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state, setState } from "../state.js";
+import { puedeVerSolicitudes } from "../shell.js";
 
 // `status` es la fuente de verdad (confirmado por Jesús, no derivar de las
 // firmas). Valores: pend_aprobacion1/2/3, done, rej_aprobacion1/2/3.
@@ -42,7 +44,9 @@ export async function render(container, params, isStale) {
   container.appendChild(el("div", { class: "view", id: "solicitudes-view" }, [el("div", { class: "skeleton", style: "height:200px" })]));
 
   const user = state.user || {};
-  if (!["lider", "gerente", "mc", "admin"].includes(user.rol)) {
+  // Por rol (líder/gerente/mc/admin) o por ser Aprobador 2/3 de algún equipo.
+  if (!(await puedeVerSolicitudes(user))) {
+    if (isStale && isStale()) return;
     paintSinPermiso(container);
     return;
   }
@@ -89,15 +93,17 @@ function pendientesParaUsuario() {
     .map((k) => ({ k, actual: estadoActual(k) }))
     .filter(({ actual }) => actual);
 
-  if (user.rol === "mc") return pendientes.filter(({ actual }) => actual.paso === 1).map(({ k }) => k);
   if (user.rol === "admin") return pendientes.map(({ k }) => k);
 
-  // lider/gerente: coincidencia exacta de nómina contra el paso actual —
-  // nunca por rol/equipo/departamento (confirmado por Jesús: `email` no es
-  // confiable, solo está poblado para los 47 aprobadores del catálogo).
-  return pendientes
-    .filter(({ actual }) => (actual.paso === 2 || actual.paso === 3) && actual.nomina === user.nomina)
-    .map(({ k }) => k);
+  // Pasos 2 y 3: coincidencia exacta de nómina contra el paso actual — nunca
+  // por rol/equipo/departamento (confirmado por Jesús: `email` no es
+  // confiable). Aplica a CUALQUIER rol (también solicitante y mc): quien es
+  // Aprobador 2/3 decide aunque su rol de sistema no sea líder ni gerente.
+  const porNomina = ({ actual }) =>
+    (actual.paso === 2 || actual.paso === 3) && String(actual.nomina || "") === String(user.nomina || "");
+  // mc además decide el paso 1 (cualquier cuenta mc).
+  if (user.rol === "mc") return pendientes.filter((p) => p.actual.paso === 1 || porNomina(p)).map(({ k }) => k);
+  return pendientes.filter(porNomina).map(({ k }) => k);
 }
 
 function paint(container) {
@@ -112,6 +118,7 @@ function paint(container) {
     gerente: "Short Kaizen de tu departamento pendientes de tu firma",
     mc: "Short Kaizen de TODA la empresa pendientes de revisión de Mejora Continua",
     admin: "Todos los Short Kaizen pendientes de cualquier paso de aprobación",
+    solicitante: "Short Kaizen pendientes de tu aprobación",
   };
 
   view.appendChild(

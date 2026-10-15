@@ -133,12 +133,12 @@ function puedeDecidir(k) {
   const user = state.user || {};
   const actual = estadoActualParaDecision(k);
   if (!actual) return false;
-  if (user.rol === "mc") return actual.paso === 1;
   if (user.rol === "admin") return true;
-  if (user.rol === "lider" || user.rol === "gerente") {
-    return (actual.paso === 2 || actual.paso === 3) && actual.nomina === user.nomina;
-  }
-  return false;
+  // Pasos 2/3: nómina exacta, sea cual sea el rol de sistema (también
+  // solicitante): quien es Aprobador 2/3 decide (pedido de Javier, oct. 2026).
+  const esSuPaso = (actual.paso === 2 || actual.paso === 3) && String(actual.nomina || "") === String(user.nomina || "");
+  if (user.rol === "mc") return actual.paso === 1 || esSuPaso;
+  return esSuPaso;
 }
 
 async function decidir(k, decision, view) {

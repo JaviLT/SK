@@ -32,6 +32,43 @@ export function puedeAprobar(user) {
   return Boolean(user) && ["lider", "gerente", "mc", "admin"].includes(user.rol);
 }
 
+// Quien figura como Aprobador 2 o Aprobador 3 de algún equipo también aprueba
+// (los pasos 2 y 3 después de Mejora Continua), sea cual sea su rol de
+// sistema: el backend autoriza esos pasos por la nómina exacta congelada en
+// el SK, no por rol (pedido de Javier, oct. 2026). El rol solo no basta para
+// saberlo: se consulta `aprobador2Nomina`/`aprobador3Nomina` de GET /equipos.
+const CLAVE_APROBADOR = "sk_es_aprobador";
+
+function leerCacheAprobador(nomina) {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(CLAVE_APROBADOR) || "null");
+    return v && v.nomina === String(nomina) ? Boolean(v.valor) : null;
+  } catch { return null; }
+}
+
+/**
+ * ¿Esta persona es Aprobador 2/3 de al menos un equipo? Resultado cacheado en
+ * sessionStorage para no repetir la consulta en cada página; si la consulta
+ * falla devuelve lo último que se sabía (o false).
+ */
+export async function esAprobadorDeAlgunEquipo(user) {
+  if (!user?.nomina) return false;
+  try {
+    const equipos = await api.getEquipos();
+    const n = String(user.nomina);
+    const valor = (equipos || []).some((eq) => String(eq.aprobador2Nomina || "") === n || String(eq.aprobador3Nomina || "") === n);
+    try { sessionStorage.setItem(CLAVE_APROBADOR, JSON.stringify({ nomina: n, valor })); } catch { /* se ignora */ }
+    return valor;
+  } catch {
+    return leerCacheAprobador(user.nomina) ?? false;
+  }
+}
+
+/** ¿Puede ver la pestaña Solicitudes? Por rol, o por ser Aprobador 2/3. */
+export async function puedeVerSolicitudes(user) {
+  return puedeAprobar(user) || (await esAprobadorDeAlgunEquipo(user));
+}
+
 /**
  * @param {object} opts
  * @param {string} opts.page - id de la página actual (para resaltar el tab activo)
@@ -95,13 +132,25 @@ function buildChrome(user, page) {
     }
   }
 
-  document.querySelectorAll("[data-nav]").forEach((node) => {
-    const item = NAV_ITEMS.find((n) => n.page === node.dataset.nav);
-    if (!item) return;
-    const visible = !item.roles || item.roles.includes(user.rol);
-    node.hidden = !visible;
-    if (visible) node.classList.toggle("active", item.page === page);
-  });
+  const mostrarNav = (extra = {}) => {
+    document.querySelectorAll("[data-nav]").forEach((node) => {
+      const item = NAV_ITEMS.find((n) => n.page === node.dataset.nav);
+      if (!item) return;
+      const visible = !item.roles || item.roles.includes(user.rol) || Boolean(extra[item.page]);
+      node.hidden = !visible;
+      if (visible) node.classList.toggle("active", item.page === page);
+    });
+  };
+  // Se pinta ya con lo que se sabe (rol + último resultado cacheado) y, si el
+  // rol no aprueba, se confirma en segundo plano si es Aprobador 2/3 para no
+  // retrasar la carga de la página.
+  const cacheado = leerCacheAprobador(user.nomina);
+  mostrarNav({ solicitudes: cacheado === true });
+  if (!puedeAprobar(user)) {
+    esAprobadorDeAlgunEquipo(user).then((esAprobador) => {
+      if (esAprobador !== (cacheado === true)) mostrarNav({ solicitudes: esAprobador });
+    });
+  }
 
   // Menú del usuario (pedido de Javier, sept. 2026): ya no se cierra sesión
   // con un solo clic directo sobre el chip — el clic abre un menú
