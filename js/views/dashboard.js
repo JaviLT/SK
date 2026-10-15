@@ -132,14 +132,24 @@ async function paint(view, equipos, kaizens, departamentos) {
     ])
   );
 
+  let Chart;
   try {
-    const Chart = await loadChartJs();
+    Chart = await loadChartJs();
+  } catch (err) {
+    console.error("[dashboard] No se pudo cargar Chart.js (assets/vendor/chart.umd.js):", err);
+    const msg = () => el("p", { class: "hint" }, ["No se pudo cargar la librería de gráficas. Recarga la página; si persiste, avisa a soporte."]);
+    equipoCanvas.replaceWith(msg());
+    empleadoCanvas.replaceWith(msg());
+    return;
+  }
+  try {
     chartInstances = [
       drawTopChart(Chart, equipoCanvas, topEquipos(equipos, implementadosPeriodo)),
       drawTopChart(Chart, empleadoCanvas, topEmpleados(implementadosPeriodo)),
     ];
-  } catch {
-    const msg = () => el("p", { class: "hint" }, ["No se pudieron cargar las gráficas (sin conexión al CDN)."]);
+  } catch (err) {
+    console.error("[dashboard] Error al dibujar las gráficas:", err);
+    const msg = () => el("p", { class: "hint" }, ["No se pudieron dibujar las gráficas."]);
     equipoCanvas.replaceWith(msg());
     empleadoCanvas.replaceWith(msg());
   }
@@ -398,7 +408,7 @@ function loadChartJs() {
   if (window.Chart) return Promise.resolve(window.Chart);
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js";
+    script.src = "assets/vendor/chart.umd.js";
     script.onload = () => resolve(window.Chart);
     script.onerror = () => reject(new Error("No se pudo cargar Chart.js"));
     document.head.appendChild(script);

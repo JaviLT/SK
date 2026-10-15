@@ -189,7 +189,7 @@ function buildCard(k, container) {
     el("div", { class: "card-header" }, [
       el(
         "div",
-        { class: "solicitud-titulo", onclick: () => { window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}`; } },
+        { class: "solicitud-titulo", onclick: () => { window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}&from=solicitudes`; } },
         [
           el("div", { style: "font-weight:700" }, [`SK-${shortId(k.id)} · ${k.areaLinea || k.donde || "—"}`]),
           // Pedido de Javier (sept. 2026): mostrar fecha de implementación

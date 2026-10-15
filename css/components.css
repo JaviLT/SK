@@ -346,3 +346,14 @@
 }
 .pass-toggle:hover{ background: var(--gray-100); }
 .pass-toggle:focus-visible{ outline: 2px solid var(--zx-primary, #0D18A8); outline-offset: 1px; }
+
+/* ============ Popup de SK por equipo (Mis Kaizens) ============ */
+.modal.modal-lg{ max-width: 760px; }
+.modal-head{ display:flex; align-items:center; justify-content:space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.modal-head h3{ margin: 0; }
+.modal-close{ background: transparent; border: 0; font-size: 1.1rem; cursor: pointer; color: var(--gray-500); padding: 4px 8px; border-radius: var(--radius-sm); }
+.modal-close:hover{ background: var(--gray-100); color: var(--gray-800); }
+.filtro-chips{ display:flex; flex-wrap:wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.filtro-chip{ background: transparent; border: 1.5px solid var(--zx-blue); color: var(--zx-heading); border-radius: 999px; padding: 4px 14px; font-size: var(--fs-sm); cursor: pointer; font-family: inherit; }
+.filtro-chip:hover{ background: var(--zx-highlight); }
+.filtro-chip.is-active{ background: var(--zx-blue); color: var(--zx-white); }

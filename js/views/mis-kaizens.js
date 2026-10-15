@@ -59,6 +59,7 @@ function etiquetaEquipoActivo(valor) {
 }
 
 export async function render(container, params, isStale) {
+  popupRestaurado = false;
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
 
   try {
@@ -236,25 +237,108 @@ function paint(container) {
     view.appendChild(buildMosaicoAgrupado(alcance.equiposVisibles, alcance.kaizensVisibles, container));
   }
 
-  // La lista plana "Todos los Short Kaizen" se quitó SOLO para quien ve el
-  // mosaico de equipos (gerente/mc/admin) — pedido de Javier, sept. 2026:
-  // esa misma información ya se puede ver entrando a cada equipo del
-  // mosaico, y los pendientes de firma ya viven en "Solicitudes". Si desde
-  // ahí filtra por un equipo, sí se muestra su lista (vista acotada, no el
-  // listado completo sin filtrar). Para solicitante/líder, que NO tienen
-  // mosaico, esta lista sigue siendo su única forma de ver sus Short
-  // Kaizen — no se toca.
-  if (!alcance.mostrarMosaico || state.equipoActivo) {
-    view.appendChild(
-      el("div", { class: "view-header", style: "margin-top:8px" }, [
-        el("h3", {}, [state.equipoActivo ? `Short Kaizen — ${etiquetaEquipoActivo(state.equipoActivo)}` : "Todos los Short Kaizen"]),
-        state.equipoActivo
-          ? el("button", { class: "btn btn-outline btn-sm", onclick: () => { setState({ equipoActivo: null }); paint(container); } }, ["Quitar filtro"])
-          : null,
-      ])
-    );
-    view.appendChild(buildList(alcance.kaizensVisibles, state.equipoActivo));
+  // Con mosaico (gerente/mc/admin/varios equipos) los SK de cada equipo se
+  // ven en un popup (pedido de Javier, oct. 2026), ya no debajo del mosaico.
+  // Sin mosaico (solicitante/líder de un solo equipo) la lista plana sigue
+  // siendo su única forma de ver sus Short Kaizen.
+  if (!alcance.mostrarMosaico) {
+    view.appendChild(el("div", { class: "view-header", style: "margin-top:8px" }, [el("h3", {}, ["Todos los Short Kaizen"])]));
+    view.appendChild(buildList(alcance.kaizensVisibles, abrirDetalle));
   }
+
+  // Al volver desde el detalle se reabre el popup del equipo con su filtro.
+  if (alcance.mostrarMosaico && !popupRestaurado) {
+    popupRestaurado = true;
+    const guardado = leerPopupGuardado();
+    if (guardado) abrirPopupEquipo(guardado.equipo, alcance.kaizensVisibles, guardado.filtro);
+  }
+}
+
+// ---- Navegación al detalle y estado del popup ----
+const CLAVE_POPUP = "sk_mk_popup";
+let popupRestaurado = false;
+
+function leerPopupGuardado() {
+  try {
+    const raw = sessionStorage.getItem(CLAVE_POPUP);
+    sessionStorage.removeItem(CLAVE_POPUP);
+    const v = raw && JSON.parse(raw);
+    return v && typeof v.equipo === "string" ? { equipo: v.equipo, filtro: FILTROS.some((f) => f.id === v.filtro) ? v.filtro : "todos" } : null;
+  } catch {
+    return null;
+  }
+}
+
+function abrirDetalle(k, popup) {
+  if (popup) {
+    try { sessionStorage.setItem(CLAVE_POPUP, JSON.stringify(popup)); } catch { /* sin storage: solo vuelve a la página */ }
+  }
+  window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}&from=mis-kaizens`;
+}
+
+// ---- Popup de SK de un equipo, con filtro por estatus ----
+const FILTROS = [
+  { id: "todos", label: "Todos", grupo: null },
+  { id: "pendiente", label: "Pendientes", grupo: "pendiente" },
+  { id: "aceptado", label: "Aceptados", grupo: "aceptado" },
+  { id: "rechazado", label: "Rechazados", grupo: "rechazado" },
+];
+
+function kaizensDeEquipo(kaizens, equipo) {
+  if (esSentinelSinEquipo(equipo)) {
+    const depto = departamentoDelSentinel(equipo);
+    return kaizens.filter((k) => !k.equipo && k.departamento === depto);
+  }
+  return kaizens.filter((k) => k.equipo === equipo);
+}
+
+function abrirPopupEquipo(equipo, kaizensAlcance, filtroInicial = "todos") {
+  const delEquipo = kaizensDeEquipo(kaizensAlcance, equipo);
+  let filtro = filtroInicial;
+
+  const chips = el("div", { class: "filtro-chips", role: "tablist" });
+  const lista = el("div", {});
+  const cerrarBtn = el("button", { class: "modal-close", type: "button", "aria-label": "Cerrar" }, ["✕"]);
+
+  const overlay = el("div", { class: "modal-overlay" }, [
+    el("div", { class: "modal modal-lg", role: "dialog", "aria-modal": "true" }, [
+      el("div", { class: "modal-head" }, [
+        el("h3", {}, [`Short Kaizen — ${etiquetaEquipoActivo(equipo)}`]),
+        cerrarBtn,
+      ]),
+      chips,
+      lista,
+    ]),
+  ]);
+
+  const pintar = () => {
+    chips.innerHTML = "";
+    FILTROS.forEach((f) => {
+      const n = f.grupo ? delEquipo.filter((k) => estadoKaizen(k).grupo === f.grupo).length : delEquipo.length;
+      chips.appendChild(
+        el(
+          "button",
+          { class: `filtro-chip${f.id === filtro ? " is-active" : ""}`, type: "button", role: "tab", "aria-selected": String(f.id === filtro), onclick: () => { filtro = f.id; pintar(); } },
+          [`${f.label} (${n})`]
+        )
+      );
+    });
+    const grupo = FILTROS.find((f) => f.id === filtro).grupo;
+    const visibles = grupo ? delEquipo.filter((k) => estadoKaizen(k).grupo === grupo) : delEquipo;
+    lista.innerHTML = "";
+    lista.appendChild(buildList(visibles, (k) => abrirDetalle(k, { equipo, filtro })));
+  };
+
+  const cerrar = () => {
+    document.removeEventListener("keydown", onKey);
+    overlay.remove();
+  };
+  const onKey = (ev) => { if (ev.key === "Escape") cerrar(); };
+  cerrarBtn.addEventListener("click", cerrar);
+  overlay.addEventListener("click", (ev) => { if (ev.target === overlay) cerrar(); });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(overlay);
+  pintar();
 }
 
 function buildStatsRow(kaizens) {
@@ -373,15 +457,11 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
         .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
         .map((eq) => {
           const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
-          const isActive = state.equipoActivo === eq.nombre;
           return el(
             "div",
             {
-              class: `equipo-card${isActive ? " active" : ""}`,
-              onclick: () => {
-                setState({ equipoActivo: isActive ? null : eq.nombre });
-                paint(container);
-              },
+              class: "equipo-card",
+              onclick: () => abrirPopupEquipo(eq.nombre, kaizensDelAlcance),
             },
             [
               el("div", { class: "eq-name" }, [eq.nombre]),
@@ -397,16 +477,12 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
       // sea 0, para que sea consistente entre departamentos.
       const sentinel = sentinelSinEquipo(nombreDepto);
       const countSinEquipo = kaizensDelAlcance.filter((k) => !k.equipo && k.departamento === nombreDepto).length;
-      const sinEquipoActive = state.equipoActivo === sentinel;
       tarjetasEquipos.push(
         el(
           "div",
           {
-            class: `equipo-card${sinEquipoActive ? " active" : ""}`,
-            onclick: () => {
-              setState({ equipoActivo: sinEquipoActive ? null : sentinel });
-              paint(container);
-            },
+            class: "equipo-card",
+            onclick: () => abrirPopupEquipo(sentinel, kaizensDelAlcance),
           },
           [
             el("div", { class: "eq-name" }, ["Sin equipo"]),
@@ -428,14 +504,8 @@ function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
   );
 }
 
-function buildList(kaizens, equipoActivo) {
-  let filtered = kaizens;
-  if (esSentinelSinEquipo(equipoActivo)) {
-    const depto = departamentoDelSentinel(equipoActivo);
-    filtered = kaizens.filter((k) => !k.equipo && k.departamento === depto);
-  } else if (equipoActivo) {
-    filtered = kaizens.filter((k) => k.equipo === equipoActivo);
-  }
+function buildList(kaizens, onOpen) {
+  const filtered = kaizens;
   if (!filtered.length) {
     return el("div", { class: "empty-state" }, [
       el("div", { class: "icon" }, ["📭"]),
@@ -459,7 +529,7 @@ function buildList(kaizens, equipoActivo) {
         "div",
         {
           class: "kaizen-row",
-          onclick: () => { window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}`; },
+          onclick: () => onOpen(k),
         },
         [
           el("div", { class: "kr-main" }, [

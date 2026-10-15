@@ -1576,7 +1576,7 @@ function loadExcelJS() {
   if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
+    script.src = "assets/vendor/exceljs.min.js";
     script.onload = () => resolve(window.ExcelJS);
     script.onerror = () => reject(new Error("No se pudo cargar el generador de Excel."));
     document.head.appendChild(script);

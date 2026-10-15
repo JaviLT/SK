@@ -1,4 +1,4 @@
-import { el, formatDate, formatDateTime, shortId, toast } from "../utils.js";
+import { el, formatDate, formatDateTime, getQueryParam, shortId, toast } from "../utils.js";
 import { api } from "../api.js";
 import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state } from "../state.js";
@@ -34,11 +34,12 @@ function paint(view, k) {
     el("div", { class: "detail-header sk-report-header" }, [
       el("button", {
         class: "btn btn-outline btn-sm sk-back-btn",
-        // Pedido de Javier (sept. 2026): "Volver" siempre regresa a
-        // Solicitudes (antes iba a Mis Kaizens) — el detalle se abre casi
-        // siempre desde ahí para aprobar/rechazar, así que es a donde debe
-        // regresar sin importar de dónde se haya entrado.
-        onclick: () => { window.location.href = "solicitudes.html"; },
+        // Pedido de Javier (oct. 2026): "Volver" regresa a la página desde la
+        // que se abrió el detalle (?from=mis-kaizens | solicitudes). Sin
+        // origen válido (enlace directo) → Mis Kaizens, que ve todo el mundo.
+        // Al volver a Mis Kaizens, la vista reabre el popup del equipo con su
+        // filtro (estado guardado en sessionStorage por mis-kaizens.js).
+        onclick: () => { window.location.href = getQueryParam("from") === "solicitudes" ? "solicitudes.html" : "mis-kaizens.html"; },
       }, ["← Volver"]),
       el("div", { class: "sk-report-banner" }, [
         el("img", { src: "assets/logo-mark.png", alt: "Short Kaizen", class: "sk-report-logo" }),
@@ -461,7 +462,7 @@ function loadJsPDF() {
   if (window.jspdf) return Promise.resolve(window.jspdf);
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    script.src = "assets/vendor/jspdf.umd.min.js";
     script.onload = () => resolve(window.jspdf);
     script.onerror = () => reject(new Error("No se pudo cargar el generador de PDF."));
     document.head.appendChild(script);
