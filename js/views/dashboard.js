@@ -33,20 +33,30 @@
 //     anteriores) — suficiente para el caso de negocio ("ver rendimiento
 //     anual a fin de año"), documentado aquí por si en el futuro hace falta
 //     navegar años previos.
+//   - Oct. 2026: filtro de AÑO (sin "todos los años"; por default el año en
+//     curso) y meses en MAYÚSCULAS. El filtro de mes pasó a ser "todos" o
+//     "01".."12". Con "Todos los meses" ya NO se muestra la barra de
+//     progreso: cada equipo muestra el número de SK de cada mes (ENE..DIC) y
+//     el total. La barra solo se queda al elegir un mes específico.
+//   - Origen de los conteos: para los meses que traen dato en el histórico de
+//     Mejora Continua (lib/historico-sk.js, ene–sep 2026) se usa ESE número;
+//     para el resto, los SK implementados reales de la app (`status ===
+//     "done"`, por `fechaImpl`). Así un mes nunca se cuenta dos veces.
 // ============================================================================
 
 import { el, formatDateTime } from "../utils.js";
+import { cargarHistorico, claveEquipo } from "../lib/historico-sk.js";
 import { api } from "../api.js";
 import { META_SK_POR_EQUIPO_MES } from "../lib/mock-backend.js";
 
 let chartInstances = [];
 
-function mesActualStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+const MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+const MESES_CORTO = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
-let mesFiltro = mesActualStr(); // "YYYY-MM" (mes específico) | "todos"
+let anioFiltro = new Date().getFullYear();
+let mesFiltro = String(new Date().getMonth() + 1).padStart(2, "0"); // "01".."12" | "todos"
+let historico = {};
 
 export async function render(container, params, isStale) {
   const view = el("div", { class: "view", id: "dashboard-view" });
@@ -54,7 +64,8 @@ export async function render(container, params, isStale) {
   view.appendChild(el("div", { class: "skeleton", style: "height:400px" }));
 
   try {
-    const [equipos, kaizens, departamentosRaw] = await Promise.all([api.getEquipos(), api.getKaizens(), api.getDepartamentos().catch(() => [])]);
+    const [equipos, kaizens, departamentosRaw, hist] = await Promise.all([api.getEquipos(), api.getKaizens(), api.getDepartamentos().catch(() => []), cargarHistorico()]);
+    historico = hist || {};
     if (isStale && isStale()) return; // el usuario ya navegó a otra vista — no tocar el DOM
     // Normaliza igual que el resto de la app: el mock puede regresar
     // string[], el backend real { id, nombre, grupo }[].
@@ -70,29 +81,69 @@ export async function render(container, params, isStale) {
   }
 }
 
-function coincideConFiltro(fechaISO) {
+function fechaEnPeriodo(fechaISO) {
   if (!fechaISO) return false;
-  if (mesFiltro === "todos") return true;
   const d = new Date(fechaISO);
-  const [anio, mes] = mesFiltro.split("-").map(Number);
-  return d.getFullYear() === anio && d.getMonth() + 1 === mes;
+  if (d.getFullYear() !== anioFiltro) return false;
+  return mesFiltro === "todos" || d.getMonth() + 1 === Number(mesFiltro);
 }
 
-// Meses "transcurridos" del año en curso, para escalar la meta cuando se ve
-// el acumulado completo (enero..mes actual, incluyéndolo) — ver nota de
-// arquitectura al inicio del archivo.
+// Meses del año elegido que cuentan para la meta: todos los transcurridos
+// (enero..mes actual) si es el año en curso, 12 si ya terminó, 0 si no ha
+// empezado; un solo mes si se filtra por mes.
 function mesesEnPeriodo() {
-  return mesFiltro === "todos" ? new Date().getMonth() + 1 : 1;
-}
-
-// Nombre legible de un valor de filtro "YYYY-MM" (no de "todos").
-function nombreMes(valorMes) {
-  const [anio, mes] = valorMes.split("-").map(Number);
-  return new Date(anio, mes - 1, 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+  if (mesFiltro !== "todos") return 1;
+  const hoy = new Date();
+  if (anioFiltro < hoy.getFullYear()) return 12;
+  if (anioFiltro > hoy.getFullYear()) return 0;
+  return hoy.getMonth() + 1;
 }
 
 function nombrePeriodo() {
-  return mesFiltro === "todos" ? "Todos los meses (acumulado del año)" : nombreMes(mesFiltro);
+  return mesFiltro === "todos" ? `Todos los meses ${anioFiltro}` : `${MESES[Number(mesFiltro) - 1]} ${anioFiltro}`;
+}
+
+function mesEsFuturo(mes) {
+  const hoy = new Date();
+  return anioFiltro > hoy.getFullYear() || (anioFiltro === hoy.getFullYear() && mes > hoy.getMonth() + 1);
+}
+
+// Años disponibles: el del histórico, los de los SK implementados y el actual.
+function aniosDisponibles(kaizens) {
+  const anios = new Set([new Date().getFullYear(), ...Object.keys(historico).map(Number)]);
+  kaizens.forEach((k) => {
+    if (k.status === "done" && k.fechaImpl) {
+      const y = new Date(k.fechaImpl).getFullYear();
+      if (!Number.isNaN(y)) anios.add(y);
+    }
+  });
+  return [...anios].sort((a, b) => b - a);
+}
+
+// Serie de 12 meses de un equipo en el año elegido: número por mes, o null si
+// el mes aún no llega. Meses con dato en el histórico → ese; el resto → SK
+// reales de la app.
+function serieMensual(nombreEquipo, kaizens) {
+  const clave = claveEquipo(nombreEquipo);
+  const histAnio = historico[String(anioFiltro)] || {};
+  const nombreHist = Object.keys(histAnio).find((n) => claveEquipo(n) === clave);
+  const serieHist = nombreHist ? histAnio[nombreHist] : null;
+  return MESES.map((_, i) => {
+    const mes = i + 1;
+    if (mesEsFuturo(mes)) return null;
+    const h = serieHist ? serieHist[i] : null;
+    if (h !== null && h !== undefined) return h;
+    return kaizens.filter((k) => {
+      if (k.status !== "done" || !k.fechaImpl || claveEquipo(k.equipo) !== clave) return false;
+      const d = new Date(k.fechaImpl);
+      return d.getFullYear() === anioFiltro && d.getMonth() + 1 === mes;
+    }).length;
+  });
+}
+
+function totalPeriodo(serie) {
+  if (mesFiltro === "todos") return serie.reduce((sum, v) => sum + (v || 0), 0);
+  return serie[Number(mesFiltro) - 1] || 0;
 }
 
 async function paint(view, equipos, kaizens, departamentos) {
@@ -103,17 +154,35 @@ async function paint(view, equipos, kaizens, departamentos) {
   const metaMensual = equipos.length * META_SK_POR_EQUIPO_MES;
   const metaPeriodo = metaMensual * mesesEnPeriodo();
   const metaEquipoPeriodo = META_SK_POR_EQUIPO_MES * mesesEnPeriodo();
-  const implementadosPeriodo = kaizens.filter((k) => k.status === "done" && coincideConFiltro(k.fechaImpl));
+
+  // Datos por equipo del catálogo y equipos que solo existen en el histórico
+  // (nombre sin coincidencia en el catálogo): se muestran aparte y NO entran a
+  // los KPIs ni a la meta, para no mezclar con equipos que no están en el
+  // catálogo.
+  const datoDe = (nombre, fueraDeCatalogo) => {
+    const serie = serieMensual(nombre, kaizens);
+    return { nombre, serie, implementados: totalPeriodo(serie), meta: metaEquipoPeriodo, fueraDeCatalogo };
+  };
+  const datosCatalogo = equipos.map((eq) => datoDe(eq.nombre, false));
+  const clavesCatalogo = new Set(equipos.map((eq) => claveEquipo(eq.nombre)));
+  const fueraDeCatalogo = Object.keys(historico[String(anioFiltro)] || {})
+    .filter((n) => !clavesCatalogo.has(claveEquipo(n)))
+    .map((n) => datoDe(n, true));
+  if (fueraDeCatalogo.length) console.warn("[dashboard] Equipos del histórico sin coincidencia en el catálogo:", fueraDeCatalogo.map((d) => d.nombre));
+
+  const totalImplementados = datosCatalogo.reduce((sum, d) => sum + d.implementados, 0);
+  // Top 5 empleados: solo SK reales de la app (el histórico no trae detalle).
+  const implementadosPeriodo = kaizens.filter((k) => k.status === "done" && fechaEnPeriodo(k.fechaImpl));
 
   view.appendChild(
     el("div", { class: "view-header" }, [
       el("div", {}, [el("h1", {}, ["Tablero general"]), el("p", {}, [`Cumplimiento de Short Kaizen — ${nombrePeriodo()}`])]),
-      buildSelectorMes(view, equipos, kaizens, departamentos),
+      buildSelectorPeriodo(view, equipos, kaizens, departamentos),
     ])
   );
 
-  view.appendChild(buildKpis(implementadosPeriodo.length, metaMensual, metaPeriodo));
-  view.appendChild(buildEquiposProgresoPorGrupo(equipos, departamentos, kaizens, implementadosPeriodo, metaEquipoPeriodo));
+  view.appendChild(buildKpis(totalImplementados, metaMensual, metaPeriodo));
+  view.appendChild(buildEquiposProgresoPorGrupo(equipos, departamentos, kaizens, datosCatalogo, fueraDeCatalogo, metaEquipoPeriodo));
 
   const equipoCanvas = el("canvas");
   const empleadoCanvas = el("canvas");
@@ -127,7 +196,7 @@ async function paint(view, equipos, kaizens, departamentos) {
 
   view.appendChild(
     el("p", { class: "methodology-note" }, [
-      `Incluye únicamente Short Kaizen con estatus "Aceptado" (implementados tras la aprobación de Mejora Continua, Líder y Gerente/Aprobador) y cuya fecha de implementación cae dentro de: ${nombrePeriodo()}. Meta: ${META_SK_POR_EQUIPO_MES} por equipo / mes (${metaMensual} mensual global, según ${equipos.length} equipo(s) activo(s)). `,
+      `Periodo: ${nombrePeriodo()}. Los meses con dato en el histórico de Mejora Continua (enero–septiembre 2026) usan ese número por equipo; el resto de los meses cuenta únicamente Short Kaizen con estatus "Aceptado" (implementados tras la aprobación de Mejora Continua, Líder y Gerente/Aprobador) según su fecha de implementación. El Top 5 de empleados solo considera SK registrados en la app. Meta: ${META_SK_POR_EQUIPO_MES} por equipo / mes (${metaMensual} mensual global, según ${equipos.length} equipo(s) activo(s)). `,
       `Generado: ${formatDateTime(new Date())}.`,
     ])
   );
@@ -144,7 +213,7 @@ async function paint(view, equipos, kaizens, departamentos) {
   }
   try {
     chartInstances = [
-      drawTopChart(Chart, equipoCanvas, topEquipos(equipos, implementadosPeriodo)),
+      drawTopChart(Chart, equipoCanvas, topEquipos(datosCatalogo)),
       drawTopChart(Chart, empleadoCanvas, topEmpleados(implementadosPeriodo)),
     ];
   } catch (err) {
@@ -155,36 +224,34 @@ async function paint(view, equipos, kaizens, departamentos) {
   }
 }
 
-// Selector de periodo (pedido de Javier, sept. 2026 — ampliado para permitir
-// elegir CUALQUIER mes del año en curso, no solo "mes actual"/"todos los
-// meses"). Re-pinta todo el dashboard con los mismos `equipos`/`kaizens` ya
-// cargados (el filtro es 100% del lado del cliente, no requiere volver a
-// pedir datos).
-function buildSelectorMes(view, equipos, kaizens, departamentos) {
-  const anioActual = new Date().getFullYear();
-  const opcionesMes = [];
-  for (let mes = 1; mes <= 12; mes++) {
-    const valor = `${anioActual}-${String(mes).padStart(2, "0")}`;
-    const etiqueta = new Date(anioActual, mes - 1, 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-    opcionesMes.push(el("option", { value: valor, selected: mesFiltro === valor || undefined }, [etiqueta]));
-  }
+// Selector de periodo: AÑO (sin "todos los años") + MES (en mayúsculas, o
+// "Todos los meses"). Re-pinta con los mismos datos ya cargados (filtro 100%
+// del lado del cliente).
+function buildSelectorPeriodo(view, equipos, kaizens, departamentos) {
+  const repintar = () => paint(view, equipos, kaizens, departamentos);
 
-  const select = el(
+  const selectAnio = el(
     "select",
-    {
-      class: "select",
-      style: "max-width:220px",
-      onchange: (e) => {
-        mesFiltro = e.target.value;
-        paint(view, equipos, kaizens, departamentos);
-      },
-    },
+    { class: "select", style: "max-width:120px", onchange: (e) => { anioFiltro = Number(e.target.value); repintar(); } },
+    aniosDisponibles(kaizens).map((y) => el("option", { value: String(y), selected: y === anioFiltro || undefined }, [String(y)]))
+  );
+
+  const selectMes = el(
+    "select",
+    { class: "select", style: "max-width:200px", onchange: (e) => { mesFiltro = e.target.value; repintar(); } },
     [
-      ...opcionesMes,
+      ...MESES.map((nombre, i) => {
+        const valor = String(i + 1).padStart(2, "0");
+        return el("option", { value: valor, selected: mesFiltro === valor || undefined }, [nombre]);
+      }),
       el("option", { value: "todos", selected: mesFiltro === "todos" || undefined }, ["Todos los meses"]),
     ]
   );
-  return el("div", { class: "field", style: "margin-bottom:0" }, [el("label", {}, ["Periodo"]), select]);
+
+  return el("div", { style: "display:flex;gap:12px;flex-wrap:wrap" }, [
+    el("div", { class: "field", style: "margin-bottom:0" }, [el("label", {}, ["Año"]), selectAnio]),
+    el("div", { class: "field", style: "margin-bottom:0" }, [el("label", {}, ["Mes"]), selectMes]),
+  ]);
 }
 
 function buildKpis(totalImplementadosPeriodo, metaMensual, metaPeriodo) {
@@ -241,7 +308,7 @@ function nombreDepartamentoDeEquipo(eq, departamentos, equipoDepartamentoCache) 
 // de las metas de sus hijos). Reutiliza las clases de acordeón ya usadas en
 // el mosaico de "Mis Short Kaizen" (`.equipos-departamento-grupo*`), que ya
 // tienen el estilo de encabezado + chevron + cuerpo colapsable.
-function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, implementadosPeriodo, metaEquipoPeriodo) {
+function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, datosCatalogo, fueraDeCatalogo, metaEquipoPeriodo) {
   if (!equipos.length) return el("div", {});
 
   const equipoDepartamentoCache = {};
@@ -249,12 +316,8 @@ function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, impl
     if (k.equipo && k.departamento) equipoDepartamentoCache[k.equipo] = k.departamento;
   });
 
-  // equipo -> { implementados, meta }
-  const datoEquipo = (eq) => ({
-    nombre: eq.nombre,
-    implementados: implementadosPeriodo.filter((k) => k.equipo === eq.nombre).length,
-    meta: metaEquipoPeriodo,
-  });
+  // equipo -> { nombre, serie, implementados, meta }
+  const datoEquipo = (eq) => datosCatalogo.find((d) => d.nombre === eq.nombre);
 
   // Agrupa equipos por nombre de departamento.
   const equiposPorDepto = new Map();
@@ -284,6 +347,9 @@ function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, impl
     { value: "sin_grupo", label: "Sin grupo asignado" },
   ].filter((g) => deptosPorGrupo.get(g.value).length); // no mostrar grupos vacíos (0 departamentos asignados)
 
+  // Con "Todos los meses" el indicador es solo el total (sin meta ni barra).
+  const indicador = (impl, meta) => (mesFiltro === "todos" ? `${impl} SK` : `${impl} / ${meta}`);
+
   return el("div", { class: "card", style: "margin-bottom:20px" }, [
     el("h3", {}, ["Cumplimiento por equipo"]),
     el("p", { class: "hint", style: "margin-bottom:10px" }, ["Agrupado por grupo de negocio → departamento → equipo. Haz clic para desplegar cada nivel."]),
@@ -296,38 +362,66 @@ function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, impl
         const metaGrupo = deptos.reduce((sum, d) => sum + d.meta, 0);
         return buildNivelColapsable(
           `${g.label}`,
-          `${implementadosGrupo} / ${metaGrupo}`,
-          [el("div", { style: "padding-left:22px" }, deptos.map((d) => buildNivelDepartamento(d)))]
+          indicador(implementadosGrupo, metaGrupo),
+          [el("div", { style: "padding-left:22px" }, deptos.map((d) => buildNivelDepartamento(d, indicador)))]
         );
-      })
+      }).concat(
+        fueraDeCatalogo.length
+          ? [
+              buildNivelColapsable(
+                "Histórico sin coincidencia en el catálogo",
+                `${fueraDeCatalogo.reduce((sum, d) => sum + d.implementados, 0)} SK`,
+                [
+                  el("p", { class: "hint", style: "padding-left:22px;margin-bottom:6px" }, [
+                    "Equipos del archivo de Mejora Continua cuyo nombre no coincide con ningún equipo del catálogo. No suman a los indicadores de arriba.",
+                  ]),
+                  el("div", { style: "padding-left:22px" }, [buildFilas(fueraDeCatalogo)]),
+                ]
+              ),
+            ]
+          : []
+      )
     ),
   ]);
 }
 
-function buildNivelDepartamento(d) {
-  return buildNivelColapsable(
-    d.nombre,
-    `${d.implementados} / ${d.meta}`,
-    [
-      el(
-        "div",
-        { class: "equipo-progreso-list", style: "padding-left:22px" },
-        d.equipos
-          .slice()
-          .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
-          .map((eq) => {
-            const pct = eq.meta > 0 ? Math.min(100, Math.round((eq.implementados / eq.meta) * 100)) : 0;
-            return el("div", { class: "equipo-progreso-row" }, [
-              el("div", { class: "ep-nombre" }, [el("div", { style: "font-weight:600" }, [eq.nombre])]),
-              el("div", { class: "ep-bar-wrap" }, [
-                el("div", { class: "ep-bar" }, [el("div", { class: "ep-bar-fill", style: `width:${pct}%` })]),
-              ]),
-              el("div", { class: "ep-valor" }, [`${eq.implementados} / ${eq.meta}`]),
-              el("div", { class: `ep-pct ${pct >= 100 ? "up" : ""}` }, [`${pct}%`]),
-            ]);
-          })
-      ),
-    ]
+function buildNivelDepartamento(d, indicador) {
+  return buildNivelColapsable(d.nombre, indicador(d.implementados, d.meta), [el("div", { style: "padding-left:22px" }, [buildFilas(d.equipos)])]);
+}
+
+// Con "Todos los meses": tabla equipo × mes (ENE..DIC + total), sin barra.
+// Con un mes específico: barra de progreso contra la meta, como siempre.
+function buildFilas(equipos) {
+  const ordenados = equipos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  if (mesFiltro === "todos") {
+    const celda = (v) => el("td", { class: `mt-num${v === null ? " mt-vacio" : ""}` }, [v === null ? "—" : String(v)]);
+    return el("div", { class: "mes-tabla-wrap" }, [
+      el("table", { class: "mes-tabla" }, [
+        el("thead", {}, [
+          el("tr", {}, [el("th", { class: "mt-equipo" }, ["Equipo"]), ...MESES_CORTO.map((m) => el("th", { class: "mt-num" }, [m])), el("th", { class: "mt-num mt-total" }, ["TOTAL"])]),
+        ]),
+        el(
+          "tbody",
+          {},
+          ordenados.map((eq) =>
+            el("tr", {}, [el("td", { class: "mt-equipo" }, [eq.nombre]), ...eq.serie.map(celda), el("td", { class: "mt-num mt-total" }, [String(eq.implementados)])])
+          )
+        ),
+      ]),
+    ]);
+  }
+  return el(
+    "div",
+    { class: "equipo-progreso-list" },
+    ordenados.map((eq) => {
+      const pct = eq.meta > 0 ? Math.min(100, Math.round((eq.implementados / eq.meta) * 100)) : 0;
+      return el("div", { class: "equipo-progreso-row" }, [
+        el("div", { class: "ep-nombre" }, [el("div", { style: "font-weight:600" }, [eq.nombre])]),
+        el("div", { class: "ep-bar-wrap" }, [el("div", { class: "ep-bar" }, [el("div", { class: "ep-bar-fill", style: `width:${pct}%` })])]),
+        el("div", { class: "ep-valor" }, [`${eq.implementados} / ${eq.meta}`]),
+        el("div", { class: `ep-pct ${pct >= 100 ? "up" : ""}` }, [`${pct}%`]),
+      ]);
+    })
   );
 }
 
@@ -350,10 +444,10 @@ function buildNivelColapsable(titulo, indicador, hijos) {
   return grupoEl;
 }
 
-function topEquipos(equipos, implementadosPeriodo) {
-  const conteo = {};
-  implementadosPeriodo.forEach((k) => { conteo[k.equipo] = (conteo[k.equipo] || 0) + 1; });
-  return Object.entries(conteo)
+function topEquipos(datosCatalogo) {
+  return datosCatalogo
+    .filter((d) => d.implementados > 0)
+    .map((d) => [d.nombre, d.implementados])
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 }

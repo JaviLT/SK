@@ -41,5 +41,6 @@ export const CONFIG = {
   // entrega, ej. "2026.09.24" — cambiado a pedido de Javier, sept. 2026).
   // Súbele (patch/minor/major según el alcance del cambio) cada vez que se
   // entregue una nueva versión del frontend.
-  APP_VERSION: "1.0.0",
+  APP_VERSION: "1.2.0",
+  APP_BUILD: "2026-10-20",
 };

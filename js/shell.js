@@ -218,7 +218,7 @@ function buildVersionBar() {
   const bar = document.createElement("div");
   bar.id = "version-bar";
   bar.className = "version-bar";
-  bar.textContent = `Short Kaizen v${CONFIG.APP_VERSION}`;
+  bar.textContent = `Short Kaizen v${CONFIG.APP_VERSION}` + (CONFIG.APP_BUILD ? ` · ${CONFIG.APP_BUILD}` : "");
   bar.title = "Versión de la aplicación en ejecución";
   document.body.appendChild(bar);
 }
