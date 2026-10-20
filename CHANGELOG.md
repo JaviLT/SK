@@ -2,6 +2,9 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.2.1 — 2026-10-20
+- Tablero general: los 4 equipos del histórico que no coincidían por nombre (C4 CEDIS = "C4", ENTREGA2 LEAN = "Entrega2", LOS INALCANZABLES = "Los Incalcanzables", MORTAL KOMPRAS = "Motal Kompras") ahora se enlazan con su equipo del catálogo. Aceptan también el nombre corregido si algún día se arregla en el catálogo.
+
 ## 1.2.0 — 2026-10-20
 - Tablero general: nuevo filtro de AÑO (por default el año en curso) y meses en MAYÚSCULAS.
 - Con "Todos los meses" ya no hay barra de progreso: cada equipo muestra el número de SK de cada mes (ENE–DIC) y su total. La barra se queda solo al elegir un mes específico.

@@ -45,7 +45,7 @@
 // ============================================================================
 
 import { el, formatDateTime } from "../utils.js";
-import { cargarHistorico, claveEquipo } from "../lib/historico-sk.js";
+import { cargarHistorico, claveEquipo, coincideEquipo } from "../lib/historico-sk.js";
 import { api } from "../api.js";
 import { META_SK_POR_EQUIPO_MES } from "../lib/mock-backend.js";
 
@@ -126,7 +126,7 @@ function aniosDisponibles(kaizens) {
 function serieMensual(nombreEquipo, kaizens) {
   const clave = claveEquipo(nombreEquipo);
   const histAnio = historico[String(anioFiltro)] || {};
-  const nombreHist = Object.keys(histAnio).find((n) => claveEquipo(n) === clave);
+  const nombreHist = Object.keys(histAnio).find((n) => coincideEquipo(n, nombreEquipo));
   const serieHist = nombreHist ? histAnio[nombreHist] : null;
   return MESES.map((_, i) => {
     const mes = i + 1;
@@ -164,9 +164,8 @@ async function paint(view, equipos, kaizens, departamentos) {
     return { nombre, serie, implementados: totalPeriodo(serie), meta: metaEquipoPeriodo, fueraDeCatalogo };
   };
   const datosCatalogo = equipos.map((eq) => datoDe(eq.nombre, false));
-  const clavesCatalogo = new Set(equipos.map((eq) => claveEquipo(eq.nombre)));
   const fueraDeCatalogo = Object.keys(historico[String(anioFiltro)] || {})
-    .filter((n) => !clavesCatalogo.has(claveEquipo(n)))
+    .filter((n) => !equipos.some((eq) => coincideEquipo(n, eq.nombre)))
     .map((n) => datoDe(n, true));
   if (fueraDeCatalogo.length) console.warn("[dashboard] Equipos del histórico sin coincidencia en el catálogo:", fueraDeCatalogo.map((d) => d.nombre));
 

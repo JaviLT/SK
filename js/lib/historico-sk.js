@@ -40,3 +40,19 @@ export function claveEquipo(nombre) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
 }
+
+// Nombres del catálogo que difieren del archivo de Mejora Continua (oct. 2026).
+// Se aceptan ambos: si algún día se corrige el nombre en el catálogo, sigue
+// coincidiendo con el del archivo.
+const ALIAS_HISTORICO = {
+  "C4 CEDIS": ["C4"],
+  "ENTREGA2 LEAN": ["Entrega2"],
+  "LOS INALCANZABLES": ["Los Incalcanzables"],
+  "MORTAL KOMPRAS": ["Motal Kompras"],
+};
+
+/** ¿El equipo `nombreHist` del archivo es el mismo que `nombreCatalogo`? */
+export function coincideEquipo(nombreHist, nombreCatalogo) {
+  const objetivo = claveEquipo(nombreCatalogo);
+  return [nombreHist, ...(ALIAS_HISTORICO[nombreHist] || [])].some((n) => claveEquipo(n) === objetivo);
+}
