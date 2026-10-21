@@ -344,6 +344,9 @@ function paint(view) {
     // departamento en uno de 3 grupos de negocio. Los equipos heredan el
     // grupo de su departamento automáticamente, no se asignan uno por uno.
     { label: "Asignar grupo a departamentos", onClick: () => openAsignarGrupoModal(view) },
+    // Pedido de Javier (oct. 2026): descargar en un ZIP el PDF de cada SK
+    // creado en un mes.
+    { label: "Descargar SK del mes (PDF)", onClick: () => openDescargarSkMesModal() },
   ]);
 
   view.appendChild(
@@ -1451,6 +1454,148 @@ function openHistorialRolModal() {
     .catch((err) => {
       body.replaceWith(el("p", { class: "hint", style: "color:#991b1b" }, [err.message || "No se pudo cargar el historial."]));
     });
+}
+
+// ---------------------------------------------------------------------------
+// Descargar SK del mes (PDF) — pedido de Javier, oct. 2026. El admin elige año
+// y mes y se descarga un ZIP con un PDF por cada Short Kaizen CREADO en ese
+// mes (fecha de creación, cualquier estatus). Todo se genera en el navegador
+// con el mismo PDF del botón "Exportar PDF" del detalle (js/lib/sk-pdf.js);
+// no requiere backend nuevo.
+// ---------------------------------------------------------------------------
+const MESES_ZIP = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+
+function fechaCreacionSK(k) {
+  const d = new Date(k.creadoEn || k.fechaId || "");
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function loadJSZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "assets/vendor/jszip.min.js";
+    script.onload = () => resolve(window.JSZip);
+    script.onerror = () => reject(new Error("No se pudo cargar el generador de ZIP."));
+    document.head.appendChild(script);
+  });
+}
+
+async function openDescargarSkMesModal() {
+  let overlayRef;
+  let kaizens = [];
+  let cancelado = false;
+  let generando = false;
+  const hoy = new Date();
+
+  const anioSelect = el("select", { class: "select" }, []);
+  const mesSelect = el(
+    "select",
+    { class: "select" },
+    MESES_ZIP.map((m, i) => el("option", { value: String(i + 1), selected: i === hoy.getMonth() || undefined }, [m]))
+  );
+  const resumen = el("p", { class: "hint", style: "margin-top:8px" }, ["Cargando…"]);
+  const progreso = el("p", { class: "hint", style: "margin-top:8px;min-height:18px" }, [""]);
+  const descargarBtn = el("button", { class: "btn btn-accent", disabled: true }, ["Descargar ZIP"]);
+  const cerrarBtn = el("button", { class: "btn btn-outline" }, ["Cerrar"]);
+
+  const delMes = () => {
+    const anio = Number(anioSelect.value);
+    const mes = Number(mesSelect.value);
+    return kaizens.filter((k) => {
+      const d = fechaCreacionSK(k);
+      return d && d.getFullYear() === anio && d.getMonth() + 1 === mes;
+    });
+  };
+  const actualizarResumen = () => {
+    const n = delMes().length;
+    resumen.textContent = n ? `${n} Short Kaizen creado(s) en ${MESES_ZIP[Number(mesSelect.value) - 1]} ${anioSelect.value}.` : "No hay Short Kaizen creados en ese mes.";
+    descargarBtn.disabled = generando || !n;
+  };
+  anioSelect.addEventListener("change", actualizarResumen);
+  mesSelect.addEventListener("change", actualizarResumen);
+
+  cerrarBtn.addEventListener("click", () => {
+    cancelado = true;
+    closeModal(overlayRef);
+  });
+
+  descargarBtn.addEventListener("click", async () => {
+    const lista = delMes();
+    if (!lista.length) return;
+    generando = true;
+    cancelado = false;
+    descargarBtn.disabled = true;
+    anioSelect.disabled = true;
+    mesSelect.disabled = true;
+    try {
+      const [JSZip, { construirPdfSK, nombreArchivoSK }] = await Promise.all([loadJSZip(), import("../lib/sk-pdf.js")]);
+      const zip = new JSZip();
+      const usados = new Set();
+      const errores = [];
+      for (let i = 0; i < lista.length; i++) {
+        if (cancelado) return;
+        let k = lista[i];
+        progreso.textContent = `Generando PDF ${i + 1} de ${lista.length}…`;
+        await new Promise((r) => setTimeout(r, 0)); // deja respirar a la interfaz
+        try {
+          // Si la lista no trae las fotos, se pide el detalle completo.
+          if (k.fotoAntes === undefined && k.fotoDespues === undefined) k = await api.getKaizen(k.id).catch(() => k);
+          const doc = await construirPdfSK(k);
+          let nombre = nombreArchivoSK(k);
+          if (usados.has(nombre)) nombre = nombre.replace(/\.pdf$/, `_${i + 1}.pdf`);
+          usados.add(nombre);
+          zip.file(nombre, doc.output("arraybuffer"));
+        } catch (err) {
+          errores.push(`SK ${k.id}: ${err.message || "no se pudo generar el PDF"}`);
+        }
+      }
+      if (cancelado) return;
+      if (errores.length === lista.length) throw new Error("No se pudo generar ningún PDF.");
+      if (errores.length) zip.file("ERRORES.txt", errores.join("\n"));
+      progreso.textContent = "Comprimiendo ZIP…";
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+      const nombreZip = `SK_${anioSelect.value}-${String(mesSelect.value).padStart(2, "0")}_${MESES_ZIP[Number(mesSelect.value) - 1]}.zip`;
+      const url = URL.createObjectURL(blob);
+      const a = el("a", { href: url, download: nombreZip });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      progreso.textContent = "";
+      toast(errores.length ? `ZIP descargado con ${errores.length} PDF sin generar (ver ERRORES.txt).` : `ZIP descargado: ${lista.length} PDF.`, errores.length ? "tr" : "tg");
+      closeModal(overlayRef);
+    } catch (err) {
+      progreso.textContent = "";
+      toast(err.message || "No se pudo generar el ZIP.", "tr");
+    } finally {
+      generando = false;
+      anioSelect.disabled = false;
+      mesSelect.disabled = false;
+      actualizarResumen();
+    }
+  });
+
+  const body = el("div", {}, [
+    el("p", { class: "hint", style: "margin-bottom:12px" }, [
+      "Se descarga un ZIP con un PDF por cada Short Kaizen creado en el mes elegido (cualquier estatus).",
+    ]),
+    field("Año", anioSelect),
+    field("Mes", mesSelect),
+    resumen,
+    progreso,
+  ]);
+  overlayRef = openModal("Descargar SK del mes (PDF)", body, [cerrarBtn, descargarBtn]);
+
+  try {
+    kaizens = await api.getKaizens();
+    const anios = new Set([hoy.getFullYear()]);
+    kaizens.forEach((k) => { const d = fechaCreacionSK(k); if (d) anios.add(d.getFullYear()); });
+    [...anios].sort((a, b) => b - a).forEach((y) => anioSelect.appendChild(el("option", { value: String(y), selected: y === hoy.getFullYear() || undefined }, [String(y)])));
+    actualizarResumen();
+  } catch (err) {
+    resumen.textContent = err.message || "No se pudo cargar la lista de Short Kaizen.";
+  }
 }
 
 // ---------------------------------------------------------------------------

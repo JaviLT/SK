@@ -2,6 +2,10 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.3.0 — 2026-10-21
+- Administración → Acciones → "Descargar SK del mes (PDF)": el admin elige año y mes y descarga un ZIP con un PDF por cada Short Kaizen creado en ese mes (cualquier estatus). Se genera en el navegador, sin backend nuevo.
+- El PDF individual ahora pesa ~110 KB en vez de ~2 MB (logo reducido); el código del PDF quedó compartido en `js/lib/sk-pdf.js`. Se agregó JSZip en `assets/vendor/`.
+
 ## 1.2.1 — 2026-10-20
 - Tablero general: los 4 equipos del histórico que no coincidían por nombre (C4 CEDIS = "C4", ENTREGA2 LEAN = "Entrega2", LOS INALCANZABLES = "Los Incalcanzables", MORTAL KOMPRAS = "Motal Kompras") ahora se enlazan con su equipo del catálogo. Aceptan también el nombre corregido si algún día se arregla en el catálogo.
 
