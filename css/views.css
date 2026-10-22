@@ -284,3 +284,80 @@
 .mes-tabla .mt-num{ text-align: center; min-width: 38px; font-variant-numeric: tabular-nums; }
 .mes-tabla .mt-vacio{ color: var(--gray-400, var(--gray-500)); }
 .mes-tabla .mt-total{ font-weight: 700; color: var(--zx-heading); border-left: 1px solid var(--gray-200); }
+
+/* ============ GEMBA 4 — hoja carta horizontal (11 × 8.5 in) ============ */
+.gemba-scale{
+  --s: 1;
+  width: calc(1056px * var(--s));
+  height: calc(816px * var(--s));
+  margin: 0 auto;
+}
+.gemba-sheet{
+  width: 1056px; height: 816px;
+  transform: scale(var(--s)); transform-origin: top left;
+  background: #f8fafc; color: #1e293b;
+  font-family: 'Poppins', 'Segoe UI', -apple-system, sans-serif;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 2px 14px rgba(15,23,42,.18);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.gemba-header{ background: #0D18A8; color: #fff; display: flex; align-items: center; gap: 18px; padding: 0 28px; height: 78px; flex: 0 0 auto; }
+.gemba-logo{ background: #fff; border-radius: 10px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.gemba-logo img{ width: 44px; height: 44px; }
+.gemba-titulos{ flex: 1; min-width: 0; }
+.gemba-titulos h2{ margin: 0; font-size: 28px; font-weight: 700; line-height: 1.1; color: #fff; }
+.gemba-titulos p{ margin: 3px 0 0; font-size: 13px; font-weight: 300; color: #dbeafe; }
+.gemba-periodo{ font-size: 15px; font-weight: 400; white-space: nowrap; }
+
+.gemba-kpis{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 18px 28px 0; flex: 0 0 auto; }
+.gemba-kpi{ background: #fff; border: 1px solid #cbd5e1; border-left: 6px solid #0D18A8; border-radius: 10px; padding: 12px 16px; min-width: 0; }
+.gemba-kpi.gemba-kpi-acento{ border-left-color: #227EF6; }
+.gemba-kpi-label{ font-size: 12.5px; color: #64748b; }
+.gemba-kpi-valor{ font-size: 38px; font-weight: 700; color: #0D18A8; line-height: 1.15; margin: 2px 0; }
+.gemba-kpi-valor.gemba-kpi-persona{ font-size: 20px; line-height: 1.3; margin: 8px 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gemba-kpi-valor.gemba-ok{ color: #166534; }
+.gemba-kpi-valor.gemba-mal{ color: #991b1b; }
+.gemba-kpi-sub{ font-size: 11.5px; color: #64748b; }
+
+.gemba-body{ display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; padding: 18px 28px 0; flex: 1 1 auto; min-height: 0; }
+.gemba-card{ background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; min-height: 0; }
+.gemba-card h3{ margin: 0 0 10px; font-size: 17px; font-weight: 700; color: #0D18A8; flex: 0 0 auto; }
+.gemba-tabla-head{ display: grid; grid-template-columns: 1.1fr 1.5fr .7fr; background: #dbeafe; color: #0D18A8; font-size: 12px; font-weight: 700; padding: 7px 10px; flex: 0 0 auto; }
+.gemba-card-pend .gemba-tabla-head{ grid-template-columns: 1fr auto; }
+.gemba-tabla-head .r, .gemba-fila .r{ text-align: right; }
+.gemba-filas{ flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.gemba-fila{ flex: 1 1 0; min-height: 0; max-height: 40px; display: grid; grid-template-columns: 1.1fr 1.5fr .7fr; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid #e2e8f0; font-size: 13.5px; }
+.gemba-fila.gemba-fila-pend{ grid-template-columns: 1fr auto; }
+.gemba-fila-nombre{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gemba-fila-valor{ font-weight: 700; }
+.gemba-barra{ display: block; height: 14px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.gemba-barra i{ display: block; height: 100%; border-radius: 999px; min-width: 0; }
+.gemba-pend-num{ color: #0D18A8; font-size: 15px; }
+.gemba-ok{ color: #166534; }
+.gemba-total{ margin-top: 10px; background: #0D18A8; color: #fff; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; flex: 0 0 auto; }
+.gemba-total strong{ font-size: 20px; }
+
+.gemba-pie{ display: flex; justify-content: space-between; gap: 20px; padding: 10px 28px 12px; font-size: 10.5px; color: #64748b; flex: 0 0 auto; }
+.gemba-pie-fecha{ white-space: nowrap; }
+
+/* Muchos departamentos: se compacta para que todo siga cabiendo en una hoja. */
+.gemba-denso .gemba-fila{ font-size: 12px; }
+.gemba-denso .gemba-barra{ height: 11px; }
+.gemba-denso .gemba-card{ padding: 12px 16px; }
+.gemba-muy-denso .gemba-fila{ font-size: 10.5px; }
+.gemba-muy-denso .gemba-barra{ height: 8px; }
+.gemba-muy-denso .gemba-pend-num{ font-size: 12px; }
+.gemba-muy-denso .gemba-kpi-valor{ font-size: 32px; }
+
+/* ---- Impresión: carta horizontal, solo la hoja ---- */
+@page{ size: letter landscape; margin: 0; }
+@media print{
+  html, body{ background: #fff !important; }
+  *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .topbar, .mobile-nav, .fab-nuevo, .version-bar, .toast-container, .boot-loader{ display: none !important; }
+  main#app-root{ padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .gemba-view{ padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .gemba-toolbar{ display: none !important; }
+  .gemba-scale{ --s: 1 !important; width: 11in !important; height: 8.5in !important; margin: 0 !important; }
+  .gemba-sheet{ transform: none !important; width: 11in !important; height: 8.5in !important; box-shadow: none !important; page-break-inside: avoid; break-inside: avoid; }
+}

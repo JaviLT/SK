@@ -56,3 +56,22 @@ export function coincideEquipo(nombreHist, nombreCatalogo) {
   const objetivo = claveEquipo(nombreCatalogo);
   return [nombreHist, ...(ALIAS_HISTORICO[nombreHist] || [])].some((n) => claveEquipo(n) === objetivo);
 }
+
+/**
+ * SK de un equipo en un mes: si el histórico de Mejora Continua trae dato para
+ * ese equipo/año/mes se usa ese número; si no, los SK implementados reales de
+ * la app (`status === "done"`, por `fechaImpl`). Así un mes nunca se cuenta
+ * dos veces. `mes` es 1..12.
+ */
+export function conteoEquipoMes(historico, kaizens, nombreEquipo, anio, mes) {
+  const histAnio = historico?.[String(anio)] || {};
+  const nombreHist = Object.keys(histAnio).find((n) => coincideEquipo(n, nombreEquipo));
+  const h = nombreHist ? histAnio[nombreHist][mes - 1] : null;
+  if (h !== null && h !== undefined) return h;
+  const clave = claveEquipo(nombreEquipo);
+  return kaizens.filter((k) => {
+    if (k.status !== "done" || !k.fechaImpl || claveEquipo(k.equipo) !== clave) return false;
+    const d = new Date(k.fechaImpl);
+    return d.getFullYear() === anio && d.getMonth() + 1 === mes;
+  }).length;
+}
