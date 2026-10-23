@@ -314,7 +314,9 @@
 .gemba-kpi.gemba-kpi-acento{ border-left-color: #227EF6; }
 .gemba-kpi-label{ font-size: 12.5px; color: #64748b; }
 .gemba-kpi-valor{ font-size: 38px; font-weight: 700; color: #0D18A8; line-height: 1.15; margin: 2px 0; }
-.gemba-kpi-valor.gemba-kpi-persona{ font-size: 20px; line-height: 1.3; margin: 8px 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gemba-kpi-valor.gemba-kpi-persona{ font-size: 19px; line-height: 1.2; margin: 6px 0 8px; white-space: normal; overflow-wrap: anywhere; }
+.gemba-kpi-valor.gemba-kpi-persona.gemba-nombre-largo{ font-size: 16px; }
+.gemba-kpi-valor.gemba-kpi-persona.gemba-nombre-muy-largo{ font-size: 13.5px; line-height: 1.25; }
 .gemba-kpi-valor.gemba-ok{ color: #166534; }
 .gemba-kpi-valor.gemba-mal{ color: #991b1b; }
 .gemba-kpi-sub{ font-size: 11.5px; color: #64748b; }

@@ -54,7 +54,10 @@ export async function construirPdfSK(k) {
     // ---- ¿Quién identificó? / Enfoque ----
     const col2 = margin + contentW * 0.62;
     y = seccionTitulo(doc, "¿Quién identificó la mejora?", margin, y, contentW * 0.58);
-    const yEnfoqueTitulo = seccionTitulo(doc, "Enfoque de la mejora", col2, y - 6, contentW * 0.38);
+    // El título de la derecha va a la MISMA altura que el de la izquierda (y
+    // ya avanzó 9 mm tras dibujarlo); antes se dibujaba 3 mm más abajo y su
+    // barra azul se encimaba con el primer enfoque.
+    seccionTitulo(doc, "Enfoque de la mejora", col2, y - 9, contentW * 0.38);
     let yA = campoTexto(doc, "Equipo", k.equipo, margin, y);
     yA = campoTexto(doc, "Nómina / Nombre", `${k.nomina} — ${k.nombre}`, margin, yA);
     yA = campoTexto(doc, "Departamento / Área", `${k.departamento || "—"} — ${k.areaLinea || k.donde || "—"}`, margin, yA);
@@ -63,8 +66,9 @@ export async function construirPdfSK(k) {
     doc.setTextColor(30, 41, 59);
     let yB = y;
     (k.enfoques || []).forEach((f) => {
-      doc.text(`• ${f}`, col2, yB);
-      yB += 5;
+      const lineas = doc.splitTextToSize(`• ${f}`, contentW * 0.38 - 2);
+      doc.text(lineas, col2, yB);
+      yB += lineas.length * 4.5 + 0.5;
     });
     y = Math.max(yA, yB) + 3;
 

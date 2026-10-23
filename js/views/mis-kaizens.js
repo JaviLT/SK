@@ -260,8 +260,13 @@ let popupRestaurado = false;
 
 function leerPopupGuardado() {
   try {
+    // Se consume SIEMPRE (para que no quede viejo), pero el popup solo se
+    // reabre si se regresó con el botón "Volver" del detalle (sk_mk_restaurar).
     const raw = sessionStorage.getItem(CLAVE_POPUP);
+    const restaurar = sessionStorage.getItem("sk_mk_restaurar") === "1";
     sessionStorage.removeItem(CLAVE_POPUP);
+    sessionStorage.removeItem("sk_mk_restaurar");
+    if (!restaurar) return null;
     const v = raw && JSON.parse(raw);
     return v && typeof v.equipo === "string" ? { equipo: v.equipo, filtro: FILTROS.some((f) => f.id === v.filtro) ? v.filtro : "todos" } : null;
   } catch {

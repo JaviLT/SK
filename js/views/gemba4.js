@@ -232,7 +232,7 @@ function buildHoja(r, datos) {
         "Persona con más SK en el mes",
         r.top ? r.top.nombre : "Sin datos",
         r.top ? `${r.top.departamento || "—"} · ${r.top.n} SK` : "Solo se registra desde la app",
-        "gemba-kpi-persona"
+        `gemba-kpi-persona${r.top && r.top.nombre.length > 36 ? " gemba-nombre-muy-largo" : r.top && r.top.nombre.length > 22 ? " gemba-nombre-largo" : ""}`
       ),
     ]),
     // Cuerpo

@@ -2,6 +2,11 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.4.1 — 2026-10-23
+- GEMBA 4: el nombre de la persona con más SK se muestra completo (se acomoda en 2 líneas y reduce el tamaño si es muy largo).
+- PDF de cada SK: corregido el encimado del título "Enfoque de la mejora" con el primer enfoque; los enfoques largos ahora saltan de línea.
+- Mis Kaizen: el popup del equipo solo se reabre al regresar con el botón "Volver" del detalle; si se sale por otra pestaña del menú y se regresa, ya no queda abierto.
+
 ## 1.4.0 — 2026-10-22
 - Nueva sección "GEMBA 4" (solo Mejora Continua y administrador): hoja de resultados del mes con KPIs (SK implementados, meta, % cumplimiento, persona con más SK), avance por departamento vs. meta y pendientes de aprobación por departamento. Filtro de año y mes, botón Imprimir en tamaño carta horizontal.
 

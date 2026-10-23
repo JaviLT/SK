@@ -5,6 +5,11 @@ import { state } from "../state.js";
 import { construirPdfSK, nombreArchivoSK } from "../lib/sk-pdf.js";
 
 export async function render(container, params, isStale) {
+  // Si el detalle no se abrió desde el popup de Mis Kaizens, no debe quedar un
+  // popup guardado de una visita anterior.
+  if (getQueryParam("from") !== "mis-kaizens") {
+    try { sessionStorage.removeItem("sk_mk_popup"); } catch { /* sin storage */ }
+  }
   const view = el("div", { class: "view", id: "detalle-view" });
   container.appendChild(view);
   view.appendChild(el("div", { class: "skeleton", style: "height:300px" }));
@@ -40,7 +45,16 @@ function paint(view, k) {
         // origen válido (enlace directo) → Mis Kaizens, que ve todo el mundo.
         // Al volver a Mis Kaizens, la vista reabre el popup del equipo con su
         // filtro (estado guardado en sessionStorage por mis-kaizens.js).
-        onclick: () => { window.location.href = getQueryParam("from") === "solicitudes" ? "solicitudes.html" : "mis-kaizens.html"; },
+        onclick: () => {
+          if (getQueryParam("from") === "solicitudes") {
+            window.location.href = "solicitudes.html";
+            return;
+          }
+          // Solo con este botón se reabre el popup del equipo en Mis Kaizens
+          // (si el usuario se va por otra pestaña del menú y regresa, ya no).
+          try { sessionStorage.setItem("sk_mk_restaurar", "1"); } catch { /* sin storage */ }
+          window.location.href = "mis-kaizens.html";
+        },
       }, ["← Volver"]),
       el("div", { class: "sk-report-banner" }, [
         el("img", { src: "assets/logo-mark.png", alt: "Short Kaizen", class: "sk-report-logo" }),
