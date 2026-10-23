@@ -2,6 +2,9 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.4.2 — 2026-10-24
+- Administración → Acciones → "Restablecer contraseña": ahora basta escribir la nómina y el nombre aparece solo (búsqueda automática al dejar de escribir; el botón "Buscar" se conserva). Con el botón de confirmación se genera la contraseña temporal y la persona debe cambiarla al iniciar sesión. Disponible para Mejora Continua y administrador.
+
 ## 1.4.1 — 2026-10-23
 - GEMBA 4: el nombre de la persona con más SK se muestra completo (se acomoda en 2 líneas y reduce el tamaño si es muy largo).
 - PDF de cada SK: corregido el encimado del título "Enfoque de la mejora" con el primer enfoque; los enfoques largos ahora saltan de línea.

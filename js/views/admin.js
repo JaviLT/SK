@@ -132,7 +132,7 @@
 // Acceso: visible para usuarios con rol "admin" o "mc" (ver js/shell.js).
 // ============================================================================
 
-import { el, toast, formatDate, shortId } from "../utils.js";
+import { el, toast, formatDate, shortId, debounce } from "../utils.js";
 import { api } from "../api.js";
 import { state } from "../state.js";
 
@@ -1313,30 +1313,39 @@ function openRestablecerPasswordModal() {
   const restablecerBtn = el("button", { class: "btn btn-accent", disabled: true }, ["Restablecer contraseña"]);
   const cerrarBtn = el("button", { class: "btn btn-outline", onclick: () => closeModal(overlayRef) }, ["Cancelar"]);
 
-  const buscar = async () => {
+  // `silencioso`: búsqueda automática al dejar de escribir (la persona solo
+  // escribe la nómina y el nombre aparece solo); no avisa si el campo está vacío.
+  const buscar = async (silencioso = false) => {
     const nomina = nominaInput.value.trim();
     empleado = null;
     restablecerBtn.disabled = true;
     nombreLabel.textContent = "—";
     if (!nomina) {
-      toast("Escribe primero la nómina.", "tr");
+      if (silencioso !== true) toast("Escribe primero la nómina.", "tr");
       return;
     }
+    nombreLabel.textContent = "Buscando…";
     try {
       const info = await buscarEmpleadoInfo(nomina);
+      if (nominaInput.value.trim() !== nomina) return; // cambió mientras buscaba
       empleado = { nomina, nombre: info.nombre || nomina };
       errorText.textContent = "";
       nombreLabel.textContent = empleado.nombre;
       restablecerBtn.disabled = false;
     } catch (err) {
+      if (nominaInput.value.trim() !== nomina) return;
+      nombreLabel.textContent = "—";
       errorText.textContent = err.message || "No se encontró ningún empleado con esa nómina.";
     }
   };
-  // Si se cambia la nómina después de buscar, hay que volver a buscar.
+  const buscarAuto = debounce(() => buscar(true), 500);
+  // Si se cambia la nómina después de buscar, se busca de nuevo solo.
   nominaInput.addEventListener("input", () => {
     empleado = null;
     restablecerBtn.disabled = true;
     nombreLabel.textContent = "—";
+    errorText.textContent = "";
+    buscarAuto();
   });
   nominaInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); buscar(); }
@@ -1347,7 +1356,7 @@ function openRestablecerPasswordModal() {
       el("label", {}, ["Número de nómina"]),
       el("div", { style: "display:flex;gap:8px" }, [
         nominaInput,
-        el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: buscar }, ["Buscar"]),
+        el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: () => buscar() }, ["Buscar"]),
       ]),
     ]),
     errorText,
