@@ -24,6 +24,7 @@ import { getTheme, toggleTheme } from "./theme.js";
 const NAV_ITEMS = [
   { page: "mis-kaizens", href: "mis-kaizens.html", label: "Mis Kaizens", roles: null },
   { page: "solicitudes", href: "solicitudes.html", label: "Solicitudes", roles: ["lider", "gerente", "mc", "admin"] },
+  { page: "todos-sk", href: "todos-sk.html", label: "Todos los SK", roles: ["mc", "admin"] },
   { page: "dashboard", href: "dashboard.html", label: "Tablero general", roles: null },
   { page: "gemba4", href: "gemba4.html", label: "GEMBA 4", roles: ["mc", "admin"] },
   { page: "admin", href: "admin.html", label: "Administración", roles: ["admin", "mc"] },

@@ -41,14 +41,18 @@
   pointer-events: none;
 }
 
-.tabs{ display: flex; gap: var(--sp-1); flex: 1; }
+.tabs{ display: flex; gap: var(--sp-1); flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; } /* con 6 pestañas (mc/admin) en pantallas medianas, la barra se desliza en vez de desbordar la página */
+.tabs::-webkit-scrollbar{ display: none; }
 .tab{
   background: transparent; border: none; color: #c7d5ff;
   padding: var(--sp-2) var(--sp-4); border-radius: var(--radius-sm);
   font-size: var(--fs-sm); font-weight: 600; cursor: pointer;
   transition: background .15s var(--ease), color .15s var(--ease);
   text-decoration: none; display: inline-flex; align-items: center;
+  white-space: nowrap; /* con 6 pestañas (mc/admin) el texto no debe partirse en 2 líneas */
 }
+@media (max-width: 1360px){ .tab{ padding: var(--sp-2) var(--sp-3); } }
+@media (max-width: 1180px){ .brand-text{ display: none; } .tab{ padding: var(--sp-2) 10px; font-size: 13px; } .user-chip-info small{ display: none; } }
 .tab:hover{ background: rgba(255,255,255,.08); color: var(--zx-white); text-decoration: none; }
 .tab.active{ background: var(--zx-white); color: var(--zx-blue); } /* siempre azul de marca: vive sobre el topbar, azul en ambos temas */
 /* Bug real (encontrado sept. 2026): `.tab{ display: inline-flex }` es una

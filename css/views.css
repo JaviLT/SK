@@ -363,3 +363,16 @@
   .gemba-scale{ --s: 1 !important; width: 11in !important; height: 8.5in !important; margin: 0 !important; }
   .gemba-sheet{ transform: none !important; width: 11in !important; height: 8.5in !important; box-shadow: none !important; page-break-inside: avoid; break-inside: avoid; }
 }
+
+/* ============ Todos los SK (mc/admin): filtros + tabla ============ */
+.todos-filtros{ display:flex; flex-wrap:wrap; gap: var(--sp-3); align-items:flex-end; }
+.todos-tabla-wrap{ overflow-x:auto; background: var(--zx-surface); border:1px solid var(--gray-200); border-radius: var(--radius-lg); }
+.todos-tabla{ width:100%; border-collapse:collapse; font-size: var(--fs-sm); }
+.todos-tabla th{ text-align:left; font-size: var(--fs-xs); letter-spacing:.03em; color: var(--gray-500); padding:10px 12px; border-bottom:1px solid var(--gray-200); white-space:nowrap; }
+.todos-tabla td{ padding:10px 12px; border-bottom:1px solid var(--gray-200); vertical-align:top; }
+.todos-tabla tr:last-child td{ border-bottom:0; }
+.todos-fila{ cursor:pointer; }
+.todos-fila:hover, .todos-fila:focus{ background: var(--gray-100); outline:none; }
+.todos-tabla .td-folio{ font-weight:700; white-space:nowrap; color: var(--zx-heading); }
+.todos-tabla .td-desc{ min-width:220px; max-width:380px; }
+.todos-tabla td .hint{ margin:0; }

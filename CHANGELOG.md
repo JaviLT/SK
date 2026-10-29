@@ -2,6 +2,10 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.5.0 — 2026-10-28
+- Nueva pantalla "Todos los SK" (solo Mejora Continua y administrador): lista de todos los Short Kaizen creados con filtros de estatus, departamento, mes y año (por fecha de creación). Al abrir un SK y pulsar "Volver" se conservan los filtros.
+- La barra de navegación ya no parte los textos en dos líneas ni desborda la página con 6 pestañas.
+
 ## 1.4.2 — 2026-10-24
 - Administración → Acciones → "Restablecer contraseña": ahora basta escribir la nómina y el nombre aparece solo (búsqueda automática al dejar de escribir; el botón "Buscar" se conserva). Con el botón de confirmación se genera la contraseña temporal y la persona debe cambiarla al iniciar sesión. Disponible para Mejora Continua y administrador.
 

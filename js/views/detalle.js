@@ -46,8 +46,15 @@ function paint(view, k) {
         // Al volver a Mis Kaizens, la vista reabre el popup del equipo con su
         // filtro (estado guardado en sessionStorage por mis-kaizens.js).
         onclick: () => {
-          if (getQueryParam("from") === "solicitudes") {
+          const origen = getQueryParam("from");
+          if (origen === "solicitudes") {
             window.location.href = "solicitudes.html";
+            return;
+          }
+          if (origen === "todos-sk") {
+            // Regresa con los mismos filtros (guardados por todos-sk.js).
+            try { sessionStorage.setItem("sk_todos_restaurar", "1"); } catch { /* sin storage */ }
+            window.location.href = "todos-sk.html";
             return;
           }
           // Solo con este botón se reabre el popup del equipo en Mis Kaizens
