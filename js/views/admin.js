@@ -135,6 +135,7 @@
 import { el, toast, formatDate, shortId, debounce } from "../utils.js";
 import { api } from "../api.js";
 import { state } from "../state.js";
+import { etiquetasEnfoques } from "../lib/enfoques.js";
 
 let equiposCache = [];
 let departamentosCache = []; // [{id, nombre}] — GET /departamentos (antes string[] en el mock)
@@ -1676,7 +1677,7 @@ async function exportarExcel() {
         nombre: k.nombre,
         areaLinea: k.areaLinea || k.donde,
         breveDescripcion: k.breveDescripcion,
-        enfoques: (k.enfoques || []).join(", "),
+        enfoques: etiquetasEnfoques(k.enfoques).join(", "),
         descAntes: k.descAntes,
         descDespues: k.descDespues,
         estandarizacion: k.estandarizacion,

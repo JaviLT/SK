@@ -39,7 +39,7 @@
 //     progreso: cada equipo muestra el número de SK de cada mes (ENE..DIC) y
 //     el total. La barra solo se queda al elegir un mes específico.
 //   - Origen de los conteos: para los meses que traen dato en el histórico de
-//     Mejora Continua (lib/historico-sk.js, ene–sep 2026) se usa ESE número;
+//     Mejora Continua (lib/historico-sk.js, ene–oct 2026) se usa ESE número;
 //     para el resto, los SK implementados reales de la app (`status ===
 //     "done"`, por `fechaImpl`). Así un mes nunca se cuenta dos veces.
 //   - Nov. 2026: TODOS los usuarios ven lo mismo que Mejora Continua (todos los
@@ -199,7 +199,7 @@ async function paint(view, equipos, kaizens, departamentos) {
 
   view.appendChild(
     el("p", { class: "methodology-note" }, [
-      `Periodo: ${nombrePeriodo()}. Los meses con dato en el histórico de Mejora Continua (enero–septiembre 2026) usan ese número por equipo; el resto de los meses cuenta únicamente Short Kaizen con estatus "Aceptado" (implementados tras la aprobación de Mejora Continua, Líder y Gerente/Aprobador) según su fecha de implementación. El Top 5 de empleados solo considera SK registrados en la app. Meta: ${META_SK_POR_EQUIPO_MES} por equipo / mes (${metaMensual} mensual global, según ${equipos.length} equipo(s) activo(s)). `,
+      `Periodo: ${nombrePeriodo()}. Los meses con dato en el histórico de Mejora Continua (enero–octubre 2026) usan ese número por equipo; el resto de los meses cuenta únicamente Short Kaizen con estatus "Aceptado" (implementados tras la aprobación de Mejora Continua, Líder y Gerente/Aprobador) según su fecha de implementación. El Top 5 de empleados solo considera SK registrados en la app. Meta: ${META_SK_POR_EQUIPO_MES} por equipo / mes (${metaMensual} mensual global, según ${equipos.length} equipo(s) activo(s)). `,
       `Generado: ${formatDateTime(new Date())}.`,
     ])
   );

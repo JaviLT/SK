@@ -2,6 +2,7 @@ import { el, formatDate, formatDateTime, getQueryParam, shortId, toast } from ".
 import { api } from "../api.js";
 import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state } from "../state.js";
+import { etiquetasEnfoques } from "../lib/enfoques.js";
 import { construirPdfSK, nombreArchivoSK } from "../lib/sk-pdf.js";
 
 export async function render(container, params, isStale) {
@@ -83,7 +84,7 @@ function paint(view, k) {
       kv("Fecha de identificación", formatDate(k.fechaId)),
       kv("Fecha de implementación", formatDate(k.fechaImpl)),
       kv("Tiempo de implementación", k.tiempoImpl ? `${k.tiempoImpl} ${k.unidadTiempo || ""}` : null),
-      kv("Enfoque", (k.enfoques || []).join(", ")),
+      kv("Enfoque", etiquetasEnfoques(k.enfoques).join(", ")),
     ]),
     el("div", { class: "card" }, [
       el("h3", {}, ["Descripción de la mejora"]),

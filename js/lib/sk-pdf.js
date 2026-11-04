@@ -3,6 +3,7 @@
 // detalle.js ("Exportar PDF") y admin.js (descarga mensual en ZIP).
 // ============================================================================
 
+import { etiquetaEnfoque } from "./enfoques.js";
 import { formatDate, formatDateTime, shortId } from "../utils.js";
 
 /**
@@ -66,7 +67,7 @@ export async function construirPdfSK(k) {
     doc.setTextColor(30, 41, 59);
     let yB = y;
     (k.enfoques || []).forEach((f) => {
-      const lineas = doc.splitTextToSize(`• ${f}`, contentW * 0.38 - 2);
+      const lineas = doc.splitTextToSize(`• ${etiquetaEnfoque(f)}`, contentW * 0.38 - 2);
       doc.text(lineas, col2, yB);
       yB += lineas.length * 4.5 + 0.5;
     });

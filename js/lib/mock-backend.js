@@ -40,6 +40,7 @@ export const DEPARTAMENTOS = [
 // para simular persistencia entre pantallas mientras dura la sesión.
 const gruposPorDepartamentoDemo = {};
 
+// Valores guardados en el SK; los textos que se muestran viven en lib/enfoques.js.
 export const ENFOQUES = ["Rentabilidad", "Bienestar del personal", "Sustentabilidad", "Mejora en el proceso"];
 
 export const META_SK_POR_EQUIPO_MES = 4;

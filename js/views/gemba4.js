@@ -9,7 +9,7 @@
 // Reglas de negocio (mismas del Tablero general, ver dashboard.js):
 //   - Meta por equipo: 4 SK al mes → meta de un departamento = 4 × sus equipos.
 //   - SK implementados de un equipo en el mes: histórico de Mejora Continua si
-//     trae dato (ene–sep 2026), si no los SK `done` de la app por `fechaImpl`
+//     trae dato (ene–oct 2026), si no los SK `done` de la app por `fechaImpl`
 //     (lib/historico-sk.js → conteoEquipoMes).
 //   - Pendientes: SK en `pend_aprobacion1/2/3` a la fecha (no dependen del mes),
 //     contados en el departamento de QUIEN CREÓ el SK, no en el de aplicación.
@@ -285,7 +285,7 @@ function buildHoja(r, datos) {
     // Pie
     el("div", { class: "gemba-pie" }, [
       el("span", {}, [
-        `Fuente: registro de SK de la app y, para ene–sep 2026, histórico de Mejora Continua. % Cumplimiento = SK implementados / meta del mes. Pendientes = SK en aprobación a la fecha de generación.`,
+        `Fuente: registro de SK de la app y, para ene–oct 2026, histórico de Mejora Continua. % Cumplimiento = SK implementados / meta del mes. Pendientes = SK en aprobación a la fecha de generación.`,
       ]),
       el("span", { class: "gemba-pie-fecha" }, [`Generado: ${formatDate(new Date())}`]),
     ]),

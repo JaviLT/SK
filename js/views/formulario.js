@@ -5,7 +5,7 @@
 // su diseño exacto — ver css/views.css para la identidad propia de la app):
 //   1. ¿Quién identificó la mejora?   (automático desde la sesión)
 //   2. ¿Dónde aplicará la mejora?     (departamento + área/línea/máquina + breve descripción)
-//   3. Enfoque de la mejora           (Rentabilidad / Bienestar del personal / Sustentabilidad / Mejora en el proceso)
+//   3. Enfoque de la mejora           (Ahorros / Reducción del impacto ambiental / Seguridad, Ergonomía / 8S, 7 Desperdicios + 1, Calidad, Merma, Entregas)
 //   4. Evidencia fotográfica          (foto + descripción del antes y del después, una junto a otra)
 //   5. Estandarización y fechas       (estandarización, fecha de identificación, fecha de implementación automática, tiempo de implementación)
 // ============================================================================
@@ -13,7 +13,7 @@
 import { el, toast, compressImage } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
-import { ENFOQUES } from "../lib/mock-backend.js";
+import { ENFOQUES } from "../lib/enfoques.js";
 
 export async function render(container, params, isStale) {
   if (!state.departamentos?.length) {
@@ -65,8 +65,8 @@ export async function render(container, params, isStale) {
   ]);
 
   // ---- Sección 3: Enfoque de la mejora ----
-  const enfoqueChecks = ENFOQUES.map((label) =>
-    el("label", { class: "enfoque-option" }, [el("input", { type: "checkbox", name: "enfoque", value: label }), label])
+  const enfoqueChecks = ENFOQUES.map(({ valor, label }) =>
+    el("label", { class: "enfoque-option" }, [el("input", { type: "checkbox", name: "enfoque", value: valor }), label])
   );
   const enfoqueSeccion = section("Enfoque de la mejora", [
     el("div", { class: "field" }, [el("div", { class: "enfoque-grid" }, enfoqueChecks)]),

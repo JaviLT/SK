@@ -2,7 +2,7 @@
 // historico-sk.js — Conteo mensual histórico de Short Kaizen por equipo.
 //
 // Origen: archivo de Mejora Continua (oct. 2026) con el número de SK que hizo
-// cada equipo en cada mes de 2026, de ENERO a SEPTIEMBRE (antes de que la app
+// cada equipo en cada mes de 2026, de ENERO a OCTUBRE (antes de que la app
 // registrara los SK). Vive en assets/data/historico-sk.json con la forma:
 //   { "2026": { "NOMBRE DEL EQUIPO": [ene, feb, ..., dic], ... } }
 // donde un mes sin dato es `null` (esos meses se calculan con los SK reales
