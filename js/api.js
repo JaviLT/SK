@@ -130,6 +130,10 @@ const FUNCTION_MAP = [
   { method: "POST", pattern: /^\/departamentos\/grupo$/, fn: "departamentos-asignar-grupo" }, // pendiente en el backend, ver doc para Jesús
   { method: "GET", pattern: /^\/equipos$/, fn: "equipos-list" },
   { method: "GET", pattern: /^\/kaizens$/, fn: "kaizens-list" },
+  // Vista LIGERA de TODOS los SK para cualquier usuario con sesión (Tablero
+  // general, Todos los SK, gráfica de Mis Kaizen) — función NUEVA pedida a
+  // Jesús (KaizenZX_Restablecer_Password_Y_Cambios_v160.md, nov. 2026).
+  { method: "GET", pattern: /^\/kaizens-resumen$/, fn: "kaizens-resumen" },
   { method: "GET", pattern: /^\/kaizens\/(.+)$/, fn: "kaizens-detail" },
   { method: "POST", pattern: /^\/kaizens$/, fn: "kaizens-create" },
   { method: "GET", pattern: /^\/approvals\/(.+)$/, fn: "approvals-get" },
@@ -322,6 +326,23 @@ export const api = {
 
   async getKaizens() {
     return CONFIG.MOCK_MODE ? mockBackend.getKaizens() : request("/kaizens");
+  },
+
+  /**
+   * Todos los SK en versión ligera (sin fotos ni firmas), visibles para
+   * cualquier usuario: alimenta el Tablero general, Todos los SK y la gráfica
+   * de Mis Kaizen. Si la función `kaizens-resumen` aún no está desplegada se
+   * usa `GET /kaizens` (que el backend filtra por rol) y se avisa en consola.
+   */
+  async getKaizensTablero() {
+    if (CONFIG.MOCK_MODE) return mockBackend.getKaizens();
+    try {
+      const data = await request("/kaizens-resumen");
+      return Array.isArray(data) ? data : data?.kaizens || [];
+    } catch (err) {
+      console.warn("[api] kaizens-resumen no disponible, se usa GET /kaizens (solo lo que el rol puede ver):", err.message);
+      return request("/kaizens");
+    }
   },
 
   async getKaizen(id) {

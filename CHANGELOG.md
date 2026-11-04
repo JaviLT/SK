@@ -2,6 +2,13 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.6.0 — 2026-11-04
+- Tablero general: todos los usuarios ven lo mismo que Mejora Continua (todos los departamentos, equipos y SK). Usa la vista ligera `kaizens-resumen` (pendiente en el backend; mientras no exista cae a `GET /kaizens`).
+- Todos los SK: ahora la ven todos. Cada persona ve solo los SK de su departamento; Mejora Continua y administrador ven todos. Nuevo filtro de equipo (con opción "Sin equipo"). El departamento de un SK es el de quien lo creó.
+- Mis Kaizen: se quitó el listado de SK y el de equipos. Los 4 KPIs ahora son clicables y abren un popup con los SK que corresponden (con filtro Todos/Pendientes/Aceptados/Rechazados). Nuevo filtro de año y mes (por defecto el mes en curso, o "Todos los meses").
+- Mis Kaizen: nueva gráfica de SK creados con drill-down por rol: integrante/líder ven las personas de su equipo; gerente ve equipos y al hacer clic las personas; Mejora Continua y administrador ven departamentos → equipos → personas.
+- GEMBA 4: los SK pendientes de aprobación se cuentan en el departamento de quien creó el SK, no en el departamento donde se aplicará la mejora.
+
 ## 1.5.0 — 2026-10-28
 - Nueva pantalla "Todos los SK" (solo Mejora Continua y administrador): lista de todos los Short Kaizen creados con filtros de estatus, departamento, mes y año (por fecha de creación). Al abrir un SK y pulsar "Volver" se conservan los filtros.
 - La barra de navegación ya no parte los textos en dos líneas ni desborda la página con 6 pestañas.

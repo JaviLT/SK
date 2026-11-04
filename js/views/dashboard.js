@@ -42,6 +42,10 @@
 //     Mejora Continua (lib/historico-sk.js, ene–sep 2026) se usa ESE número;
 //     para el resto, los SK implementados reales de la app (`status ===
 //     "done"`, por `fechaImpl`). Así un mes nunca se cuenta dos veces.
+//   - Nov. 2026: TODOS los usuarios ven lo mismo que Mejora Continua (todos los
+//     departamentos, equipos y SK). Los SK se piden con `api.getKaizensTablero()`
+//     (función `kaizens-resumen`, sin filtro por rol); `GET /kaizens` filtra por
+//     rol en el servidor y por eso la gente solo veía lo de su departamento.
 // ============================================================================
 
 import { el, formatDateTime } from "../utils.js";
@@ -64,7 +68,7 @@ export async function render(container, params, isStale) {
   view.appendChild(el("div", { class: "skeleton", style: "height:400px" }));
 
   try {
-    const [equipos, kaizens, departamentosRaw, hist] = await Promise.all([api.getEquipos(), api.getKaizens(), api.getDepartamentos().catch(() => []), cargarHistorico()]);
+    const [equipos, kaizens, departamentosRaw, hist] = await Promise.all([api.getEquipos(), api.getKaizensTablero(), api.getDepartamentos().catch(() => []), cargarHistorico()]);
     historico = hist || {};
     if (isStale && isStale()) return; // el usuario ya navegó a otra vista — no tocar el DOM
     // Normaliza igual que el resto de la app: el mock puede regresar
@@ -312,7 +316,8 @@ function buildEquiposProgresoPorGrupo(equipos, departamentos, kaizensTodos, dato
 
   const equipoDepartamentoCache = {};
   (kaizensTodos || []).forEach((k) => {
-    if (k.equipo && k.departamento) equipoDepartamentoCache[k.equipo] = k.departamento;
+    const d = k.departamentoSolicitante || k.departamento;
+    if (k.equipo && d) equipoDepartamentoCache[k.equipo] = d;
   });
 
   // equipo -> { nombre, serie, implementados, meta }

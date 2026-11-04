@@ -1,21 +1,42 @@
 // ============================================================================
 // mis-kaizens.js — Pantalla "Mis Kaizens" (antes "Solicitudes").
 //
-// Se renombró y se simplificaron sus KPIs a solo 4: total creados,
-// pendientes de firma, aceptados y rechazados — el detalle de en qué paso
-// exacto está cada pendiente ahora vive en la nueva pestaña "Solicitudes"
-// (solicitudes.js), que es donde se aprueba.
+// Nov. 2026 (pedido de Javier): la pantalla quedó con 3 cosas —
+//   1) Filtro de PERIODO (año + mes, por fecha de creación del SK). Por defecto
+//      el mes en curso; "Todos los meses" para ver todo el año.
+//   2) 4 KPIs (creados, pendientes, aceptados, rechazados) que al hacer clic
+//      abren un popup con el listado de los SK que corresponden a ese KPI.
+//   3) UNA gráfica de SK creados con drill-down según el rol:
+//        - integrante / líder (un equipo): personas de su equipo.
+//        - gerente (o quien ve varios equipos): equipos → clic → personas.
+//        - mc / admin: departamentos → clic → equipos → clic → personas.
+//      Ya no hay listado de SK ni mosaico de equipos debajo de los KPIs.
 //
-// La regla de visibilidad NO cambió:
+// La regla de visibilidad de los KPIs/popup NO cambió:
 //   - solicitante: solo sus propios Short Kaizen enviados.
 //   - lider:       los Short Kaizen de su propio Equipo Lean.
 //   - gerente:     TODOS los Short Kaizen de su departamento.
 //   - admin/mc:    todo, sin restricción.
+// La gráfica usa `api.getKaizensTablero()` (todos los SK en versión ligera)
+// porque un integrante/líder necesita ver cuántos SK hizo cada compañero de su
+// equipo, y `GET /kaizens` solo le entrega los suyos.
 // ============================================================================
 
 import { el, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
+import { claveEquipo } from "../lib/historico-sk.js";
+import { crearResolvedorDeptoCreador } from "../lib/depto-creador.js";
+import { loadChartJs } from "../lib/chart-loader.js";
+
+const MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+
+// Periodo elegido (por defecto, el mes en curso).
+let anioSel = new Date().getFullYear();
+let mesSel = String(new Date().getMonth() + 1); // "1".."12" | "todos"
+let datosGrafica = { tablero: [], equipos: [], departamentos: [] };
+let rutaGrafica = []; // [{ tipo: "depto"|"equipo", valor, depto? }]
+let chartInstance = null;
 
 // Modelo de 2-o-3 pasos (KaizenZX_Flujo_Definitivo_Aprobacion.md): `status`
 // es la fuente de verdad confirmada por Jesús (nunca derivar del estado de
@@ -35,44 +56,22 @@ function estadoKaizen(k) {
 
 let departamentosCache = [];
 
-// "Sin equipo" (pedido de Javier, sept. 2026): en cada departamento del
-// mosaico se agrega un equipo ficticio "Sin equipo" con los Short Kaizen
-// creados por gente que no tiene un equipo asignado (`k.equipo` vacío),
-// filtrados a ese departamento (`k.departamento`, campo que sí viaja en
-// cada kaizen). Como no es un equipo real, `state.equipoActivo` (que en
-// todo el resto del archivo es simplemente el nombre del equipo) usa un
-// valor especial con prefijo para poder distinguir "Sin equipo de
-// Calidad" de "Sin equipo de Extrusión" sin inventar un segundo campo de
-// estado.
-const SIN_EQUIPO_PREFIX = "__sin_equipo__:";
-function sentinelSinEquipo(nombreDepto) {
-  return SIN_EQUIPO_PREFIX + nombreDepto;
-}
-function esSentinelSinEquipo(valor) {
-  return typeof valor === "string" && valor.startsWith(SIN_EQUIPO_PREFIX);
-}
-function departamentoDelSentinel(valor) {
-  return valor.slice(SIN_EQUIPO_PREFIX.length);
-}
-function etiquetaEquipoActivo(valor) {
-  return esSentinelSinEquipo(valor) ? `Sin equipo — ${departamentoDelSentinel(valor)}` : valor;
-}
+const SIN_EQUIPO = "__sin_equipo__";
 
 export async function render(container, params, isStale) {
   popupRestaurado = false;
+  rutaGrafica = [];
   container.appendChild(el("div", { class: "view", id: "historial-view" }, [renderSkeleton()]));
 
   try {
-    // `getDepartamentos()` se pide aparte, sin dejar que una falla ahí
-    // tumbe toda la pantalla — solo se usa para agrupar el mosaico de
-    // equipos por departamento (ver agruparEquiposPorDepartamento()); si
-    // falla o el endpoint no está listo, el mosaico cae de vuelta a los
-    // equipos sin agrupar en vez de mostrar un error.
     const [equipos, kaizens] = await Promise.all([api.getEquipos(), api.getKaizens()]);
     if (isStale && isStale()) return;
-    departamentosCache = await api.getDepartamentos().catch(() => []);
-    departamentosCache = (departamentosCache || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
+    // Sin dejar que una falla aquí tumbe la pantalla: la gráfica cae a los SK
+    // que el rol ya puede ver si la vista de todos los SK no está disponible.
+    const [deptosRaw, tablero] = await Promise.all([api.getDepartamentos().catch(() => []), api.getKaizensTablero().catch(() => kaizens)]);
+    departamentosCache = (deptosRaw || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
     if (isStale && isStale()) return;
+    datosGrafica = { tablero, equipos, departamentos: departamentosCache };
     setState({ equipos, kaizens });
     paint(container);
   } catch (err) {
@@ -159,10 +158,12 @@ function alcanceParaUsuario() {
   };
 
   if (rol === "solicitante") {
+    // El equipo propio también entra a `equiposVisibles` (lo usa la gráfica).
+    const propio = state.equipos.filter((eq) => eq.nombre === user.equipo);
     if (comoAprobador.length) {
       return {
         mostrarMosaico: true,
-        equiposVisibles: comoAprobador,
+        equiposVisibles: unirEquipos(propio, comoAprobador),
         kaizensVisibles: kaizensDeEquipos(comoAprobador, (k) => k.nomina === user.nomina),
         titulo: "Mis Short Kaizen",
         subtitulo: "Selecciona un equipo para ver sus Short Kaizen",
@@ -170,7 +171,7 @@ function alcanceParaUsuario() {
     }
     return {
       mostrarMosaico: false,
-      equiposVisibles: [],
+      equiposVisibles: propio,
       kaizensVisibles: state.kaizens.filter((k) => k.nomina === user.nomina),
       titulo: "Mis Short Kaizen",
       subtitulo: "Short Kaizen que has enviado",
@@ -219,38 +220,81 @@ function alcanceParaUsuario() {
   };
 }
 
+// ---- Periodo ----------------------------------------------------------------
+
+function fechaCreacion(k) {
+  const d = new Date(k.creadoEn || k.fechaId || "");
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function enPeriodo(k) {
+  const d = fechaCreacion(k);
+  if (!d || d.getFullYear() !== anioSel) return false;
+  return mesSel === "todos" || String(d.getMonth() + 1) === mesSel;
+}
+
+function nombrePeriodo() {
+  return mesSel === "todos" ? `Todos los meses ${anioSel}` : `${MESES[Number(mesSel) - 1]} ${anioSel}`;
+}
+
+function aniosDisponibles() {
+  const anios = new Set([new Date().getFullYear()]);
+  [...state.kaizens, ...datosGrafica.tablero].forEach((k) => {
+    const d = fechaCreacion(k);
+    if (d) anios.add(d.getFullYear());
+  });
+  return [...anios].sort((a, b) => b - a);
+}
+
+function buildSelectorPeriodo(container) {
+  const repintar = () => paint(container);
+  const selectAnio = el(
+    "select",
+    { class: "select", style: "max-width:120px", onchange: (e) => { anioSel = Number(e.target.value); repintar(); } },
+    aniosDisponibles().map((y) => el("option", { value: String(y), selected: y === anioSel || undefined }, [String(y)]))
+  );
+  const selectMes = el(
+    "select",
+    { class: "select", style: "max-width:200px", onchange: (e) => { mesSel = e.target.value; repintar(); } },
+    [
+      ...MESES.map((nombre, i) => el("option", { value: String(i + 1), selected: mesSel === String(i + 1) || undefined }, [nombre])),
+      el("option", { value: "todos", selected: mesSel === "todos" || undefined }, ["Todos los meses"]),
+    ]
+  );
+  return el("div", { style: "display:flex;gap:12px;flex-wrap:wrap" }, [
+    el("div", { class: "field", style: "margin-bottom:0" }, [el("label", {}, ["Año"]), selectAnio]),
+    el("div", { class: "field", style: "margin-bottom:0" }, [el("label", {}, ["Mes"]), selectMes]),
+  ]);
+}
+
 function paint(container) {
   const view = container.querySelector("#historial-view");
   view.innerHTML = "";
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 
   const alcance = alcanceParaUsuario();
+  const kaizensPeriodo = alcance.kaizensVisibles.filter(enPeriodo);
 
   view.appendChild(
     el("div", { class: "view-header" }, [
-      el("div", {}, [el("h1", {}, [alcance.titulo]), alcance.subtitulo ? el("p", {}, [alcance.subtitulo]) : null].filter(Boolean)),
+      el("div", {}, [el("h1", {}, [alcance.titulo]), el("p", {}, [`${alcance.subtitulo || "Short Kaizen creados"} — ${nombrePeriodo()}`])]),
+      buildSelectorPeriodo(container),
     ])
   );
 
-  view.appendChild(buildStatsRow(alcance.kaizensVisibles));
+  view.appendChild(buildStatsRow(kaizensPeriodo));
+  view.appendChild(buildGraficaCard(container, alcance));
 
-  if (alcance.mostrarMosaico) {
-    view.appendChild(buildMosaicoAgrupado(alcance.equiposVisibles, alcance.kaizensVisibles, container));
-  }
-
-  // Con mosaico (gerente/mc/admin/varios equipos) los SK de cada equipo se
-  // ven en un popup (pedido de Javier, oct. 2026), ya no debajo del mosaico.
-  // Sin mosaico (solicitante/líder de un solo equipo) la lista plana sigue
-  // siendo su única forma de ver sus Short Kaizen.
-  if (!alcance.mostrarMosaico) {
-    view.appendChild(el("div", { class: "view-header", style: "margin-top:8px" }, [el("h3", {}, ["Todos los Short Kaizen"])]));
-    view.appendChild(buildList(alcance.kaizensVisibles, abrirDetalle));
-  }
-
-  // Al volver desde el detalle se reabre el popup del equipo con su filtro.
-  if (alcance.mostrarMosaico && !popupRestaurado) {
+  // Al volver desde el detalle se reabre el popup con su filtro (y el periodo).
+  if (!popupRestaurado) {
     popupRestaurado = true;
     const guardado = leerPopupGuardado();
-    if (guardado) abrirPopupEquipo(guardado.equipo, alcance.kaizensVisibles, guardado.filtro);
+    if (guardado) {
+      anioSel = guardado.anio;
+      mesSel = guardado.mes;
+      paint(container);
+      abrirPopupLista(alcance.kaizensVisibles.filter(enPeriodo), guardado.filtro);
+    }
   }
 }
 
@@ -268,7 +312,10 @@ function leerPopupGuardado() {
     sessionStorage.removeItem("sk_mk_restaurar");
     if (!restaurar) return null;
     const v = raw && JSON.parse(raw);
-    return v && typeof v.equipo === "string" ? { equipo: v.equipo, filtro: FILTROS.some((f) => f.id === v.filtro) ? v.filtro : "todos" } : null;
+    if (!v || typeof v !== "object") return null;
+    const mes = v.mes === "todos" || (/^\d+$/.test(String(v.mes)) && Number(v.mes) >= 1 && Number(v.mes) <= 12) ? String(v.mes) : mesSel;
+    const anio = Number.isFinite(Number(v.anio)) ? Number(v.anio) : anioSel;
+    return { filtro: FILTROS.some((f) => f.id === v.filtro) ? v.filtro : "todos", mes, anio };
   } catch {
     return null;
   }
@@ -276,12 +323,12 @@ function leerPopupGuardado() {
 
 function abrirDetalle(k, popup) {
   if (popup) {
-    try { sessionStorage.setItem(CLAVE_POPUP, JSON.stringify(popup)); } catch { /* sin storage: solo vuelve a la página */ }
+    try { sessionStorage.setItem(CLAVE_POPUP, JSON.stringify({ ...popup, mes: mesSel, anio: anioSel })); } catch { /* sin storage: solo vuelve a la página */ }
   }
   window.location.href = `detalle.html?id=${encodeURIComponent(k.id)}&from=mis-kaizens`;
 }
 
-// ---- Popup de SK de un equipo, con filtro por estatus ----
+// ---- Popup de SK (al hacer clic en un KPI), con filtro por estatus ----
 const FILTROS = [
   { id: "todos", label: "Todos", grupo: null },
   { id: "pendiente", label: "Pendientes", grupo: "pendiente" },
@@ -289,16 +336,7 @@ const FILTROS = [
   { id: "rechazado", label: "Rechazados", grupo: "rechazado" },
 ];
 
-function kaizensDeEquipo(kaizens, equipo) {
-  if (esSentinelSinEquipo(equipo)) {
-    const depto = departamentoDelSentinel(equipo);
-    return kaizens.filter((k) => !k.equipo && k.departamento === depto);
-  }
-  return kaizens.filter((k) => k.equipo === equipo);
-}
-
-function abrirPopupEquipo(equipo, kaizensAlcance, filtroInicial = "todos") {
-  const delEquipo = kaizensDeEquipo(kaizensAlcance, equipo);
+function abrirPopupLista(kaizens, filtroInicial = "todos") {
   let filtro = filtroInicial;
 
   const chips = el("div", { class: "filtro-chips", role: "tablist" });
@@ -307,10 +345,7 @@ function abrirPopupEquipo(equipo, kaizensAlcance, filtroInicial = "todos") {
 
   const overlay = el("div", { class: "modal-overlay" }, [
     el("div", { class: "modal modal-lg", role: "dialog", "aria-modal": "true" }, [
-      el("div", { class: "modal-head" }, [
-        el("h3", {}, [`Short Kaizen — ${etiquetaEquipoActivo(equipo)}`]),
-        cerrarBtn,
-      ]),
+      el("div", { class: "modal-head" }, [el("h3", {}, [`Short Kaizen — ${nombrePeriodo()}`]), cerrarBtn]),
       chips,
       lista,
     ]),
@@ -319,7 +354,7 @@ function abrirPopupEquipo(equipo, kaizensAlcance, filtroInicial = "todos") {
   const pintar = () => {
     chips.innerHTML = "";
     FILTROS.forEach((f) => {
-      const n = f.grupo ? delEquipo.filter((k) => estadoKaizen(k).grupo === f.grupo).length : delEquipo.length;
+      const n = f.grupo ? kaizens.filter((k) => estadoKaizen(k).grupo === f.grupo).length : kaizens.length;
       chips.appendChild(
         el(
           "button",
@@ -329,9 +364,11 @@ function abrirPopupEquipo(equipo, kaizensAlcance, filtroInicial = "todos") {
       );
     });
     const grupo = FILTROS.find((f) => f.id === filtro).grupo;
-    const visibles = grupo ? delEquipo.filter((k) => estadoKaizen(k).grupo === grupo) : delEquipo;
+    const visibles = (grupo ? kaizens.filter((k) => estadoKaizen(k).grupo === grupo) : kaizens)
+      .slice()
+      .sort((a, b) => (fechaCreacion(b)?.getTime() || 0) - (fechaCreacion(a)?.getTime() || 0));
     lista.innerHTML = "";
-    lista.appendChild(buildList(visibles, (k) => abrirDetalle(k, { equipo, filtro })));
+    lista.appendChild(buildList(visibles, (k) => abrirDetalle(k, { filtro })));
   };
 
   const cerrar = () => {
@@ -354,21 +391,31 @@ function buildStatsRow(kaizens) {
     aceptados: grupos.filter((g) => g === "aceptado").length,
     rechazados: grupos.filter((g) => g === "rechazado").length,
   };
+  // [etiqueta, valor, filtro con el que se abre el popup]
   const items = [
-    ["Short Kaizen creados", counts.total],
-    ["Pendientes de aprobación", counts.pendientes],
-    ["Aceptados", counts.aceptados],
-    ["Rechazados", counts.rechazados],
+    ["Short Kaizen creados", counts.total, "todos"],
+    ["Pendientes de aprobación", counts.pendientes, "pendiente"],
+    ["Aceptados", counts.aceptados, "aceptado"],
+    ["Rechazados", counts.rechazados, "rechazado"],
   ];
   return el(
     "div",
     { class: "stats-row stats-row-4" },
-    items.map(([label, value]) =>
-      el("div", { class: "kpi-card" }, [
-        el("div", { class: "kpi-label" }, [label]),
-        el("div", { class: "kpi-value" }, [String(value)]),
-      ])
-    )
+    items.map(([label, value, filtro]) => {
+      const abrir = () => abrirPopupLista(kaizens, filtro);
+      return el(
+        "div",
+        {
+          class: "kpi-card kpi-card-click",
+          role: "button",
+          tabindex: "0",
+          title: "Ver el listado de estos Short Kaizen",
+          onclick: abrir,
+          onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); abrir(); } },
+        },
+        [el("div", { class: "kpi-label" }, [label]), el("div", { class: "kpi-value" }, [String(value)]), el("div", { class: "kpi-link" }, ["Ver listado ›"])]
+      );
+    })
   );
 }
 
@@ -393,120 +440,226 @@ function departamentoDeEquipoLocal(eq, equipoDepartamentoCache) {
   return equipoDepartamentoCache[eq.nombre] || null;
 }
 
-// Agrupa el mosaico de equipos por departamento (pedido de Javier, sept.
-// 2026): antes era una sola lista plana ordenada alfabéticamente por
-// nombre de equipo — ahora aparece un encabezado de sección por
-// departamento ("Equipos Calidad", "Equipos Ingeniería", …) con sus
-// equipos debajo. Los departamentos se muestran en orden alfabético, y los
-// equipos sin departamento identificable caen en una sección final
-// "Departamento sin clasificar".
-function buildMosaicoAgrupado(equipos, kaizensDelAlcance, container) {
-  if (!equipos.length) {
-    return el("div", {}, [
-      el("h3", {}, ["Equipos"]),
-      el("div", { class: "empty-state" }, [
-        el("div", { class: "icon" }, ["🏷️"]),
-        el("p", {}, ["No hay equipos asignados a tu cuenta todavía."]),
-      ]),
-    ]);
+// ---- Gráfica de SK creados, con drill-down según el rol ---------------------
+
+const COLORES_DEPTO = [
+  [/extru/, "#1e40af"],
+  [/prueba/, "#0284c7"],
+  [/mantenimiento/, "#0e7490"],
+  [/impresi/, "#b91c1c"],
+  [/bolseo/, "#15803d"],
+];
+const COLOR_MARCA = "#0D18A8";
+const COLOR_DEPTO_RESTO = ["#4f5fd5", "#227EF6", "#64748b", "#94a3b8", "#0D18A8"];
+
+function colorDepto(nombre, i) {
+  const n = String(nombre).toLowerCase();
+  const fijo = COLORES_DEPTO.find(([re]) => re.test(n));
+  return fijo ? fijo[1] : COLOR_DEPTO_RESTO[i % COLOR_DEPTO_RESTO.length];
+}
+
+// Nivel de arranque según el rol: mc/admin → departamentos; gerente o quien ve
+// varios equipos → equipos; integrante/líder de un solo equipo → personas.
+function inicioGrafica(alcance) {
+  const rol = (state.user || {}).rol;
+  if (rol === "mc" || rol === "admin") return "deptos";
+  if (rol === "gerente" || alcance.equiposVisibles.length > 1) return "equipos";
+  return "personas";
+}
+
+function barrasDeGrafica(alcance) {
+  const user = state.user || {};
+  const { tablero, equipos, departamentos } = datosGrafica;
+  const sk = tablero.filter(enPeriodo);
+  const deptoDe = crearResolvedorDeptoCreador(equipos, departamentos, tablero);
+  const cacheDepto = {};
+  tablero.forEach((k) => {
+    const d = k.departamentoSolicitante || k.departamento;
+    if (k.equipo && d) cacheDepto[k.equipo] = d;
+  });
+  const deptoDeEquipo = (eq) => departamentoDeEquipoLocal(eq, cacheDepto);
+  const skDeEquipo = (nombre) => sk.filter((k) => k.equipo && claveEquipo(k.equipo) === claveEquipo(nombre));
+  const ultimo = rutaGrafica[rutaGrafica.length - 1];
+  const inicio = inicioGrafica(alcance);
+
+  // Personas de un equipo (o de "sin equipo" de un departamento): integrantes
+  // del catálogo + quien haya creado SK ahí aunque ya no figure como miembro.
+  const personas = (miembros, skPersonas) => {
+    const mapa = new Map();
+    (miembros || []).forEach((m) => mapa.set(String(m.nomina), { label: m.nombre || String(m.nomina), value: 0 }));
+    skPersonas.forEach((k) => {
+      const id = String(k.nomina || k.nombre);
+      if (!mapa.has(id)) mapa.set(id, { label: k.nombre || id, value: 0 });
+      mapa.get(id).value += 1;
+    });
+    return [...mapa.values()].sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, "es"));
+  };
+
+  const barrasEquipos = (listaEquipos, deptoNombre) => {
+    const vistos = new Set();
+    const bars = listaEquipos
+      .filter((eq) => (vistos.has(claveEquipo(eq.nombre)) ? false : (vistos.add(claveEquipo(eq.nombre)), true)))
+      .map((eq) => ({ label: eq.nombre, value: skDeEquipo(eq.nombre).length, siguiente: { tipo: "equipo", valor: eq.nombre, depto: deptoNombre } }))
+      .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, "es"));
+    if (deptoNombre) {
+      const sinEquipo = sk.filter((k) => !k.equipo && deptoDe(k) && claveEquipo(deptoDe(k)) === claveEquipo(deptoNombre)).length;
+      if (sinEquipo) bars.push({ label: "Sin equipo", value: sinEquipo, siguiente: { tipo: "equipo", valor: SIN_EQUIPO, depto: deptoNombre } });
+    }
+    return bars;
+  };
+
+  // --- Nivel actual ---
+  if (ultimo?.tipo === "equipo") {
+    if (ultimo.valor === SIN_EQUIPO) {
+      const delDepto = sk.filter((k) => !k.equipo && deptoDe(k) && claveEquipo(deptoDe(k)) === claveEquipo(ultimo.depto));
+      return { titulo: `Sin equipo — ${ultimo.depto}`, bars: personas([], delDepto), color: COLOR_MARCA, unidad: "persona" };
+    }
+    const eq = equipos.find((e) => claveEquipo(e.nombre) === claveEquipo(ultimo.valor));
+    return { titulo: ultimo.valor, bars: personas(eq?.miembros, skDeEquipo(ultimo.valor)), color: COLOR_MARCA, unidad: "persona" };
   }
+  if (ultimo?.tipo === "depto") {
+    const delDepto = equipos.filter((eq) => deptoDeEquipo(eq) && claveEquipo(deptoDeEquipo(eq)) === claveEquipo(ultimo.valor));
+    return { titulo: ultimo.valor, bars: barrasEquipos(delDepto, ultimo.valor), color: COLOR_MARCA, unidad: "equipo" };
+  }
+  // Raíz
+  if (inicio === "deptos") {
+    const porDepto = new Map();
+    equipos.forEach((eq) => {
+      const nombre = deptoDeEquipo(eq) || "Sin clasificar";
+      if (!porDepto.has(claveEquipo(nombre))) porDepto.set(claveEquipo(nombre), nombre);
+    });
+    const bars = [...porDepto.values()].map((nombre) => ({
+      label: nombre,
+      value: sk.filter((k) => (deptoDe(k) ? claveEquipo(deptoDe(k)) === claveEquipo(nombre) : claveEquipo(nombre) === claveEquipo("Sin clasificar"))).length,
+      siguiente: { tipo: "depto", valor: nombre },
+    }));
+    const sinClasificar = sk.filter((k) => !deptoDe(k)).length;
+    if (sinClasificar && !porDepto.has(claveEquipo("Sin clasificar"))) bars.push({ label: "Sin clasificar", value: sinClasificar, siguiente: null });
+    bars.sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, "es"));
+    bars.forEach((b, i) => { b.color = colorDepto(b.label, i); });
+    return { titulo: "Departamentos", bars, color: null, unidad: "departamento" };
+  }
+  if (inicio === "equipos") {
+    return { titulo: "Equipos", bars: barrasEquipos(alcance.equiposVisibles, null), color: COLOR_MARCA, unidad: "equipo" };
+  }
+  // Integrante / líder de un solo equipo (o integrante sin equipo)
+  const eq = alcance.equiposVisibles[0];
+  if (eq) return { titulo: eq.nombre, bars: personas(eq.miembros, skDeEquipo(eq.nombre)), color: COLOR_MARCA, unidad: "persona" };
+  const propios = sk.filter((k) => String(k.nomina) === String(user.nomina));
+  return { titulo: "Mis Short Kaizen", bars: [{ label: user.nombre || String(user.nomina), value: propios.length }], color: COLOR_MARCA, unidad: "persona" };
+}
 
-  // Igual que en admin.js: se infiere por historial de kaizens cuando el
-  // equipo no trae departamento directo todavía. Se usa TODO el historial
-  // disponible (state.kaizens), no solo `kaizensDelAlcance`, para que la
-  // inferencia no dependa de qué kaizens ve este usuario en particular.
-  const equipoDepartamentoCache = {};
-  (state.kaizens || []).forEach((k) => {
-    if (k.equipo && k.departamento) equipoDepartamentoCache[k.equipo] = k.departamento;
-  });
+function buildGraficaCard(container, alcance) {
+  const nivel = barrasDeGrafica(alcance);
+  const inicio = inicioGrafica(alcance);
+  const raizLabel = inicio === "deptos" ? "Departamentos" : inicio === "equipos" ? "Equipos" : null;
 
-  const grupos = new Map(); // nombreDepartamento -> equipos[]
-  equipos.forEach((eq) => {
-    const nombreDepto = departamentoDeEquipoLocal(eq, equipoDepartamentoCache) || "Departamento sin clasificar";
-    if (!grupos.has(nombreDepto)) grupos.set(nombreDepto, []);
-    grupos.get(nombreDepto).push(eq);
-  });
-
-  const nombresOrdenados = [...grupos.keys()].sort((a, b) => {
-    if (a === "Departamento sin clasificar") return 1;
-    if (b === "Departamento sin clasificar") return -1;
-    return a.localeCompare(b, "es");
-  });
-
-  return el(
+  // Migas de pan: Departamentos › Depto › Equipo (o Equipos › Equipo).
+  const migas = [];
+  if (raizLabel) {
+    migas.push({ label: raizLabel, ruta: [] });
+    rutaGrafica.forEach((paso, i) => migas.push({ label: paso.valor === SIN_EQUIPO ? "Sin equipo" : paso.valor, ruta: rutaGrafica.slice(0, i + 1) }));
+  }
+  const migasEl = el(
     "div",
-    {},
-    nombresOrdenados.map((nombreDepto) => {
-      // Colapsable, colapsado por defecto (pedido de Javier, sept. 2026):
-      // antes los equipos de cada departamento se veían siempre completos,
-      // lo que hacía el mosaico muy largo con varios departamentos. Ahora
-      // cada grupo empieza cerrado y se abre al hacer clic en su
-      // encabezado. El estado de abierto/cerrado vive solo en el DOM (la
-      // clase "is-open"), no en `state` — no hace falta persistirlo entre
-      // repintados de esta misma vista.
-      const grupoEl = el("div", { class: "equipos-departamento-grupo" });
-      const header = el(
-        "button",
-        {
-          class: "equipos-departamento-grupo-header",
-          type: "button",
-          onclick: () => grupoEl.classList.toggle("is-open"),
-        },
-        [
-          el("span", { class: "equipos-departamento-grupo-chevron" }, ["▶"]),
-          el("h3", {}, [`Equipos ${nombreDepto}`]),
-        ]
-      );
-      const tarjetasEquipos = grupos.get(nombreDepto)
-        .slice()
-        .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
-        .map((eq) => {
-          const count = kaizensDelAlcance.filter((k) => k.equipo === eq.nombre).length;
-          return el(
-            "div",
-            {
-              class: "equipo-card",
-              onclick: () => abrirPopupEquipo(eq.nombre, kaizensDelAlcance),
-            },
-            [
-              el("div", { class: "eq-name" }, [eq.nombre]),
-              el("div", { class: "eq-count" }, [String(count)]),
-              el("div", { class: "eq-sub" }, ["kaizens registrados"]),
-            ]
-          );
-        });
-
-      // "Sin equipo" (pedido de Javier, sept. 2026): tarjeta fija al final
-      // de cada departamento con los Short Kaizen de gente sin equipo
-      // asignado en ese departamento — siempre presente, aunque el conteo
-      // sea 0, para que sea consistente entre departamentos.
-      const sentinel = sentinelSinEquipo(nombreDepto);
-      const countSinEquipo = kaizensDelAlcance.filter((k) => !k.equipo && k.departamento === nombreDepto).length;
-      tarjetasEquipos.push(
-        el(
-          "div",
-          {
-            class: "equipo-card",
-            onclick: () => abrirPopupEquipo(sentinel, kaizensDelAlcance),
-          },
-          [
-            el("div", { class: "eq-name" }, ["Sin equipo"]),
-            el("div", { class: "eq-count" }, [String(countSinEquipo)]),
-            el("div", { class: "eq-sub" }, ["kaizens registrados"]),
-          ]
-        )
-      );
-
-      const body = el(
-        "div",
-        { class: "equipos-departamento-grupo-body" },
-        [el("div", { class: "mosaico" }, tarjetasEquipos)]
-      );
-      grupoEl.appendChild(header);
-      grupoEl.appendChild(body);
-      return grupoEl;
+    { class: "grafica-migas" },
+    migas.flatMap((m, i) => {
+      const esUltima = i === migas.length - 1;
+      const parte = esUltima
+        ? el("span", { class: "grafica-miga is-actual" }, [m.label])
+        : el("button", { class: "grafica-miga", type: "button", onclick: () => { rutaGrafica = m.ruta; paint(container); } }, [m.label]);
+      return esUltima ? [parte] : [parte, el("span", { class: "grafica-sep" }, ["›"])];
     })
   );
+
+  const total = nivel.bars.reduce((sum, b) => sum + b.value, 0);
+  const hayDrill = nivel.bars.some((b) => b.siguiente);
+  const subtitulo = `${total} Short Kaizen creados — ${nombrePeriodo()}` + (hayDrill ? ` · Haz clic en un ${nivel.unidad} para ver el detalle` : "");
+
+  const ancho = Math.max(0, nivel.bars.length * 68);
+  const canvas = el("canvas");
+  const inner = el("div", { class: "grafica-inner", style: `min-width:${ancho}px` }, [canvas]);
+  const wrap = el("div", { class: "grafica-scroll" }, [inner]);
+
+  const card = el("div", { class: "card grafica-card" }, [
+    el("div", { class: "grafica-head" }, [
+      el("div", {}, [el("h3", {}, [`SK creados — ${nivel.titulo}`]), el("p", { class: "hint" }, [subtitulo])]),
+      rutaGrafica.length
+        ? el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: () => { rutaGrafica = rutaGrafica.slice(0, -1); paint(container); } }, ["‹ Atrás"])
+        : null,
+    ]),
+    migas.length > 1 ? migasEl : null,
+    nivel.bars.length ? wrap : el("p", { class: "hint" }, ["No hay datos para mostrar."]),
+  ]);
+
+  if (nivel.bars.length) dibujarGrafica(canvas, nivel, container);
+  return card;
+}
+
+async function dibujarGrafica(canvas, nivel, container) {
+  let Chart;
+  try {
+    Chart = await loadChartJs();
+  } catch (err) {
+    console.error("[mis-kaizens] No se pudo cargar Chart.js:", err);
+    canvas.replaceWith(el("p", { class: "hint" }, ["No se pudo cargar la librería de gráficas. Recarga la página; si persiste, avisa a soporte."]));
+    return;
+  }
+  if (!canvas.isConnected) return; // la pantalla se repintó mientras cargaba la librería
+  const etiquetas = nivel.bars.map((b) => b.label);
+  const colores = nivel.bars.map((b) => b.color || nivel.color || COLOR_MARCA);
+  // Número encima de cada columna (sin plugin externo).
+  const valorEncima = {
+    id: "valorEncima",
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.font = "600 12px Poppins, 'Segoe UI', sans-serif";
+      ctx.fillStyle = getComputedStyle(document.body).color || "#1f2937";
+      ctx.textAlign = "center";
+      chart.getDatasetMeta(0).data.forEach((bar, i) => ctx.fillText(String(nivel.bars[i].value), bar.x, bar.y - 6));
+      ctx.restore();
+    },
+  };
+  try {
+    chartInstance = new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: { labels: etiquetas, datasets: [{ data: nivel.bars.map((b) => b.value), backgroundColor: colores, borderRadius: 4, maxBarThickness: 56 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.parsed.y} SK creados` } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "SK creados" } },
+          x: {
+            ticks: {
+              autoSkip: false,
+              maxRotation: 50,
+              callback(value) {
+                const l = this.getLabelForValue(value);
+                return l.length > 22 ? `${l.slice(0, 21)}…` : l;
+              },
+            },
+          },
+        },
+        onClick: (_evt, els) => {
+          const b = els.length ? nivel.bars[els[0].index] : null;
+          // Se repinta fuera del evento: destruir la gráfica dentro de su propio
+          // onClick hace que Chart.js lance "handleEvent of undefined".
+          if (b?.siguiente) setTimeout(() => { rutaGrafica = [...rutaGrafica, b.siguiente]; paint(container); }, 0);
+        },
+        onHover: (evt, els) => {
+          const b = els.length ? nivel.bars[els[0].index] : null;
+          if (evt.native?.target) evt.native.target.style.cursor = b?.siguiente ? "pointer" : "default";
+        },
+      },
+      plugins: [valorEncima],
+    });
+  } catch (err) {
+    console.error("[mis-kaizens] Error al dibujar la gráfica:", err);
+    canvas.replaceWith(el("p", { class: "hint" }, ["No se pudo dibujar la gráfica."]));
+  }
 }
 
 function buildList(kaizens, onOpen) {
@@ -549,4 +702,6 @@ function buildList(kaizens, onOpen) {
   );
 }
 
-export function unmount() {}
+export function unmount() {
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+}

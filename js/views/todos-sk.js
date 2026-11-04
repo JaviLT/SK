@@ -1,9 +1,12 @@
 // ============================================================================
 // todos-sk.js — Pantalla "Todos los SK" (pedido de Javier, oct. 2026).
 //
-// Lista de TODOS los Short Kaizen creados, para ver rápido todo sin ir equipo
-// por equipo en "Mis Kaizens". Solo Mejora Continua (mc) y administrador.
-// Filtros: estatus, departamento, mes y año. Mes y año filtran por la FECHA DE
+// Lista de los Short Kaizen creados, para ver rápido todo sin ir equipo por
+// equipo en "Mis Kaizens". Nov. 2026: la ve TODO el mundo, pero cada persona
+// solo ve los SK de SU departamento; Mejora Continua (mc) y administrador ven
+// todos los departamentos. El departamento de un SK es el de QUIEN LO CREÓ
+// (lib/depto-creador.js), con el de aplicación solo como último recurso.
+// Filtros: estatus, departamento (solo mc/admin), equipo, mes y año. Mes y año filtran por la FECHA DE
 // CREACIÓN del SK (`creadoEn`, o `fechaId` si faltara). Al abrir un SK y
 // regresar con "Volver" del detalle, se conservan los filtros.
 // ============================================================================
@@ -12,6 +15,7 @@ import { el, formatDate, shortId } from "../utils.js";
 import { api } from "../api.js";
 import { state, setState } from "../state.js";
 import { claveEquipo } from "../lib/historico-sk.js";
+import { crearResolvedorDeptoCreador, departamentoDeEquipo } from "../lib/depto-creador.js";
 
 const MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 const CLAVE_FILTROS = "sk_todos_filtros";
@@ -50,7 +54,9 @@ function coincideEstatus(k, filtro) {
   return k.status === filtro;
 }
 
-let filtros = { estatus: "todos", depto: "todos", mes: "todos", anio: String(new Date().getFullYear()) };
+const SIN_EQUIPO = "__sin_equipo__";
+const filtrosIniciales = () => ({ estatus: "todos", depto: "todos", equipo: "todos", mes: "todos", anio: String(new Date().getFullYear()) });
+let filtros = filtrosIniciales();
 let visibles = POR_PAGINA;
 
 function leerFiltrosGuardados() {
@@ -70,27 +76,39 @@ export async function render(container, params, isStale) {
   container.appendChild(view);
 
   const user = state.user || {};
-  if (!["mc", "admin"].includes(user.rol)) {
-    view.appendChild(
-      el("div", { class: "empty-state" }, [
-        el("div", { class: "icon" }, ["🔒"]),
-        el("h3", {}, ["No tienes acceso a esta pantalla"]),
-        el("p", {}, ["Todos los SK solo lo ven Mejora Continua y el administrador."]),
-      ])
-    );
-    return;
-  }
-
   view.appendChild(el("div", { class: "skeleton", style: "height:300px" }));
   try {
-    const [kaizens, departamentosRaw] = await Promise.all([api.getKaizens(), api.getDepartamentos().catch(() => [])]);
+    const [kaizensRaw, equipos, departamentosRaw] = await Promise.all([
+      api.getKaizensTablero(),
+      api.getEquipos().catch(() => []),
+      api.getDepartamentos().catch(() => []),
+    ]);
     if (isStale && isStale()) return;
+    const departamentosObj = (departamentosRaw || []).map((d) => (typeof d === "string" ? { id: d, nombre: d } : d));
+    const departamentos = departamentosObj.map((d) => d.nombre).filter(Boolean);
+
+    // Departamento de cada SK = el de quien lo creó (con respaldo al de aplicación).
+    const deptoDe = crearResolvedorDeptoCreador(equipos, departamentosObj, kaizensRaw, { fallbackAplicacion: true });
+    const todosLosSk = kaizensRaw.map((k) => ({ ...k, _depto: deptoDe(k) }));
+
+    // Mejora Continua y admin ven todo; el resto, solo su departamento.
+    const verTodo = ["mc", "admin"].includes(user.rol);
+    let kaizens = todosLosSk;
+    let deptosPermitidos = null;
+    if (!verTodo) {
+      const propios = String(user.departamento || "").split(/[,;|]/).map((d) => d.trim()).filter(Boolean);
+      const eqUsuario = (equipos || []).find((eq) => eq.nombre === user.equipo);
+      const deEquipo = eqUsuario ? departamentoDeEquipo(eqUsuario, departamentosObj, {}) : null;
+      deptosPermitidos = new Set([...propios, deEquipo].filter(Boolean).map(claveEquipo));
+      kaizens = todosLosSk.filter((k) => k._depto && deptosPermitidos.has(claveEquipo(k._depto)));
+    }
+
     setState({ kaizens });
-    const departamentos = (departamentosRaw || []).map((d) => (typeof d === "string" ? d : d.nombre)).filter(Boolean);
     const guardados = leerFiltrosGuardados();
-    filtros = { estatus: "todos", depto: "todos", mes: "todos", anio: String(new Date().getFullYear()), ...(guardados || {}) };
+    filtros = { ...filtrosIniciales(), ...(guardados || {}) };
     visibles = POR_PAGINA;
-    paint(view, kaizens, departamentos);
+    const ctx = { verTodo, deptosPermitidos, nombreDepto: String(user.departamento || user.equipo || "tu departamento") };
+    paint(view, kaizens, departamentos, ctx);
   } catch (err) {
     if (isStale && isStale()) return;
     view.innerHTML = "";
@@ -98,16 +116,28 @@ export async function render(container, params, isStale) {
   }
 }
 
-function paint(view, kaizens, departamentos) {
+function paint(view, kaizens, departamentos, ctx) {
   view.innerHTML = "";
-  const repintar = () => { visibles = POR_PAGINA; paint(view, kaizens, departamentos); };
+  const repintar = () => { visibles = POR_PAGINA; paint(view, kaizens, departamentos, ctx); };
 
   // Opciones de departamento: catálogo + los que aparezcan en los SK (sin repetir).
   const deptos = new Map();
-  [...departamentos, ...kaizens.map((k) => k.departamento)].filter(Boolean).forEach((d) => {
+  [...(ctx.verTodo ? departamentos : []), ...kaizens.map((k) => k._depto)].filter(Boolean).forEach((d) => {
     if (!deptos.has(claveEquipo(d))) deptos.set(claveEquipo(d), d);
   });
   const opcionesDepto = [...deptos.entries()].sort((a, b) => a[1].localeCompare(b[1], "es"));
+
+  // Opciones de equipo: los que aparecen en los SK (del departamento elegido, si hay uno).
+  const equiposOpc = new Map();
+  let haySinEquipo = false;
+  kaizens.forEach((k) => {
+    if (filtros.depto !== "todos" && claveEquipo(k._depto) !== filtros.depto) return;
+    if (!k.equipo) { haySinEquipo = true; return; }
+    if (!equiposOpc.has(claveEquipo(k.equipo))) equiposOpc.set(claveEquipo(k.equipo), k.equipo);
+  });
+  const opcionesEquipo = [...equiposOpc.entries()].sort((a, b) => a[1].localeCompare(b[1], "es"));
+  if (filtros.equipo !== "todos" && filtros.equipo !== SIN_EQUIPO && !equiposOpc.has(filtros.equipo)) filtros.equipo = "todos";
+  if (filtros.equipo === SIN_EQUIPO && !haySinEquipo) filtros.equipo = "todos";
 
   const anios = new Set([new Date().getFullYear()]);
   kaizens.forEach((k) => { const d = fechaCreacion(k); if (d) anios.add(d.getFullYear()); });
@@ -126,7 +156,8 @@ function paint(view, kaizens, departamentos) {
   const filtrados = kaizens
     .filter((k) => {
       if (!coincideEstatus(k, filtros.estatus)) return false;
-      if (filtros.depto !== "todos" && claveEquipo(k.departamento) !== filtros.depto) return false;
+      if (filtros.depto !== "todos" && claveEquipo(k._depto) !== filtros.depto) return false;
+      if (filtros.equipo === SIN_EQUIPO ? Boolean(k.equipo) : filtros.equipo !== "todos" && claveEquipo(k.equipo) !== filtros.equipo) return false;
       const d = fechaCreacion(k);
       if (filtros.anio !== "todos" && (!d || String(d.getFullYear()) !== filtros.anio)) return false;
       if (filtros.mes !== "todos" && (!d || String(d.getMonth() + 1) !== filtros.mes)) return false;
@@ -136,14 +167,15 @@ function paint(view, kaizens, departamentos) {
 
   view.appendChild(
     el("div", { class: "view-header" }, [
-      el("div", {}, [el("h1", {}, ["Todos los SK"]), el("p", {}, ["Todos los Short Kaizen creados, con filtros por estatus, departamento, mes y año"])]),
+      el("div", {}, [el("h1", {}, ["Todos los SK"]), el("p", {}, [ctx.verTodo ? "Todos los Short Kaizen creados, con filtros por estatus, departamento, equipo, mes y año" : `Short Kaizen de tu departamento (${ctx.nombreDepto}), con filtros por estatus, equipo, mes y año`])]),
     ])
   );
 
   view.appendChild(
     el("div", { class: "todos-filtros" }, [
       select("Estatus", filtros.estatus, ESTATUS_OPCIONES, (v) => { filtros.estatus = v; repintar(); }, 210),
-      select("Departamento", filtros.depto, [["todos", "Todos"], ...opcionesDepto.map(([c, n]) => [c, n])], (v) => { filtros.depto = v; repintar(); }, 200),
+      ctx.verTodo ? select("Departamento", filtros.depto, [["todos", "Todos"], ...opcionesDepto.map(([c, n]) => [c, n])], (v) => { filtros.depto = v; repintar(); }, 200) : null,
+      select("Equipo", filtros.equipo, [["todos", "Todos"], ...opcionesEquipo.map(([c, n]) => [c, n]), ...(haySinEquipo ? [[SIN_EQUIPO, "Sin equipo"]] : [])], (v) => { filtros.equipo = v; repintar(); }, 200),
       select("Mes", filtros.mes, [["todos", "Todos los meses"], ...MESES.map((m, i) => [String(i + 1), m])], (v) => { filtros.mes = v; repintar(); }, 160),
       select("Año", filtros.anio, [["todos", "Todos los años"], ...[...anios].sort((a, b) => b - a).map((y) => [String(y), String(y)])], (v) => { filtros.anio = v; repintar(); }, 130),
       el(
@@ -151,7 +183,7 @@ function paint(view, kaizens, departamentos) {
         {
           class: "btn btn-outline btn-sm",
           type: "button",
-          onclick: () => { filtros = { estatus: "todos", depto: "todos", mes: "todos", anio: String(new Date().getFullYear()) }; repintar(); },
+          onclick: () => { filtros = filtrosIniciales(); repintar(); },
         },
         ["Limpiar filtros"]
       ),
@@ -165,7 +197,7 @@ function paint(view, kaizens, departamentos) {
       el("div", { class: "empty-state" }, [
         el("div", { class: "icon" }, ["📭"]),
         el("h3", {}, ["Sin Short Kaizen"]),
-        el("p", {}, ["No hay SK con esos filtros."]),
+        el("p", {}, [kaizens.length ? "No hay SK con esos filtros." : ctx.verTodo ? "Todavía no hay Short Kaizen." : "Todavía no hay Short Kaizen de tu departamento."]),
       ])
     );
     return;
@@ -182,7 +214,7 @@ function paint(view, kaizens, departamentos) {
       el("td", { class: "td-folio" }, [`SK-${shortId(k.id)}`]),
       el("td", {}, [formatDate(fechaCreacion(k))]),
       el("td", {}, [k.equipo || "Sin equipo"]),
-      el("td", {}, [k.departamento || "—"]),
+      el("td", {}, [k._depto || "—"]),
       el("td", {}, [`${k.nombre || "—"}`, el("div", { class: "hint" }, [k.nomina || ""])]),
       el("td", { class: "td-desc" }, [k.breveDescripcion || "—"]),
       el("td", {}, [el("span", { class: `badge ${e.badge}` }, [e.label])]),
@@ -203,7 +235,7 @@ function paint(view, kaizens, departamentos) {
       el("div", { style: "text-align:center;margin-top:14px" }, [
         el(
           "button",
-          { class: "btn btn-outline", type: "button", onclick: () => { visibles += POR_PAGINA; paint(view, kaizens, departamentos); } },
+          { class: "btn btn-outline", type: "button", onclick: () => { visibles += POR_PAGINA; paint(view, kaizens, departamentos, ctx); } },
           [`Mostrar más (${filtrados.length - visibles} restantes)`]
         ),
       ])

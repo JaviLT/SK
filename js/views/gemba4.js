@@ -11,7 +11,8 @@
 //   - SK implementados de un equipo en el mes: histórico de Mejora Continua si
 //     trae dato (ene–sep 2026), si no los SK `done` de la app por `fechaImpl`
 //     (lib/historico-sk.js → conteoEquipoMes).
-//   - Pendientes: SK en `pend_aprobacion1/2/3` a la fecha (no dependen del mes).
+//   - Pendientes: SK en `pend_aprobacion1/2/3` a la fecha (no dependen del mes),
+//     contados en el departamento de QUIEN CREÓ el SK, no en el de aplicación.
 //   - Persona con más SK: solo SK registrados en la app (el histórico no trae
 //     detalle por persona).
 //
@@ -25,6 +26,7 @@ import { api } from "../api.js";
 import { state } from "../state.js";
 import { META_SK_POR_EQUIPO_MES } from "../lib/mock-backend.js";
 import { cargarHistorico, claveEquipo, conteoEquipoMes } from "../lib/historico-sk.js";
+import { crearResolvedorDeptoCreador } from "../lib/depto-creador.js";
 
 const MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 const HOJA_W = 1056; // 11 in a 96 dpi
@@ -96,7 +98,8 @@ function calcular({ equipos, kaizens, departamentos, historico }) {
   // equipo -> departamento inferido del historial de SK (si el catálogo no lo trae)
   const cacheKaizens = {};
   kaizens.forEach((k) => {
-    if (k.equipo && k.departamento) cacheKaizens[k.equipo] = k.departamento;
+    const d = k.departamentoSolicitante || k.departamento;
+    if (k.equipo && d) cacheKaizens[k.equipo] = d;
   });
 
   const porDepto = new Map(); // clave -> { nombre, equipos[], implementados, meta, pendientes }
@@ -113,14 +116,16 @@ function calcular({ equipos, kaizens, departamentos, historico }) {
     d.implementados += conteoEquipoMes(historico, kaizens, eq.nombre, anioSel, mesSel);
   });
 
-  // Pendientes de aprobación (estado actual), por departamento del SK.
-  const equipoADepto = new Map(equipos.map((eq) => [claveEquipo(eq.nombre), claveEquipo(nombreDepartamentoDeEquipo(eq, departamentos, cacheKaizens) || "Sin clasificar")]));
+  // Pendientes de aprobación (estado actual), por departamento de QUIEN CREÓ el
+  // SK (nov. 2026) — NO por el departamento donde se aplicará la mejora
+  // (`k.departamento`). Ver lib/depto-creador.js. Sin dato → "Sin clasificar".
+  const deptoDe = crearResolvedorDeptoCreador(equipos, departamentos, kaizens);
   let pendSinClasificar = 0;
   kaizens
     .filter((k) => /^pend_aprobacion[123]$/.test(k.status || ""))
     .forEach((k) => {
-      const claveDepto = k.departamento ? claveEquipo(k.departamento) : equipoADepto.get(claveEquipo(k.equipo));
-      const d = claveDepto && porDepto.get(claveDepto);
+      const nombreDepto = deptoDe(k);
+      const d = nombreDepto && porDepto.get(claveEquipo(nombreDepto));
       if (d) d.pendientes += 1;
       else pendSinClasificar += 1;
     });
@@ -137,7 +142,7 @@ function calcular({ equipos, kaizens, departamentos, historico }) {
     })
     .forEach((k) => {
       const id = k.nomina || k.nombre;
-      const cur = conteoPersona.get(id) || { nombre: k.nombre, departamento: k.departamento, n: 0 };
+      const cur = conteoPersona.get(id) || { nombre: k.nombre, departamento: deptoDe(k), n: 0 };
       cur.n += 1;
       conteoPersona.set(id, cur);
     });

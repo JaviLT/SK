@@ -376,3 +376,17 @@
 .todos-tabla .td-folio{ font-weight:700; white-space:nowrap; color: var(--zx-heading); }
 .todos-tabla .td-desc{ min-width:220px; max-width:380px; }
 .todos-tabla td .hint{ margin:0; }
+
+/* ---- Mis Kaizen: KPIs clicables + gráfica con drill-down (nov. 2026) ---- */
+.kpi-card-click{ cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; }
+.kpi-card-click:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); border-color: var(--zx-blue); }
+.kpi-card-click:focus-visible{ outline: 2px solid var(--zx-blue); outline-offset: 2px; }
+.kpi-link{ font-size: var(--fs-xs); font-weight: 600; color: var(--zx-blue); margin-top: var(--sp-1); }
+.grafica-card{ margin-top: var(--sp-5); }
+.grafica-head{ display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-2); }
+.grafica-migas{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: var(--sp-3); font-size: var(--fs-sm); }
+.grafica-miga{ background: none; border: 0; padding: 2px 4px; font: inherit; font-weight: 600; color: var(--zx-blue); cursor: pointer; text-decoration: underline; }
+.grafica-miga.is-actual{ color: var(--zx-heading); text-decoration: none; cursor: default; }
+.grafica-sep{ color: var(--gray-500); }
+.grafica-scroll{ overflow-x: auto; }
+.grafica-inner{ position: relative; height: 340px; }
