@@ -247,6 +247,11 @@
   font-size: var(--fs-sm); font-weight: 600; color: var(--gray-700);
   cursor: pointer; transition: border-color .15s var(--ease), background .15s var(--ease);
 }
+.enfoque-texto{ line-height: 1.35; }
+.enfoque-principal{ font-weight: 700; }
+/* Lo que va entre paréntesis: otro formato (cursiva, regular) y más pequeño */
+.enfoque-detalle{ font-size: 0.82em; font-weight: 400; font-style: italic; color: var(--gray-500); }
+.enfoque-option:has(input:checked) .enfoque-detalle{ color: var(--zx-heading); opacity: .85; }
 .enfoque-option:has(input:checked){
   border-color: var(--zx-blue-accent); background: var(--zx-highlight); color: var(--zx-heading);
 }

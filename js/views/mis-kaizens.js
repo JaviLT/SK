@@ -6,7 +6,7 @@
 //      el mes en curso; "Todos los meses" para ver todo el año.
 //   2) 4 KPIs (creados, pendientes, aceptados, rechazados) que al hacer clic
 //      abren un popup con el listado de los SK que corresponden a ese KPI.
-//   3) UNA gráfica de SK creados con drill-down según el rol:
+//   3) UNA gráfica de SK ACEPTADOS (nov. 2026) con drill-down según el rol:
 //        - integrante / líder (un equipo): personas de su equipo.
 //        - gerente (o quien ve varios equipos): equipos → clic → personas.
 //        - mc / admin: departamentos → clic → equipos → clic → personas.
@@ -440,7 +440,7 @@ function departamentoDeEquipoLocal(eq, equipoDepartamentoCache) {
   return equipoDepartamentoCache[eq.nombre] || null;
 }
 
-// ---- Gráfica de SK creados, con drill-down según el rol ---------------------
+// ---- Gráfica de SK aceptados, con drill-down según el rol ---------------------
 
 const COLORES_DEPTO = [
   [/extru/, "#1e40af"],
@@ -470,7 +470,8 @@ function inicioGrafica(alcance) {
 function barrasDeGrafica(alcance) {
   const user = state.user || {};
   const { tablero, equipos, departamentos } = datosGrafica;
-  const sk = tablero.filter(enPeriodo);
+  // La gráfica cuenta solo los SK ACEPTADOS (status "done"), creados en el periodo elegido.
+  const sk = tablero.filter((k) => k.status === "done" && enPeriodo(k));
   const deptoDe = crearResolvedorDeptoCreador(equipos, departamentos, tablero);
   const cacheDepto = {};
   tablero.forEach((k) => {
@@ -574,7 +575,7 @@ function buildGraficaCard(container, alcance) {
 
   const total = nivel.bars.reduce((sum, b) => sum + b.value, 0);
   const hayDrill = nivel.bars.some((b) => b.siguiente);
-  const subtitulo = `${total} Short Kaizen creados — ${nombrePeriodo()}` + (hayDrill ? ` · Haz clic en un ${nivel.unidad} para ver el detalle` : "");
+  const subtitulo = `${total} Short Kaizen aceptados — ${nombrePeriodo()}` + (hayDrill ? ` · Haz clic en un ${nivel.unidad} para ver el detalle` : "");
 
   const ancho = Math.max(0, nivel.bars.length * 68);
   const canvas = el("canvas");
@@ -583,7 +584,7 @@ function buildGraficaCard(container, alcance) {
 
   const card = el("div", { class: "card grafica-card" }, [
     el("div", { class: "grafica-head" }, [
-      el("div", {}, [el("h3", {}, [`SK creados — ${nivel.titulo}`]), el("p", { class: "hint" }, [subtitulo])]),
+      el("div", {}, [el("h3", {}, [`SK aceptados — ${nivel.titulo}`]), el("p", { class: "hint" }, [subtitulo])]),
       rutaGrafica.length
         ? el("button", { class: "btn btn-outline btn-sm", type: "button", onclick: () => { rutaGrafica = rutaGrafica.slice(0, -1); paint(container); } }, ["‹ Atrás"])
         : null,
@@ -629,9 +630,9 @@ async function dibujarGrafica(canvas, nivel, container) {
         responsive: true,
         maintainAspectRatio: false,
         layout: { padding: { top: 20 } },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.parsed.y} SK creados` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.parsed.y} SK aceptados` } } },
         scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "SK creados" } },
+          y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "SK aceptados" } },
           x: {
             ticks: {
               autoSkip: false,

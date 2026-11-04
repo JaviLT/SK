@@ -2,6 +2,10 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.6.3 — 2026-11-09
+- Mis Kaizen: la gráfica ahora cuenta solo los SK aceptados (los KPIs de arriba no cambian).
+- Nuevo Kaizen → "Enfoque de la mejora": cada opción muestra el texto completo ("Rentabilidad (Ahorros)", "Sustentabilidad (Enfoque de reducción del impacto ambiental)", "Bienestar del personal (Seguridad, Ergonomía)", "Mejoras en el proceso (8S, 7 Desperdicios + 1, Calidad, Merma, Entregas)"). Lo que va entre paréntesis se ve en cursiva, más pequeño y en gris. El mismo texto completo se muestra en el detalle del SK, el PDF y el Excel. El valor guardado en el SK no cambió.
+
 ## 1.6.2 — 2026-11-06
 - Tablero general: se agregó al histórico de Mejora Continua el número de SK de OCTUBRE 2026 por equipo (archivo Libro2). Con "Todos los meses" y en OCTUBRE el tablero y GEMBA 4 usan ese número; noviembre en adelante siguen saliendo de los SK implementados en la app.
 - El archivo nuevo trae además dos equipos que no estaban antes: LAS PAPAS y MC (con sus datos de enero a octubre). Si no coinciden con ningún equipo del catálogo, aparecen en "Histórico sin coincidencia en el catálogo" y no suman a los KPIs.

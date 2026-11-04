@@ -5,7 +5,7 @@
 // su diseño exacto — ver css/views.css para la identidad propia de la app):
 //   1. ¿Quién identificó la mejora?   (automático desde la sesión)
 //   2. ¿Dónde aplicará la mejora?     (departamento + área/línea/máquina + breve descripción)
-//   3. Enfoque de la mejora           (Ahorros / Reducción del impacto ambiental / Seguridad, Ergonomía / 8S, 7 Desperdicios + 1, Calidad, Merma, Entregas)
+//   3. Enfoque de la mejora           (Rentabilidad / Sustentabilidad / Bienestar del personal / Mejoras en el proceso, cada una con su detalle entre paréntesis)
 //   4. Evidencia fotográfica          (foto + descripción del antes y del después, una junto a otra)
 //   5. Estandarización y fechas       (estandarización, fecha de identificación, fecha de implementación automática, tiempo de implementación)
 // ============================================================================
@@ -65,8 +65,11 @@ export async function render(container, params, isStale) {
   ]);
 
   // ---- Sección 3: Enfoque de la mejora ----
-  const enfoqueChecks = ENFOQUES.map(({ valor, label }) =>
-    el("label", { class: "enfoque-option" }, [el("input", { type: "checkbox", name: "enfoque", value: valor }), label])
+  const enfoqueChecks = ENFOQUES.map(({ valor, principal, detalle }) =>
+    el("label", { class: "enfoque-option" }, [
+      el("input", { type: "checkbox", name: "enfoque", value: valor }),
+      el("span", { class: "enfoque-texto" }, [el("span", { class: "enfoque-principal" }, [principal]), " ", el("span", { class: "enfoque-detalle" }, [`(${detalle})`])]),
+    ])
   );
   const enfoqueSeccion = section("Enfoque de la mejora", [
     el("div", { class: "field" }, [el("div", { class: "enfoque-grid" }, enfoqueChecks)]),
