@@ -179,6 +179,17 @@
 }
 .sk-report-banner > div:nth-child(2){ flex: 1; }
 .sk-export-btn{ flex-shrink: 0; }
+/* Datos de control del formato (MEJ-F-03), a la izquierda del botón Exportar PDF.
+   Letra chica para que las 5 líneas quepan dentro de la franja azul. */
+.sk-report-banner{ padding-top: var(--sp-4); padding-bottom: var(--sp-4); }
+.sk-formato{
+  display: flex; flex-direction: column; flex-shrink: 0;
+  font-size: 10.5px; line-height: 1.22; color: var(--zx-white);
+  text-align: left; white-space: nowrap;
+}
+.sk-formato strong{ font-weight: 700; }
+.sk-formato-sistema{ display: block; }
+.sk-formato-fila{ display: block; font-weight: 400; }
 
 .sk-autorizaciones{
   display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4);

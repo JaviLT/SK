@@ -4,190 +4,282 @@
 // ============================================================================
 
 import { etiquetaEnfoque } from "./enfoques.js";
+import { FORMATO_SK, filasFormatoSK } from "./formato-sk.js";
 import { formatDate, formatDateTime, shortId } from "../utils.js";
 
 /**
  * Construye el PDF de un kaizen, directo en el navegador (jsPDF, sin backend).
- * Lo usan el botón "Exportar PDF" del detalle y la descarga masiva (ZIP) de
- * Administración.
  *
- * El diseño se acerca a la primera página del formato oficial MEJ-F-03
- * (encabezado azul, secciones por bloques, fotos antes/después lado a
- * lado), incluyendo el logo de Short Kaizen en el encabezado (dentro de un
- * recuadro blanco, para no deformarlo ni recolorearlo — ver manual de marca).
+ * Formato oficial MEJ-F-03 Rev. 08 (hoja carta horizontal, 792 x 612 pt):
+ * mismas posiciones y tamaños que el PDF editable de Mejora Continua, con los
+ * campos ya llenos. Si algún texto no cabe en su recuadro se reduce la letra
+ * (hasta 6 pt); si aun así no cabe se corta con "…" y el texto completo va en
+ * una hoja de continuación. La estandarización (que el formato Rev. 08 no
+ * tiene como recuadro) también va en esa hoja cuando existe.
  */
 export async function construirPdfSK(k) {
-  {
-    const [{ jsPDF }, logoDataUrl] = await Promise.all([loadJsPDF(), loadLogoDataUrl()]);
-    const doc = new jsPDF({ unit: "mm", format: "letter" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = 12;
-    const contentW = pageW - margin * 2;
-    const BLUE = [13, 24, 168]; // #0D18A8
-    const GRAY = [100, 116, 139];
+  const [{ jsPDF }, logoDataUrl] = await Promise.all([loadJsPDF(), loadLogoDataUrl()]);
+  const doc = new jsPDF({ unit: "pt", format: "letter", orientation: "landscape" });
+  const folio = `SK-${shortId(k.id)}`;
+  doc.setProperties({ title: `Short Kaizen — ${FORMATO_SK.clave} — ${folio}`, author: "Zubex Industrial" });
 
-    let y = margin;
+  const extras = []; // textos que no cupieron o que no tienen recuadro → hoja 2
 
-    // ---- Encabezado ----
-    doc.setFillColor(...BLUE);
-    doc.rect(margin, y, contentW, 14, "F");
-    if (logoDataUrl) {
-      // Logo dentro de un chip blanco: mantiene la combinación de color
-      // permitida (azul sobre blanco) aunque el fondo del encabezado sea azul.
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(margin + 2, y + 2, 10, 10, 1.2, 1.2, "F");
-      doc.addImage(logoDataUrl, "PNG", margin + 2.8, y + 2.8, 8.4, 8.4);
-    }
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, "bold");
-    doc.setFontSize(14);
-    doc.text("Short Kaizen", margin + (logoDataUrl ? 16 : 4), y + 9);
-    doc.setFontSize(10);
-    doc.text(`SK-${shortId(k.id)}`, margin + contentW - 4, y + 9, { align: "right" });
-    y += 14 + 4;
-
-    doc.setTextColor(...GRAY);
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(8);
-    doc.text("Zubex Industrial · Sistema de Gestión de Inocuidad y Calidad", margin, y);
-    y += 6;
-
-    // ---- ¿Quién identificó? / Enfoque ----
-    const col2 = margin + contentW * 0.62;
-    y = seccionTitulo(doc, "¿Quién identificó la mejora?", margin, y, contentW * 0.58);
-    // El título de la derecha va a la MISMA altura que el de la izquierda (y
-    // ya avanzó 9 mm tras dibujarlo); antes se dibujaba 3 mm más abajo y su
-    // barra azul se encimaba con el primer enfoque.
-    seccionTitulo(doc, "Enfoque de la mejora", col2, y - 9, contentW * 0.38);
-    let yA = campoTexto(doc, "Equipo", k.equipo, margin, y);
-    yA = campoTexto(doc, "Nómina / Nombre", `${k.nomina} — ${k.nombre}`, margin, yA);
-    yA = campoTexto(doc, "Departamento / Área", `${k.departamento || "—"} — ${k.areaLinea || k.donde || "—"}`, margin, yA);
-
-    doc.setFontSize(9);
-    doc.setTextColor(30, 41, 59);
-    let yB = y;
-    (k.enfoques || []).forEach((f) => {
-      const lineas = doc.splitTextToSize(`• ${etiquetaEnfoque(f)}`, contentW * 0.38 - 2);
-      doc.text(lineas, col2, yB);
-      yB += lineas.length * 4.5 + 0.5;
-    });
-    y = Math.max(yA, yB) + 3;
-
-    // ---- Breve descripción ----
-    y = seccionTitulo(doc, "Breve descripción de la mejora", margin, y, contentW);
-    y = parrafo(doc, k.breveDescripcion, margin, y, contentW);
-
-    // ---- Fotos antes/después ----
-    const fotoW = contentW / 2 - 3;
-    const fotoH = 42;
-    const yFotosTop = y;
-    y = seccionTitulo(doc, "Antes", margin, y, fotoW);
-    seccionTitulo(doc, "Después", margin + fotoW + 6, yFotosTop, fotoW);
-    const yFotos = y;
-    dibujarFoto(doc, k.fotoAntes, margin, yFotos, fotoW, fotoH);
-    dibujarFoto(doc, k.fotoDespues, margin + fotoW + 6, yFotos, fotoW, fotoH);
-    y = yFotos + fotoH + 4;
-
-    y = parrafo(doc, k.descAntes, margin, y, fotoW, margin + fotoW + 6);
-    const yDespuesTexto = parrafo(doc, k.descDespues, margin + fotoW + 6, yFotos + fotoH + 4, fotoW);
-    y = Math.max(y, yDespuesTexto) + 3;
-
-    // ---- Estandarización / fechas ----
-    if (k.estandarizacion) {
-      y = seccionTitulo(doc, "Estandarización", margin, y, contentW);
-      y = parrafo(doc, k.estandarizacion, margin, y, contentW);
-    }
-    y = campoTexto(doc, "Fecha de identificación", formatDate(k.fechaId), margin, y + 2);
-    y = campoTexto(doc, "Fecha de implementación", formatDate(k.fechaImpl), margin, y);
-    y = campoTexto(doc, "Tiempo de implementación", k.tiempoImpl ? `${k.tiempoImpl} ${k.unidadTiempo || ""}` : "—", margin, y);
-
-    // ---- Autorizaciones ----
-    y += 2;
-    y = seccionTitulo(doc, "Autorizaciones", margin, y, contentW);
-    const tienePaso3 = Boolean(k.nombreAprobacion3 || k.emailAprobacion3 || k.firmaAprobacion3Nombre);
-    const autItems = [
-      ["Mejora Continua", k.firmaAprobacion1Nombre, k.firmaAprobacion1Fecha],
-      [k.nombreAprobacion2 || "Aprobación 2", k.firmaAprobacion2Nombre, k.firmaAprobacion2Fecha],
-    ];
-    if (tienePaso3) autItems.push([k.nombreAprobacion3 || "Aprobación 3", k.firmaAprobacion3Nombre, k.firmaAprobacion3Fecha]);
-    const autCols = contentW / autItems.length;
-    autItems.forEach(([rol, nombre, fecha], i) => autorizacion(doc, rol, nombre, fecha, margin + autCols * i, y, autCols - 3));
-
-    y += 16 + 8;
-    doc.setFontSize(7);
-    doc.setTextColor(148, 163, 184);
-    doc.text(`Generado: ${formatDateTime(new Date())}`, margin, y);
-
-    return doc;
+  // ---- Encabezado azul ----
+  rectRelleno(doc, 30, 24, 732, 42, C.azul);
+  rectRelleno(doc, 36, 29, 32, 32, C.blanco);
+  if (logoDataUrl) {
+    try { doc.addImage(logoDataUrl, "PNG", 39, 32, 26, 26); } catch { /* sin logo */ }
   }
+  doc.setTextColor(...C.blanco);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.text("Short Kaizen", 80, 51);
+
+  // Bloque de control del formato (Sistema / Formato / Fecha / Clave / Revisión)
+  doc.setFontSize(6.5);
+  doc.text(FORMATO_SK.sistema, 420, 33);
+  const ys = [41.5, 48.4, 55.3, 62.2];
+  filasFormatoSK().forEach(([etiqueta, valor], i) => {
+    doc.setFont("helvetica", "bold");
+    const t = `${etiqueta}:`;
+    doc.text(t, 420, ys[i]);
+    const anchoEtiqueta = doc.getTextWidth(t); // se mide en negritas, antes de cambiar de fuente
+    doc.setFont("helvetica", "normal");
+    doc.text(valor, 420 + anchoEtiqueta + 3, ys[i]);
+  });
+
+  // Folio
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.text("Folio", 668, 42);
+  caja(doc, 668, 46, 86, 14);
+  texto(doc, folio, 668, 46, 86, 14, { max: 9, min: 7, bold: true, extras, titulo: "Folio" });
+
+  doc.setTextColor(...C.gris);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(`Zubex Industrial · ${FORMATO_SK.sistema}`, 30, 79);
+
+  // ---- ¿Quién identificó? / Enfoque ----
+  barra(doc, "¿Quién identificó la mejora?", 30, 90, 470);
+  barra(doc, "Enfoque de la mejora", 515, 90, 247);
+  campo(doc, "Equipo", k.equipo, 110, extras);
+  campo(doc, "Nómina / Nombre", `${k.nomina} — ${k.nombre}`, 126, extras);
+  campo(doc, "Departamento / Área", `${k.departamento || "—"} — ${k.areaLinea || k.donde || "—"}`, 142, extras);
+
+  caja(doc, 515, 106, 247, 52);
+  const enfoques = (k.enfoques || []).map((f) => `• ${etiquetaEnfoque(f)}`).join("\n");
+  texto(doc, enfoques, 515, 106, 247, 52, { max: 9, min: 6, extras, titulo: "Enfoque de la mejora" });
+
+  // ---- Breve descripción ----
+  barra(doc, "Breve descripción de la mejora", 30, 166, 732);
+  caja(doc, 30, 182, 732, 34);
+  texto(doc, k.breveDescripcion, 30, 182, 732, 34, { max: 8, min: 6, extras, titulo: "Breve descripción de la mejora" });
+
+  // ---- Antes / Después ----
+  barra(doc, "Antes", 30, 224, 358);
+  barra(doc, "Después", 404, 224, 358);
+  dibujarFoto(doc, k.fotoAntes, 30, 244, 358, 132);
+  dibujarFoto(doc, k.fotoDespues, 404, 244, 358, 132);
+  caja(doc, 30, 380, 358, 30);
+  caja(doc, 404, 380, 358, 30);
+  texto(doc, k.descAntes, 30, 380, 358, 30, { max: 8, min: 6, extras, titulo: "Antes — descripción" });
+  texto(doc, k.descDespues, 404, 380, 358, 30, { max: 8, min: 6, extras, titulo: "Después y beneficios" });
+
+  // ---- Fechas ----
+  campo(doc, "Fecha de identificación", formatDate(k.fechaId), 418, extras, { x: 135, w: 253, h: 12, label: 428 });
+  campo(doc, "Fecha de implementación", formatDate(k.fechaImpl), 433, extras, { x: 135, w: 253, h: 12, label: 443 });
+  campo(
+    doc,
+    "Tiempo de implementación",
+    k.tiempoImpl ? `${k.tiempoImpl} ${k.unidadTiempo || ""}`.trim() : "—",
+    448,
+    extras,
+    { x: 135, w: 253, h: 12, label: 458 }
+  );
+
+  // ---- Autorizaciones ----
+  barra(doc, "Autorizaciones", 30, 466, 732);
+  const tienePaso3 = Boolean(k.nombreAprobacion3 || k.emailAprobacion3 || k.firmaAprobacion3Nombre);
+  const aut = [
+    ["Mejora Continua", k.firmaAprobacion1Nombre, k.firmaAprobacion1Fecha, true],
+    [k.nombreAprobacion2 || "Aprobación 2", k.firmaAprobacion2Nombre, k.firmaAprobacion2Fecha, true],
+    [k.nombreAprobacion3 || "Aprobación 3", k.firmaAprobacion3Nombre, k.firmaAprobacion3Fecha, tienePaso3],
+  ];
+  [30, 278, 526].forEach((x, i) => {
+    const [rol, nombre, fecha, aplica] = aut[i];
+    doc.setDrawColor(...C.borde);
+    doc.setLineWidth(0.8);
+    doc.setFillColor(...C.blanco);
+    doc.rect(x, 488, 236, 62, "FD");
+    const bx = x + 6;
+    caja(doc, bx, 493, 224, 11);
+    caja(doc, bx, 507, 224, 24);
+    caja(doc, bx, 535, 224, 10);
+    texto(doc, aplica ? rol : "No aplica", bx, 493, 224, 11, { max: 7, min: 6, color: C.gris, extras, titulo: "Autorización — rol" });
+    if (aplica) {
+      texto(doc, nombre || "Pendiente", bx, 507, 224, 24, { max: 8, min: 6, bold: true, extras, titulo: `Autorización — ${rol}` });
+      texto(doc, fecha ? formatDate(fecha) : "—", bx, 535, 224, 10, { max: 7, min: 6, color: C.gris, extras, titulo: "Autorización — fecha" });
+    }
+  });
+
+  caja(doc, 30, 560, 230, 11);
+  texto(doc, `Generado: ${formatDateTime(new Date())}`, 30, 560, 230, 11, { max: 7, min: 6, color: C.gris, extras, titulo: "Generado" });
+
+  // ---- Estandarización (el formato Rev. 08 no tiene recuadro para ella) ----
+  if (k.estandarizacion) extras.push({ titulo: "Estandarización", texto: String(k.estandarizacion) });
+
+  if (extras.length) hojaContinuacion(doc, folio, extras);
+
+  return doc;
 }
 
 export function nombreArchivoSK(k) {
   return `SK-${shortId(k.id)}.pdf`;
 }
 
-function seccionTitulo(doc, texto, x, y, w) {
-  doc.setFillColor(13, 24, 168);
-  doc.rect(x, y, w, 6, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(undefined, "bold");
-  doc.setFontSize(8.5);
-  doc.text(texto, x + 2, y + 4.2);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont(undefined, "normal");
-  return y + 6 + 3;
+// ---------------------------------------------------------------------------
+// Paleta y primitivas de dibujo
+// ---------------------------------------------------------------------------
+const C = {
+  azul: [13, 24, 168], // #0D18A8
+  blanco: [255, 255, 255],
+  campo: [219, 234, 254], // #DBEAFE — recuadros de captura del formato
+  borde: [226, 232, 240], // #E2E8F0
+  gris: [100, 116, 139], // #64748B
+  hint: [148, 163, 184], // #94A3B8
+  texto: [30, 41, 59], // #1E293B
+};
+
+function rectRelleno(doc, x, y, w, h, color) {
+  doc.setFillColor(...color);
+  doc.rect(x, y, w, h, "F");
 }
 
-function campoTexto(doc, label, valor, x, y) {
+function barra(doc, titulo, x, y, w) {
+  rectRelleno(doc, x, y, w, 16, C.azul);
+  doc.setTextColor(...C.blanco);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.text(titulo, x + 7, y + 11);
+}
+
+function caja(doc, x, y, w, h) {
+  rectRelleno(doc, x, y, w, h, C.campo);
+}
+
+/** Etiqueta gris a la izquierda + recuadro azul claro con el valor. */
+function campo(doc, etiqueta, valor, y, extras, o = {}) {
+  const x = o.x ?? 130;
+  const w = o.w ?? 370;
+  const h = o.h ?? 13;
+  doc.setTextColor(...C.gris);
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`${label}:`, x, y);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont(undefined, "bold");
-  doc.text(String(valor || "—"), x + 42, y);
-  doc.setFont(undefined, "normal");
-  return y + 5;
+  doc.text(`${etiqueta}:`, 32, o.label ?? y + 10);
+  caja(doc, x, y, w, h);
+  texto(doc, valor, x, y, w, h, { max: 8, min: 6, extras, titulo: etiqueta });
 }
 
-function parrafo(doc, texto, x, y, w) {
-  doc.setFontSize(8.5);
-  doc.setTextColor(30, 41, 59);
-  const lines = doc.splitTextToSize(texto || "—", w);
-  doc.text(lines, x, y);
-  return y + lines.length * 4.2 + 3;
+/**
+ * Escribe `valor` dentro del recuadro (x, y, w, h): baja la letra de `max` a
+ * `min` hasta que quepa; si no cabe, corta con "…" y manda el texto completo a
+ * la hoja de continuación (`extras`).
+ */
+function texto(doc, valor, x, y, w, h, { max = 8, min = 6, bold = false, color = C.texto, extras, titulo } = {}) {
+  const t = String(valor ?? "").trim() || "—";
+  const padX = 4;
+  const padY = 2.5;
+  const anchoUtil = w - padX * 2;
+  const altoUtil = h - padY - 0.5;
+  doc.setFont("helvetica", bold ? "bold" : "normal");
+  doc.setTextColor(...color);
+
+  let size = max;
+  let lineas;
+  for (;;) {
+    doc.setFontSize(size);
+    lineas = doc.splitTextToSize(t, anchoUtil);
+    if (lineas.length * size * 1.2 <= altoUtil || size <= min) break;
+    size = Math.max(min, size - 0.5);
+  }
+
+  const maxLineas = Math.max(1, Math.floor(altoUtil / (size * 1.2)));
+  if (lineas.length > maxLineas) {
+    const marca = " … (ver hoja 2)";
+    lineas = lineas.slice(0, maxLineas);
+    let ultima = lineas[maxLineas - 1];
+    while (ultima.length && doc.getTextWidth(ultima + marca) > anchoUtil) ultima = ultima.slice(0, -1);
+    lineas[maxLineas - 1] = ultima.trimEnd() + marca;
+    extras?.push({ titulo, texto: t });
+  }
+  doc.text(lineas, x + padX, y + padY + size * 0.8, { lineHeightFactor: 1.2 });
 }
 
+/** Foto dentro de su marco, sin deformarla (se ajusta al recuadro y se centra). */
 function dibujarFoto(doc, dataUrl, x, y, w, h) {
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(x, y, w, h);
+  doc.setFillColor(...C.blanco);
+  doc.setDrawColor(...C.borde);
+  doc.setLineWidth(0.8);
+  doc.rect(x, y, w, h, "FD");
   if (!dataUrl) {
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text("Sin foto", x + w / 2, y + h / 2, { align: "center" });
+    doc.setTextColor(...C.hint);
+    doc.text("Sin foto", x + w / 2, y + h / 2 + 3, { align: "center" });
     return;
   }
   try {
     const format = dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-    doc.addImage(dataUrl, format, x + 1, y + 1, w - 2, h - 2, undefined, "FAST");
+    const props = doc.getImageProperties(dataUrl);
+    const maxW = w - 4;
+    const maxH = h - 4;
+    const escala = Math.min(maxW / props.width, maxH / props.height);
+    const iw = props.width * escala;
+    const ih = props.height * escala;
+    doc.addImage(dataUrl, format, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih, undefined, "FAST");
   } catch {
-    /* si la imagen no se puede insertar, se deja el recuadro vacío */
+    /* si la imagen no se puede insertar, se deja el marco vacío */
   }
 }
 
-function autorizacion(doc, rol, nombre, fecha, x, y, w) {
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(x, y, w, 16);
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(rol, x + 2, y + 4);
-  doc.setFontSize(8.5);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont(undefined, "bold");
-  doc.text(nombre || "Pendiente", x + 2, y + 10);
-  doc.setFont(undefined, "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(148, 163, 184);
-  doc.text(fecha ? formatDate(fecha) : "—", x + 2, y + 14);
+/** Hoja(s) extra con los textos completos que no cupieron en la hoja 1. */
+function hojaContinuacion(doc, folio, extras) {
+  const unicos = [];
+  extras.forEach((e) => {
+    if (!unicos.some((u) => u.titulo === e.titulo && u.texto === e.texto)) unicos.push(e);
+  });
+
+  const nuevaHoja = () => {
+    doc.addPage("letter", "landscape");
+    rectRelleno(doc, 30, 24, 732, 28, C.azul);
+    doc.setTextColor(...C.blanco);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(`Short Kaizen · ${folio} · Continuación`, 38, 42);
+    doc.setFontSize(7);
+    doc.text(`${FORMATO_SK.clave} · Rev. ${FORMATO_SK.revision}`, 754, 42, { align: "right" });
+    return 64;
+  };
+
+  let y = nuevaHoja();
+  const limite = 580;
+  unicos.forEach(({ titulo, texto: t }) => {
+    if (y + 16 + 14 > limite) y = nuevaHoja();
+    barra(doc, titulo, 30, y, 732);
+    y += 16 + 12;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...C.texto);
+    const lineas = doc.splitTextToSize(t, 720);
+    lineas.forEach((l) => {
+      if (y > limite) y = nuevaHoja() + 12;
+      doc.text(l, 36, y);
+      y += 11.5;
+    });
+    y += 10;
+  });
 }
 
 function loadJsPDF() {
@@ -211,7 +303,7 @@ function loadLogoDataUrl() {
     img.onload = () => {
       try {
         const canvas = document.createElement("canvas");
-        // El logo se dibuja a 8.4 mm: se reduce a 160 px para que cada PDF no
+        // El logo se dibuja a 26 pt: se reduce a 160 px para que cada PDF no
         // pese ~2 MB (jsPDF incrusta el PNG sin comprimir) — importa sobre todo
         // en la descarga mensual en ZIP, con decenas de PDF.
         const lado = Math.min(160, img.width);

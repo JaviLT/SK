@@ -4,6 +4,7 @@ import { pedirMotivoRechazo } from "../lib/motivo-rechazo.js";
 import { state } from "../state.js";
 import { etiquetasEnfoques } from "../lib/enfoques.js";
 import { construirPdfSK, nombreArchivoSK } from "../lib/sk-pdf.js";
+import { FORMATO_SK, filasFormatoSK } from "../lib/formato-sk.js";
 
 export async function render(container, params, isStale) {
   // Si el detalle no se abrió desde el popup de Mis Kaizens, no debe quedar un
@@ -69,6 +70,13 @@ function paint(view, k) {
         el("div", {}, [
           el("h1", {}, [`SK-${shortId(k.id)}`]),
           el("p", {}, [`${k.equipo} · ${k.areaLinea || k.donde || "—"}`]),
+        ]),
+        // Datos de control del formato (a la izquierda del botón, dentro de la franja).
+        el("div", { class: "sk-formato", "aria-label": "Datos de control del formato" }, [
+          el("strong", { class: "sk-formato-sistema" }, [FORMATO_SK.sistema]),
+          ...filasFormatoSK().map(([etiqueta, valor]) =>
+            el("span", { class: "sk-formato-fila" }, [el("strong", {}, [`${etiqueta}: `]), valor])
+          ),
         ]),
         el("button", { class: "btn btn-accent sk-export-btn", onclick: () => exportPDF(k) }, ["⬇ Exportar PDF"]),
       ]),

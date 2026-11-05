@@ -2,6 +2,10 @@
 
 Cada entrega sube la versión (`APP_VERSION` en `js/config.js`). La versión y la fecha de build se ven abajo en la app ("Short Kaizen vX.Y.Z · fecha") y en el nombre del zip, para confirmar que está publicada la más reciente.
 
+## 1.6.4 — 2026-11-10
+- Detalle del SK: a la izquierda del botón "Exportar PDF", dentro de la franja azul, se muestran los datos de control del formato: Sistema de Gestión de Inocuidad y Calidad · Formato: Short Kaizen · Fecha de Revisión: 4 de noviembre 2026 · Clave: MEJ-F-03 · Revisión: 08. Los datos viven en `js/lib/formato-sk.js` (un solo lugar para actualizar la próxima revisión).
+- Exportar PDF: ahora se descarga con el formato oficial MEJ-F-03 Rev. 08 (hoja carta horizontal, mismas secciones, recuadros y posiciones que el PDF de Mejora Continua), con el folio SK-XXXX en el recuadro "Folio". Las fotos ya no se deforman (se ajustan a su recuadro sin estirarse). Si un texto no cabe, se reduce la letra y, si aun así no cabe, se corta con "… (ver hoja 2)" y el texto completo va en una hoja de continuación. La Estandarización (que el formato Rev. 08 no tiene como recuadro) también va en esa hoja cuando existe. La descarga mensual en ZIP de Administración usa el mismo PDF.
+
 ## 1.6.3 — 2026-11-09
 - Mis Kaizen: la gráfica ahora cuenta solo los SK aceptados (los KPIs de arriba no cambian).
 - Nuevo Kaizen → "Enfoque de la mejora": cada opción muestra el texto completo ("Rentabilidad (Ahorros)", "Sustentabilidad (Enfoque de reducción del impacto ambiental)", "Bienestar del personal (Seguridad, Ergonomía)", "Mejoras en el proceso (8S, 7 Desperdicios + 1, Calidad, Merma, Entregas)"). Lo que va entre paréntesis se ve en cursiva, más pequeño y en gris. El mismo texto completo se muestra en el detalle del SK, el PDF y el Excel. El valor guardado en el SK no cambió.
