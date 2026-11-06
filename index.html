@@ -1,224 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("sk_theme")==="dark"?"dark":"light";}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none'">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="robots" content="noindex, nofollow">
-<title>Tablero de proyectos — Equipo ERP</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script src="config.js"></script>
+<title>Short Kaizen · Zubex Industrial</title>
+<meta name="theme-color" content="#0D18A8">
+<link rel="icon" href="assets/logo-mark.png">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
 </head>
 <body>
-<section class="login" id="login" hidden aria-labelledby="loginTitle">
-  <div class="login-card">
-    <header>
-      <div class="logo-slot">ZUBEX<small>Industrial</small></div>
-      <h1 id="loginTitle">Tablero de proyectos</h1>
-      <p>Equipo ERP</p>
-    </header>
-    <form id="loginForm" novalidate>
-      <label>Usuario
-        <input id="lUser" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" required>
-      </label>
-      <label>Contraseña
-        <input id="lPass" type="password" autocomplete="current-password" required>
-      </label>
-      <p class="err" id="lErr" hidden></p>
-      <button class="btn btn-primary" id="lBtn" type="submit">Entrar</button>
-      <p class="hint">¿No tienes usuario u olvidaste tu contraseña? Pídelo al administrador del tablero.</p>
-    </form>
-    <form id="pwdForm" novalidate hidden>
-      <h2 id="pwdTitle">Cambia tu contraseña</h2>
-      <p class="hint" id="pwdIntro">Estás entrando con una contraseña temporal. Elige una nueva para continuar.</p>
-      <input type="text" id="pwdUser" autocomplete="username" hidden>
-      <label>Nueva contraseña
-        <input id="pNew" type="password" autocomplete="new-password" maxlength="72" required>
-      </label>
-      <label>Confírmala
-        <input id="pNew2" type="password" autocomplete="new-password" maxlength="72" required>
-      </label>
-      <p class="hint">Mínimo 8 caracteres, con letras y números.</p>
-      <p class="err" id="pErr" hidden></p>
-      <button class="btn btn-primary" id="pBtn" type="submit">Guardar y entrar</button>
-      <button class="btn btn-ghost" id="pCancel" type="button">Cancelar</button>
-    </form>
-  </div>
-</section>
-
-<header class="top">
-  <div class="top-in">
-    <div class="brand">
-      <div class="logo-slot" aria-label="Zubex Industrial">ZUBEX<small>Industrial</small></div>
-      <span class="brand-rule" aria-hidden="true"></span>
-      <div>
-        <h1>Tablero de proyectos</h1>
-        <p class="sub">Equipo ERP</p>
-      </div>
-    </div>
-    <div class="top-actions">
-      <span class="save-state" id="saveState" aria-live="polite"></span>
-      <span class="user-box" id="userBox"></span>
-      <button class="btn btn-sm btn-outline-light" id="btnUsers" type="button" hidden>Usuarios</button>
-      <button class="btn btn-sm btn-outline-light" id="btnPwd" type="button" hidden>Contraseña</button>
-      <button class="btn btn-sm btn-outline-light" id="btnLogout" type="button" hidden>Salir</button>
-      <button class="btn btn-light w-only" id="btnNew" type="button">Nuevo proyecto</button>
-    </div>
-  </div>
-</header>
-
-<main>
-  <div id="notices"></div>
-
-  <section class="kpis" id="kpis" aria-label="Resumen"></section>
-
-  <div class="toolbar">
-    <div class="tabs" role="tablist" aria-label="Vistas">
-      <button class="tab" role="tab" data-view="tablero" type="button">Tablero</button>
-      <button class="tab" role="tab" data-view="cronograma" type="button">Cronograma</button>
-      <button class="tab" role="tab" data-view="indicadores" type="button">Indicadores</button>
-    </div>
-    <div class="filters">
-      <label class="sr" for="fQ">Buscar proyecto</label>
-      <input class="field-sm" id="fQ" type="search" placeholder="Buscar">
-      <label class="sr" for="fResp">Responsable</label>
-      <select class="field-sm" id="fResp"><option value="">Todos los responsables</option></select>
-      <label class="sr" for="fTipo">Tipo</label>
-      <select class="field-sm" id="fTipo"><option value="">Todos los tipos</option></select>
-    </div>
-  </div>
-
-  <section id="view"></section>
-
-  <footer class="method">
-    <p><b>Nota metodológica.</b> Fuente: proyectos capturados por el equipo en este tablero. Avance = fases hechas entre fases totales, sumando las fases generales y las de cada módulo; un módulo sin fases cuenta como una parte, hecha al terminarse. Un proyecto terminado o en mejora cuenta 100%. Fechas: el inicio se pone al arrancar (o a mano) y el cierre se asigna solo al marcar una fase como hecha, al completarse las fases de un módulo o al terminar el proyecto; no hay fechas compromiso. En el cronograma las barras abiertas crecen día con día hasta hoy y se cierran al terminar. Un proyecto en mejora conserva su línea original y cambia de color después de su fecha de cierre: punteada hasta que inicia la mejora y continua mientras dura. Duración promedio = días de inicio a cierre de los proyectos terminados. La carga por responsable cuenta cada módulo por separado. Los filtros de arriba aplican a todo.</p>
-    <p id="genStamp"></p>
-  </footer>
-</main>
-
-<!-- Detalle de proyecto -->
-<dialog class="drawer" id="detailDlg" aria-labelledby="dTitle">
-  <div class="d-bar">
-    <button class="btn btn-ghost btn-sm" type="button" id="dClose">Cerrar</button>
-    <span class="sp"></span>
-    <label class="sr" for="dEstado">Estado</label>
-    <select class="status-select w-only" id="dEstado"></select>
-    <span id="dEstadoRO" class="status-select" hidden></span>
-    <button class="btn btn-sm w-only" type="button" id="dEdit">Editar</button>
-    <button class="btn btn-sm btn-danger w-only" type="button" id="dDelete">Eliminar</button>
-  </div>
-  <div class="d-body" id="detailBody"></div>
-</dialog>
-
-<!-- Alta / edición -->
-<dialog class="form" id="formDlg" aria-labelledby="fTitle">
-  <form id="pForm" method="dialog" novalidate>
-    <h2 id="fTitle">Nuevo proyecto</h2>
-    <div class="grid2">
-      <label class="full">Nombre del proyecto
-        <input name="nombre" required maxlength="120" autocomplete="off">
-      </label>
-      <label class="full">Descripción
-        <textarea name="descripcion" maxlength="2000" placeholder="Qué se busca resolver y para quién"></textarea>
-      </label>
-      <label>Responsable
-        <input name="responsable" list="dlResp" maxlength="80" autocomplete="off">
-      </label>
-      <label>Tipo
-        <input name="tipo" list="dlTipo" maxlength="60" autocomplete="off">
-      </label>
-      <label>Estado
-        <select name="estado"></select>
-      </label>
-      <label>Prioridad
-        <select name="prioridad">
-          <option value="alta">Alta</option>
-          <option value="media" selected>Media</option>
-          <option value="baja">Baja</option>
-        </select>
-      </label>
-      <label>Fecha de inicio
-        <input name="fechaInicio" type="date">
-        <span class="hint">Si la dejas vacía, se pone sola cuando el proyecto arranque.</span>
-      </label>
-      <label id="cierreWrap" hidden>Fecha de cierre
-        <input name="fechaCierre" type="date">
-        <span class="hint">Se pone sola al terminar; cámbiala solo para registrar proyectos pasados.</span>
-      </label>
-      <label class="full" id="modsInitWrap">Módulos <span class="hint">Opcional, uno por línea. Úsalo cuando el proyecto tenga partes que avanzan por separado (ej. Vacaciones, Movimiento de personal).</span>
-        <textarea name="modsInit" placeholder="Vacaciones&#10;Movimiento de personal&#10;Aniversarios y cumpleaños"></textarea>
-      </label>
-      <label class="full" id="fasesInitWrap">Fases generales <span class="hint">Una por línea. Sus fechas se ponen solas al avanzarlas.</span>
-        <textarea name="fasesInit" placeholder="Levantamiento&#10;Desarrollo&#10;Pruebas con usuarios&#10;Liberación"></textarea>
-      </label>
-    </div>
-    <p class="err" id="fErr" hidden></p>
-    <div class="actions">
-      <button class="btn btn-ghost" type="button" id="fCancel">Cancelar</button>
-      <button class="btn btn-primary" type="submit" id="fSubmit">Crear proyecto</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog class="form" id="mejDlg" aria-labelledby="mTitle">
-  <form id="mForm" method="dialog" novalidate>
-    <h2 id="mTitle">Registrar mejora</h2>
-    <p class="m-ctx" id="mCtx"></p>
-    <div class="grid2">
-      <label class="full">¿Qué mejora se detectó?
-        <textarea name="descripcion" maxlength="1000" placeholder="Ej. Agregar el desglose por línea que pidió gerencia"></textarea>
-      </label>
-      <label>Inicio de la mejora
-        <input name="inicio" type="date">
-      </label>
-    </div>
-    <p class="err" id="mErr" hidden></p>
-    <div class="actions">
-      <button class="btn btn-ghost" type="button" id="mCancel">Cancelar</button>
-      <button class="btn btn-primary" type="submit">Registrar mejora</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog class="form users" id="usrDlg" aria-labelledby="uTitle">
-  <div class="u-wrap">
-    <div class="u-head"><h2 id="uTitle">Usuarios del tablero</h2><button class="btn btn-ghost btn-sm" type="button" id="uClose">Cerrar</button></div>
-    <form id="uForm" class="u-form" novalidate autocomplete="off">
-      <label>Usuario corto
-        <input name="usuario" maxlength="20" autocapitalize="none" spellcheck="false" placeholder="ej. jperez">
-      </label>
-      <label>Nombre
-        <input name="nombre" maxlength="80" placeholder="Nombre y apellido">
-      </label>
-      <label class="u-check"><input type="checkbox" name="es_admin"> Administrador</label>
-      <button class="btn btn-primary" type="submit" id="uBtn">Crear usuario</button>
-    </form>
-    <p class="hint u-hint">De 3 a 20 caracteres: letras minúsculas, números, punto, guion o guion bajo. Se genera una contraseña temporal que la persona cambia al entrar por primera vez.</p>
-    <p class="err" id="uErr" hidden></p>
-    <div class="u-temp" id="uTemp" hidden></div>
-    <div id="uList"></div>
-  </div>
-</dialog>
-
-<dialog class="confirm" id="confirmDlg">
-  <div>
-    <p id="cMsg"></p>
-    <div class="actions">
-      <button class="btn btn-ghost" type="button" id="cNo">Cancelar</button>
-      <button class="btn btn-primary" type="button" id="cYes">Eliminar</button>
-    </div>
-  </div>
-</dialog>
-
-<datalist id="dlResp"></datalist>
-<datalist id="dlTipo"></datalist>
-
-<script src="app.js"></script>
+<!--
+  index.html ya NO es la SPA — cada pantalla es ahora su propio archivo .html
+  real (ver README.md). Esta página solo redirige a donde corresponda:
+  a Mis Kaizens / Login según haya
+  sesión iniciada o no.
+-->
+<div class="boot-loader">
+  <img src="assets/logo-mark.png" alt="" style="width:56px;height:56px;animation:boot-pulse 1.4s ease-in-out infinite">
+  <p>Cargando…</p>
+</div>
+<script type="module">
+  import { api } from "./js/api.js";
+  const user = await api.restoreSession().catch(() => null);
+  window.location.replace(user ? "mis-kaizens.html" : "login.html");
+</script>
 </body>
 </html>
