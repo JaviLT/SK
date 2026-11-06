@@ -1,178 +1,33 @@
-# Short Kaizen — Zubex Industrial (Frontend)
+# Tablero de proyectos — Equipo ERP
 
-Registro de mejoras continuas con aprobación, roles con visibilidad distinta
-(integrante, líder, gerente, Mejora Continua, admin), panel de
-administración de equipos/empleados, dashboard de cumplimiento de metas, y
-exportación a PDF/Excel — todo sin credenciales ni datos de personal en el
-código, y responsivo para cualquier dispositivo.
+Tablero para registrar y seguir los proyectos del equipo: estados, módulos, fases, mejoras, cronograma e indicadores. Es una página estática (HTML, CSS y JavaScript) publicada en GitHub Pages, con los datos y los usuarios en Supabase.
 
-## Flujo de negocio actual
+## Archivos
 
-El flujo de aprobación (cuántos pasos y a quién se le envía cada uno) lo
-decide el backend a partir de las columnas del listado de personal — ver
-`docs/PARA_JESUS.md` para el contrato completo. El frontend no asume un
-número fijo de pasos: solo conoce los estatus que el backend le devuelva
-(`pend_mc`, `pend_l`, `pend_g`, `done`, `rej_*`, etc.).
+| Archivo | Qué es |
+|---|---|
+| `index.html` | Estructura de la página |
+| `styles.css` | Estilos (estándar de imagen Zubex) |
+| `app.js` | Lógica del tablero, inicio de sesión y conexión con Supabase |
+| `config.js` | URL del proyecto de Supabase, llave publicable y dominio interno de usuarios |
 
-Si cualquier paso rechaza, el kaizen queda rechazado en ese paso y el flujo
-termina ahí.
+## Usuarios
 
-## Qué NO contiene este proyecto (a propósito)
+- Cada persona entra con un **usuario corto** (ej. `jperez`) y su contraseña; no escribe correo.
+- Solo un administrador da de alta usuarios, desde el botón **Usuarios** del tablero.
+- Al crear un usuario se genera una **contraseña temporal**. La primera vez que la persona entra, el tablero le pide cambiarla y no la deja ver nada hasta hacerlo.
+- Si alguien olvida su contraseña, el administrador le genera una **nueva temporal** desde el mismo panel.
+- Cualquiera puede cambiar su contraseña con el botón **Contraseña**.
 
-- Ninguna credencial de Firebase, EmailJS, Azure ni Microsoft 365 (más allá
-  de la anon key pública de Supabase, que está diseñada para ir en el
-  cliente).
-- Ningún dato real de empleados, nóminas, correos o equipos de Zubex.
-- Ninguna contraseña por defecto ni comparación de contraseñas en el cliente.
-- Ningún `innerHTML` con datos dinámicos sin escapar (todo el DOM se
-  construye con el helper `el()` de `js/utils.js`).
-- Ningún link de aprobación con datos embebidos — solo se pasa un `token`
-  opaco en la URL; el contenido y la validez los resuelve el backend.
+## Seguridad
 
-**Todo lo anterior es responsabilidad del backend, que administra TI
-(Jesús)** — ver `docs/PARA_JESUS.md` para el detalle completo de lo que
-falta construir del lado del backend para que todo esto funcione con datos
-reales.
+- El repositorio **no contiene contraseñas ni llaves secretas**.
+- `config.js` solo lleva la **llave publicable** de Supabase, que está diseñada para usarse en el navegador.
+- Para ver o guardar datos hay que iniciar sesión, estar dado de alta en el equipo y haber cambiado la contraseña temporal. Estas reglas viven en la base de datos (RLS), no en esta página.
+- La creación de usuarios y el manejo de contraseñas pasan por una función de Supabase que usa la llave de servicio del lado del servidor; esa llave nunca llega al navegador.
+- El registro público de usuarios está desactivado.
+- Nunca subas la llave secreta (`sb_secret_…` / `service_role`) ni la contraseña de la base de datos.
 
-## Estructura del proyecto — sitio multi-página
+## Actualizar la página
 
-A partir de esta versión, el sitio dejó de ser una SPA (aplicación de una
-sola página con router de JavaScript): **cada pantalla es su propio archivo
-`.html` real**, con su propia navegación por enlaces normales.
-
-```
-shortkaizen/
-├── index.html                 # Redirige a login.html / mis-kaizens.html
-├── login.html                 # Inicio de sesión
-├── cambiar-password.html      # Cambio de contraseña obligatorio (primer login)
-├── mis-kaizens.html           # "Mis Kaizens" (antes "Solicitudes") — KPIs + lista, según rol
-├── solicitudes.html           # NUEVA — aprobar en un clic (solo roles que aprueban)
-├── formulario.html            # Nuevo Short Kaizen
-├── detalle.html                # Detalle de un kaizen + exportar PDF (parecido al PDF)
-├── dashboard.html               # Cumplimiento de metas (sin cambios de diseño esta ronda)
-├── admin.html                   # Equipos/empleados/gerentes + exportar Excel (admin y mc)
-├── assets/
-│   ├── logo-sk.png             # Logo completo (círculo + wordmark) — imagen entregada
-│   └── logo-mark.png           # Solo el monograma circular — usado en topbar/PDF/login
-├── css/
-│   ├── variables.css           # Tokens de marca (colores, tipografía, espaciado)
-│   ├── base.css                # Reset y estilos globales
-│   ├── components.css          # Botones, tarjetas, topbar, FAB, modal, toasts
-│   ├── views.css                # Layout específico de cada vista
-│   └── responsive.css          # Media queries (tablet / móvil)
-└── js/
-    ├── config.js                # Único lugar con la config del backend y el modo mock
-    ├── api.js                    # Única puerta de entrada/salida de datos
-    ├── state.js                   # Estado en memoria de la sesión (dentro de una página)
-    ├── shell.js                   # Bootstrap compartido: sesión, topbar/menú móvil, FAB
-    ├── utils.js                   # Helpers (DOM seguro, fechas, toasts, imágenes)
-    ├── pages/                     # Un módulo mínimo por página — llama a shell.js + a la vista
-    │   ├── login.js, cambiar-password.js, mis-kaizens.js, solicitudes.js,
-    │   │   formulario.js, detalle.js, dashboard.js, admin.js
-    ├── lib/
-    │   ├── mock-backend.js         # Backend simulado, persistido en localStorage (solo dev)
-    │   └── signature-pad.js        # (sin uso actualmente)
-    └── views/
-        ├── login.js, cambiar-password.js, mis-kaizens.js, solicitudes.js,
-        │   formulario.js, detalle.js, dashboard.js, admin.js
-        # Cada archivo exporta render(container, params, isStale) — la lógica de
-        # cada pantalla vive aquí; js/pages/*.js solo la invoca desde su página.
-```
-
-No hay paso de build (bundler/transpilador) — son módulos ES nativos
-(`<script type="module">`), así que funciona igual en GitHub Pages que en
-tu computadora, abriendo cualquier página con un servidor local simple:
-
-```bash
-python3 -m http.server 8000
-# o
-npx serve .
-```
-
-(Abrir los `.html` con doble clic, sin servidor, no funciona: los módulos
-ES nativos requieren que el navegador los cargue vía `http://`, no `file://`.)
-
-## Roles y qué ve cada uno
-
-| Rol | Mis Kaizens | Solicitudes (aprobar) | Dashboard | Administración |
-|---|---|---|---|---|
-| `solicitante` (Integrante) | Solo los suyos | — | Sí | — |
-| `lider` | Los de su Equipo Lean | Los de su equipo, pendientes de su firma | Sí | — |
-| `gerente` | Todos los de su departamento | Los de su departamento, pendientes de su firma | Sí | — |
-| `mc` (Mejora Continua) — **NUEVO** | Todo, sin restricción | **TODOS** los de la empresa, pendientes del paso de Mejora Continua | Sí | Sí |
-| `admin` | Todo, sin restricción | Todos los pendientes, de cualquier paso | Sí | Sí |
-
-### Pestaña "Solicitudes" (nueva)
-
-Los correos de aprobación llevan un link directo a la app
-(`detalle.html?id=<id>`); si no hay sesión se pasa por el login y se regresa
-al mismo SK. Quien puede aprobar ve la pestaña **Solicitudes** (y los
-botones en el detalle), donde aprueba con un clic y rechaza escribiendo un
-**motivo obligatorio** (5–500 caracteres). La pantalla antigua
-`aprobacion.html` (token + contraseña) se eliminó en oct. 2026.
-
-### Rol "mc" (nuevo)
-
-Representa a Mejora Continua dentro de la app (antes ese paso solo existía
-como un correo/buzón, sin nadie con sesión). Alguien con este rol:
-- ve **todas** las solicitudes pendientes de Mejora Continua, de **cualquier
-  equipo o departamento** (no está limitado a un equipo/departamento propio);
-- tiene acceso al tab **Administración**, igual que `admin`.
-
-## Botón "+ Nuevo Kaizen"
-
-Se reubicó del topbar a un botón flotante (FAB) fijo en la esquina inferior
-derecha, visible en cualquier pantalla autenticada (escritorio y móvil). Se
-descartó la idea de crear un kaizen sin iniciar sesión (solo con nómina) por
-el riesgo de suplantación de identidad — ver `docs/PARA_JESUS.md`.
-
-## Logo
-
-El logo de Short Kaizen (`assets/logo-mark.png`) aparece en: el topbar de
-cada pantalla autenticada, la pantalla de login/cambio de contraseña, el
-encabezado del detalle de un kaizen, y el PDF exportado — siempre dentro de
-un recuadro blanco (azul sobre blanco), respetando las combinaciones de
-color permitidas por el manual de marca.
-
-## Modo mock (desarrollo sin backend)
-
-Mientras el backend real no tenga listas las rutas nuevas, `js/config.js`
-puede volver a `MOCK_MODE: true` temporalmente. En ese modo la app funciona
-con datos **ficticios** de `js/lib/mock-backend.js` — su estado (sesión,
-kaizens creados, equipos) ahora se guarda en `localStorage` para que
-sobreviva la navegación real entre páginas (antes, al ser una sola página,
-bastaba con una variable en memoria).
-
-- Login de prueba: `0001`/`demo123` (integrante), `lider1`/`demo123`,
-  `gerente1`/`demo123` (ve todo el departamento EXTRUSIÓN), `mc1`/`demo123`
-  (Mejora Continua), `admin1`/`demo123`.
-
-## Conectar al backend real
-
-`js/config.js` tiene `SUPABASE_FUNCTIONS_URL`, `SUPABASE_ANON_KEY` y
-`MOCK_MODE: false` — ver `docs/PARA_JESUS.md` para el contrato completo de
-endpoints, incluyendo el nuevo `POST /kaizens/:id/decision` que necesita la
-pestaña Solicitudes.
-
-## Diseño / marca
-
-Colores, tipografía y estructura siguen el Manual de Estandarización de
-Reportes IA de Zubex (`#0D18A8` azul primario, `#227EF6` azul de acento,
-verde/rojo semántico para KPIs, tipografía Poppins con fallback Segoe UI).
-
-## Responsivo
-
-El ancho de contenido (`--content-max` en `css/variables.css`) es fluido —
-crece con la ventana hasta un tope de 1680px. El resto del layout usa grids
-fluidos (`auto-fill`/`minmax`) y sustituye la barra superior por navegación
-inferior en pantallas ≤ 720px; el FAB se recoloca arriba de esa barra.
-
-## Exportaciones
-
-- **PDF** (botón "Exportar PDF" en el detalle de un kaizen): jsPDF, 100%
-  del lado del cliente. Incluye el logo de Short Kaizen en el encabezado.
-- **Excel** (botón "Exportar a Excel" en Administración, roles `admin`/`mc`):
-  ExcelJS, 100% del lado del cliente.
-
-Ambas librerías se cargan desde cdnjs.cloudflare.com — requieren conexión a
-internet en el navegador de quien exporta (no hay backend de por medio).
+Sube los archivos modificados al repositorio; GitHub Pages publica los cambios en uno o dos minutos.
