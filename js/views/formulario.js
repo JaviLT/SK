@@ -79,7 +79,7 @@ export async function render(container, params, isStale) {
   const descAntesInput = el("textarea", { class: "textarea", id: "f-antes", required: true, placeholder: "¿Cómo estaba la situación antes?" });
   const descDespuesInput = el("textarea", { class: "textarea", id: "f-despues", required: true, placeholder: "¿Qué se hizo, cómo quedó después y qué beneficios trae?" });
   const fotoAntesBox = buildUploadBox("Foto/dibujo — antes", fotoAntesState);
-  const fotoDespuesBox = buildUploadBox("Foto/dibujo — después", fotoDespuesState);
+  const fotoDespuesBox = buildUploadBox("Foto/dibujo — después", fotoDespuesState, { requerida: true });
 
   const fotosSeccion = section("Evidencia fotográfica", [
     el("div", { class: "field-row" }, [
@@ -120,6 +120,14 @@ export async function render(container, params, isStale) {
         }
         if (!descAntesInput.value.trim() || !descDespuesInput.value.trim()) {
           toast("Describe la situación antes y después.", "tr");
+          return;
+        }
+        if (!fotoDespuesState.dataUrl) {
+          // La foto del "después" es obligatoria (evidencia de la mejora hecha).
+          const caja = fotoDespuesBox.querySelector(".upload-box");
+          caja?.classList.add("is-invalid");
+          fotoDespuesBox.scrollIntoView({ behavior: "smooth", block: "center" });
+          toast("La foto del después es obligatoria. Sube una foto o dibujo de cómo quedó la mejora.", "tr", 5000);
           return;
         }
         if (!enfoques.length) {
@@ -196,9 +204,10 @@ function readOnlyField(labelText, value) {
   return el("div", { class: "field" }, [el("label", {}, [labelText]), el("div", { class: "readonly-field" }, [value])]);
 }
 
-function buildUploadBox(labelText, targetState) {
+function buildUploadBox(labelText, targetState, { requerida = false } = {}) {
   const fileInput = el("input", { type: "file", accept: "image/*", class: "visually-hidden" });
-  const box = el("div", { class: "upload-box" }, [el("span", {}, [`📷 ${labelText} — toca para subir`])]);
+  const textoVacio = `📷 ${labelText}${requerida ? " *" : ""} — toca para subir`;
+  const box = el("div", { class: "upload-box" }, [el("span", {}, [textoVacio])]);
 
   fileInput.addEventListener("change", async () => {
     const file = fileInput.files[0];
@@ -209,17 +218,18 @@ function buildUploadBox(labelText, targetState) {
       const dataUrl = await compressImage(file, { maxWidth: 900, quality: 0.72 });
       targetState.dataUrl = dataUrl;
       box.classList.add("has-image");
+      box.classList.remove("is-invalid");
       box.innerHTML = "";
       box.appendChild(el("img", { src: dataUrl, alt: labelText }));
     } catch (err) {
       toast("No se pudo procesar la imagen.", "tr");
       box.innerHTML = "";
-      box.appendChild(el("span", {}, [`📷 ${labelText} — toca para subir`]));
+      box.appendChild(el("span", {}, [textoVacio]));
     }
   });
 
   box.addEventListener("click", () => fileInput.click());
-  return el("div", { class: "field" }, [el("label", {}, [labelText]), box, fileInput]);
+  return el("div", { class: "field" }, [el("label", {}, [requerida ? `${labelText} *` : labelText]), box, fileInput]);
 }
 
 export function unmount() {}

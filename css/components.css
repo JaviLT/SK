@@ -267,6 +267,7 @@
 }
 .upload-box:hover{ border-color: var(--zx-blue-accent); background: var(--zx-highlight); }
 .upload-box.has-image{ padding: 0; border-style: solid; overflow: hidden; }
+.upload-box.is-invalid{ border-color: #991b1b; background: #fef2f2; color: #991b1b; }
 .upload-box.has-image img{ width: 100%; max-height: 220px; object-fit: cover; }
 
 /* ============ Firma digital ============ */
